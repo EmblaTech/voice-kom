@@ -1,6 +1,5 @@
 // types.ts
 import { EventEmitter } from 'events';
-import { EventStore } from './eventstore';
 
 // Type identifiers for dependency injection
 export const TYPES = {
@@ -9,7 +8,8 @@ export const TYPES = {
   UIComponent: Symbol.for('UIComponent'),
   AudioCapturer: Symbol.for('AudioCapturer'),
   STTDriver: Symbol.for('STTDriver'),
-  EventStore: Symbol.for('EventStore')
+  EventBus: Symbol.for('EventBus'),
+  StateStore: Symbol.for('StateStore')
 };
 
 // Recording status enum
@@ -61,9 +61,7 @@ export interface IVoiceLib {
     language?: string;
     apiKey?: string; 
   }): Promise<void>;
-  startListening(): void;
-  stopListening(): void;
-  isListening(): boolean;
+
 }
 
 // Intent recognition result

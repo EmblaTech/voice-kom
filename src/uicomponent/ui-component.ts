@@ -1,7 +1,8 @@
 // ui-component.ts
 import { injectable, inject } from 'inversify';
 import { IUIComponent, RecordingStatus, TYPES } from '../types';
-import { EventStore, VoiceLibEvents, VoiceLibState } from '../eventstore';
+import { EventBus, VoiceLibEvents } from '../eventbus';
+import { StateStore } from '../stateStore';
 
 @injectable()
 export class UIComponent implements IUIComponent {
@@ -11,15 +12,16 @@ export class UIComponent implements IUIComponent {
   private transcriptionElement: HTMLElement | null = null;
   
   constructor(
-    @inject(TYPES.EventStore) private eventStore: EventStore
+    @inject(TYPES.EventBus) private eventBus: EventBus,
+    @inject(TYPES.StateStore) private stateStore: StateStore
   ) {}
 
   public init(container: HTMLElement): void {
     this.container = container;
     this.createUIElements();
     
-    // Subscribe to state changes from the EventStore
-    this.eventStore.on(VoiceLibEvents.STATE_CHANGED, () => {
+    // Subscribe to state changes from the StateStore
+    this.eventBus.on(VoiceLibEvents.STATE_CHANGED, () => {
       this.updateFromState();
     });
   }
@@ -27,7 +29,7 @@ export class UIComponent implements IUIComponent {
   public updateFromState(): void {
     if (!this.statusElement || !this.recordButton || !this.transcriptionElement) return;
     
-    const state = this.eventStore.getState();
+    const state = this.stateStore.getState();
     
     // Update UI based on current state
     this.updateStatus(state.recordingStatus);
@@ -67,11 +69,10 @@ export class UIComponent implements IUIComponent {
     this.recordButton.addEventListener('click', () => {
       if (this.recordButton?.classList.contains('recording')) {
         // Currently recording, so this click should stop recording
-        this.eventStore.emit(VoiceLibEvents.STOP_BUTTON_PRESSED);
-        console.log('stopped')
+        this.eventBus.emit(VoiceLibEvents.STOP_BUTTON_PRESSED);
       } else {
         // Not recording, so this click should start recording
-        this.eventStore.emit(VoiceLibEvents.RECORD_BUTTON_PRESSED);
+        this.eventBus.emit(VoiceLibEvents.RECORD_BUTTON_PRESSED);
       }
     });
     wrapper.appendChild(this.recordButton);

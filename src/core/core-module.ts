@@ -1,7 +1,8 @@
 // core-module.ts
 import { injectable, inject } from 'inversify';
 import { ICoreModule, INLPModule, IUIComponent, RecordingStatus, TYPES } from '../types';
-import { EventStore, VoiceLibEvents } from '../eventstore';
+import { EventBus, VoiceLibEvents } from '../eventbus';
+import { StateStore } from '../stateStore';
 
 @injectable()
 export class CoreModule implements ICoreModule {
@@ -10,7 +11,8 @@ export class CoreModule implements ICoreModule {
   constructor(
     @inject(TYPES.NLPModule) private nlpModule: INLPModule,
     @inject(TYPES.UIComponent) private uiComponent: IUIComponent,
-    @inject(TYPES.EventStore) private eventStore: EventStore
+    @inject(TYPES.EventBus) private eventBus: EventBus,
+    @inject(TYPES.StateStore) private stateStore: StateStore
   ) {}
   
   public async init(container: HTMLElement, config: { language?: string, apiKey?: string }): Promise<void> {
@@ -32,40 +34,40 @@ export class CoreModule implements ICoreModule {
       apiKey: this.config.apiKey
     });
     
-    // Set up UI event listeners through EventStore
-    this.eventStore.on(VoiceLibEvents.RECORD_BUTTON_PRESSED, () => {
+    // Set up UI event listeners through EventBus
+    this.eventBus.on(VoiceLibEvents.RECORD_BUTTON_PRESSED, () => {
       this.startListening();
     });
     
-    this.eventStore.on(VoiceLibEvents.STOP_BUTTON_PRESSED, () => {
+    this.eventBus.on(VoiceLibEvents.STOP_BUTTON_PRESSED, () => {
       this.stopListening();
     });
     
     // Set up transcription event listener
-    this.eventStore.on(VoiceLibEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
+    this.eventBus.on(VoiceLibEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
       // Here you can add any additional logic when transcription is complete
       console.log('Transcription completed:', transcription);
     });
     
     // Handle errors
-    this.eventStore.on(VoiceLibEvents.ERROR_OCCURRED, (error: Error) => {
+    this.eventBus.on(VoiceLibEvents.ERROR_OCCURRED, (error: Error) => {
       console.error('VoiceLib error:', error);
     });
     
     // Set initial state
-    this.eventStore.setRecordingStatus(RecordingStatus.IDLE);
+    this.stateStore.setRecordingStatus(RecordingStatus.IDLE);
     this.uiComponent.updateFromState();
   }
   
   public startListening(): void {
-    const state = this.eventStore.getState();
+    const state = this.stateStore.getState();
     if (state.recordingStatus !== RecordingStatus.RECORDING) {
       this.nlpModule.startListening();
     }
   }
   
   public stopListening(): void {
-    const state = this.eventStore.getState();
+    const state = this.stateStore.getState();
     if (state.recordingStatus === RecordingStatus.RECORDING) {
       this.nlpModule.stopListening();
     }

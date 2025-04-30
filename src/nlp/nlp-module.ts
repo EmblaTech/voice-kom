@@ -1,7 +1,8 @@
 // nlp-module.ts
 import { injectable, inject } from 'inversify';
 import { INLPModule, IAudioCapturer, ISTTDriver, RecordingStatus, TYPES } from '../types';
-import { EventStore, VoiceLibEvents } from '../eventstore';
+import { EventBus, VoiceLibEvents } from '../eventbus';
+import { StateStore } from '../stateStore';
 
 @injectable()
 export class NLPModule implements INLPModule {
@@ -10,7 +11,8 @@ export class NLPModule implements INLPModule {
   constructor(
     @inject(TYPES.AudioCapturer) private audioCapturer: IAudioCapturer,
     @inject(TYPES.STTDriver) private sttDriver: ISTTDriver,
-    @inject(TYPES.EventStore) private eventStore: EventStore
+    @inject(TYPES.EventBus) private eventBus: EventBus,
+    @inject(TYPES.StateStore) private stateStore: StateStore
   ) {}
   
   public async init(config: { language?: string, apiKey?: string }): Promise<void> {
@@ -24,41 +26,41 @@ export class NLPModule implements INLPModule {
       this.language = config.language;
     }
     
-    // Set up event listeners through EventStore
-    this.eventStore.on(VoiceLibEvents.RECORDING_STOPPED, async (audioBlob: Blob) => {
+    // Set up event listeners through EventBus
+    this.eventBus.on(VoiceLibEvents.RECORDING_STOPPED, async (audioBlob: Blob) => {
       try {
         // Update state to processing
-        this.eventStore.setRecordingStatus(RecordingStatus.PROCESSING);
+        this.stateStore.setRecordingStatus(RecordingStatus.PROCESSING);
         
         // Emit transcription started event
-        this.eventStore.emit(VoiceLibEvents.TRANSCRIPTION_STARTED);
+        this.eventBus.emit(VoiceLibEvents.TRANSCRIPTION_STARTED);
         
         // Process the audio
         const transcription = await this.sttDriver.transcribe(audioBlob);
         
         // Update state with transcription results
-        this.eventStore.setTranscription(transcription);
-        this.eventStore.setRecordingStatus(RecordingStatus.IDLE);
+        this.stateStore.setTranscription(transcription);
+        this.stateStore.setRecordingStatus(RecordingStatus.IDLE);
         
         // Emit transcription completed event
-        this.eventStore.emit(VoiceLibEvents.TRANSCRIPTION_COMPLETED, transcription);
+        this.eventBus.emit(VoiceLibEvents.TRANSCRIPTION_COMPLETED, transcription);
       } catch (error: unknown) {
         console.error('Transcription error:', error);
-        this.eventStore.setError(error);
+        this.stateStore.setError(error);
       }
     });
   }
   
   public startListening(): void {
-    const state = this.eventStore.getState();
+    const state = this.stateStore.getState();
     if (state.recordingStatus === RecordingStatus.IDLE) {
-      this.eventStore.setRecordingStatus(RecordingStatus.RECORDING);
+      this.stateStore.setRecordingStatus(RecordingStatus.RECORDING);
       this.audioCapturer.startRecording();
     }
   }
   
   public stopListening(): void {
-    const state = this.eventStore.getState();
+    const state = this.stateStore.getState();
     if (state.recordingStatus === RecordingStatus.RECORDING) {
       this.audioCapturer.stopRecording();
     }
