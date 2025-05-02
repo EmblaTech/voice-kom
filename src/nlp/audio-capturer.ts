@@ -1,22 +1,21 @@
 // audio-capturer.ts
 import { injectable, inject } from 'inversify';
-import { IAudioCapturer, RecordingStatus, TYPES } from '../types';
-import { EventBus, VoiceLibEvents } from '../eventbus';
-import { StateStore } from '../stateStore';
+import { IAudioCapturer, TYPES } from '../types';
+import { EventBus } from '../eventbus';
 
 @injectable()
 export class WebAudioCapturer implements IAudioCapturer {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
+  private resolveAudioPromise: ((value: Blob) => void) | null = null;
+  private rejectAudioPromise: ((reason?: any) => void) | null = null;
   
   constructor(
     @inject(TYPES.EventBus) private eventBus: EventBus,
-    @inject(TYPES.StateStore) private stateStore: StateStore
   ) {}
   
   public startRecording(): void {
-    const state = this.stateStore.getState();
-    if (state.recordingStatus === RecordingStatus.RECORDING) return;
+    console.log("Starting audio recording");
     
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
@@ -30,30 +29,39 @@ export class WebAudioCapturer implements IAudioCapturer {
         });
         
         this.mediaRecorder.addEventListener('stop', () => {
-          const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
+          const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
           
-          // Emit event with the recorded audio blob through the EventBus
-          this.eventBus.emit(VoiceLibEvents.RECORDING_STOPPED, audioBlob);
+          // Resolve the promise with the recorded audio blob
+          if (this.resolveAudioPromise) {
+            this.resolveAudioPromise(audioBlob);
+          }
           
           // Stop all tracks in the stream to release the microphone
           stream.getTracks().forEach(track => track.stop());
         });
         
         this.mediaRecorder.start();
-        
-        // Emit recording started event
-        this.eventBus.emit(VoiceLibEvents.RECORDING_STARTED);
       })
       .catch((error: unknown) => {
         console.error('Error accessing microphone:', error);
-        this.stateStore.setError(error);
+        if (this.rejectAudioPromise) {
+          this.rejectAudioPromise(error);
+        }
       });
   }
   
-  public stopRecording(): void {
-    if (this.mediaRecorder) {
-      console.log("Stopped at")
-      this.mediaRecorder.stop();
-    }
+  public stopRecording(): Promise<Blob> {
+    console.log("Stopping audio recording");
+    
+    return new Promise<Blob>((resolve, reject) => {
+      this.resolveAudioPromise = resolve;
+      this.rejectAudioPromise = reject;
+      
+      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+        this.mediaRecorder.stop();
+      } else {
+        reject(new Error("MediaRecorder not available or already stopped"));
+      }
+    });
   }
 }

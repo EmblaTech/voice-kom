@@ -2,9 +2,15 @@
   "name": "voice-lib",
   "version": "1.0.0",
   "description": "A speech-to-text library with InversifyJS",
-  "main": "dist/bundle.js",
+  "main": "dist/voice-lib.js",
+  "types": "dist/types/voice-lib.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "webpack",
+    "build": "cross-env NODE_ENV=production webpack",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist/types",
+    "build:all": "npm run build && npm run build:types",
     "start": "webpack serve",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -21,7 +27,10 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "html-webpack-plugin": "^5.6.3",
+    "style-loader": "^3.3.4",
+    "css-loader": "^6.8.1",
     "ts-loader": "^9.5.2",
     "typescript": "^5.8.3",
     "webpack": "^5.99.7",

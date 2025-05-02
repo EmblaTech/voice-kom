@@ -15,27 +15,62 @@
       color: #333;
       text-align: center;
     }
-    .external-controls {
+    .voice-container {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      min-height: 150px;
+    }
+    .controls {
       margin-top: 20px;
       text-align: center;
     }
     button {
-      padding: 8px 16px;
+      padding: 10px 20px;
       margin: 0 10px;
       cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .transcription {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      min-height: 50px;
     }
   </style>
 </head>
 <body>
   <h1>VoiceLib Speech-to-Text Demo</h1>
   
-  <div id="voice-lib-container"></div>
+  <div id="voice-lib-container" class="voice-container"></div>
   
-  <div class="external-controls">
-    <h3>External Controls</h3>
-    <button id="external-start-button">Start Listening</button>
-    <button id="external-stop-button">Stop Listening</button>
+  <div class="controls">
+    <button id="ok-button" voice.name = "ok">Ok</button>
+    <button id="cancel-button" voice.name = "cancel" >Cancel</button>
   </div>
-  
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Get container element
+      const container = document.getElementById('voice-lib-container');
+      const startButton = document.getElementById('start-button');
+      const stopButton = document.getElementById('stop-button');
+      const transcriptionText = document.getElementById('transcription-text');
+    
+    });
+  </script>
 </body>
 </html>
