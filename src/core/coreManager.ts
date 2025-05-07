@@ -20,7 +20,9 @@ export class CoreManager {
 
     async stopRecording() {
         this.logger.info("Core recording topped");
-        await this._nlpModule.stopRecording();        
+        await this._nlpModule.stopRecording()
+        .then((result) => {})
+        .catch((error) => {})      
     }
 
     setLang(value: string) {

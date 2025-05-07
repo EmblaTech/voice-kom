@@ -10,6 +10,7 @@ export class SpeechManager {
     
     async init(config: SpeechEngineConfig) {
         this.config = config;
+        this.speechEngine = SpeechEngineFactory.getEngine("default");
         this.logger.info("Speech manager initialized with config", config);
     }
 
@@ -17,9 +18,9 @@ export class SpeechManager {
         this.speechEngine = SpeechEngineFactory.getEngine(type);
     }
 
-    async processAudio(audioInput: AudioInput): Promise<IntentEntityResult> {
+    async processAudio(rawAudio: Blob): Promise<IntentEntityResult> {
         try {
-            const transcription = await this.speechEngine.transcribe(audioInput);
+            const transcription = await this.speechEngine.transcribe(rawAudio);
             const intentResult = await this.speechEngine.detectIntent(transcription);
             const entities = await this.speechEngine.extractEntities(transcription, intentResult.intent);
 

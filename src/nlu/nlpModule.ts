@@ -11,6 +11,8 @@ export class NLPModule {
 
     async init(config: any): Promise<void> {
         this.audioRecorder = new AudioRecorder();
+        this.speechManager = new SpeechManager();
+        this.speechManager.init({});
         this.logger.info("NLPModule initialized with config", config);
     }
 
@@ -18,7 +20,7 @@ export class NLPModule {
         if (this.isRecording) return;
 
         this.logger.info("NLP recording started"); 
-        await this.audioRecorder.startRecording();     
+        this.audioRecorder.startRecording();     
         this.isRecording = true;
     }
 
@@ -28,8 +30,22 @@ export class NLPModule {
         }
 
         this.logger.info("NLP recording stopped");
-        await this.audioRecorder.stopRecording();        
-        this.isRecording = false;
+        await this.audioRecorder.stopRecording()
+        .then((audioBlob) => {
+            this.isRecording = false;
+            this.speechManager.processAudio(audioBlob)
+            .then((result) => {
+                this.logger.info("Successfully processed audio", result);
+            })
+            .catch((error) => {
+                this.logger.info("Failed to process audio", error);
+            })
+            
+        })
+        .catch((error) => {
+            this.isRecording = false;
+        });        
+        
         return Promise.resolve({
             intent: '',
             confidence: 0,

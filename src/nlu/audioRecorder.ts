@@ -7,6 +7,7 @@ export class AudioRecorder {
     private rejectAudioPromise: ((reason?: any) => void) | null = null;
     private readonly logger = Logger.getInstance();
 
+    //TODO: Change this as promise
     public startRecording(): void {        
         this.logger.info("AudioRecorder recording started");
         navigator.mediaDevices.getUserMedia({ audio: true })
@@ -41,7 +42,8 @@ export class AudioRecorder {
             }
           });          
       }
-      
+    
+    //TODO: Change this resolve without resolveAudioPromise
     public stopRecording(): Promise<Blob> {
         this.logger.info("AudioRecorder recording stopped");    
         return new Promise<Blob>((resolve, reject) => {

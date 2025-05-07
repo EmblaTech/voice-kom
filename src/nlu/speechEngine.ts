@@ -1,5 +1,5 @@
 interface SpeechEngine {
-    transcribe(audioInput: AudioInput): Promise<string>;
-    detectIntent(text: string): Promise<IntentResult>;
-    extractEntities(text: string, intent: string): Promise<Record<string, any>>;
+    transcribe(rawAudio: Blob): Promise<string>;
+    detectIntent(transcription: string): Promise<IntentResult>;
+    extractEntities(transcription: string, intent: string): Promise<Record<string, any>>;
 }

@@ -5,7 +5,7 @@ export class LLMSpeechEngine implements SpeechEngine {
     constructor(config: SpeechEngineConfig) {
         this.config = config;
     }
-    transcribe(audioInput: AudioInput): Promise<string> {
+    transcribe(rawAudio: Blob): Promise<string> {
         throw new Error("Method not implemented.");
     }
     detectIntent(transcription: string): Promise<IntentResult> {
