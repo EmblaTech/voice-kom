@@ -1,18 +1,17 @@
-import { IntentResult } from "./model/intentResult";
 import { SpeechEngineConfig } from "./model/speechEngineConfig";
-import { SpeechEngine } from "./speechEngine";
 
-export class LLMSpeechEngine extends SpeechEngine {
+export class LLMSpeechEngine implements SpeechEngine {
+    private config: SpeechEngineConfig;
     constructor(config: SpeechEngineConfig) {
-        super(config);
+        this.config = config;
     }
     transcribe(audioInput: AudioInput): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    detectIntent(text: string): Promise<IntentResult> {
+    detectIntent(transcription: string): Promise<IntentResult> {
         throw new Error("Method not implemented.");
     }
-    extractEntities(text: string, intent: string): Promise<Record<string, any>> {
+    extractEntities(transcription: string, intent: string): Promise<Record<string, any>> {
         throw new Error("Method not implemented.");
     }
 }

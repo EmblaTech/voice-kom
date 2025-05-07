@@ -1,15 +1,16 @@
+import { Logger } from "../util/logger";
 import { IntentEntityResult } from "./model/intentEntityResult";
 import { SpeechEngineConfig } from "./model/speechEngineConfig";
-import { SpeechEngine } from "./speechEngine";
 import { SpeechEngineFactory } from "./speechEngineFactory";
 
 export class SpeechManager {
     private config: SpeechEngineConfig;
     private speechEngine: SpeechEngine;
-
-    constructor(config: SpeechEngineConfig) {
+    private readonly logger = Logger.getInstance();
+    
+    async init(config: SpeechEngineConfig) {
         this.config = config;
-        //this.setEngine(config.engineType);
+        this.logger.info("Speech manager initialized with config", config);
     }
 
     setEngine(type: string): void {

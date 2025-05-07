@@ -1,5 +1,5 @@
-import Core from "../core/coreManager";
-import Logger from "../util/logger";
+import { CoreManager } from "../core/coreManager";
+import { Logger } from "../util/logger";
 
 export class SpeechAdapter {
     private _containerId: string;
@@ -19,7 +19,7 @@ export class SpeechAdapter {
     private _theme: string;
     private _styles: Record<string, string>;
 
-    private _core: Core;
+    private _coreManager: CoreManager;
     //Constants
     static readonly defaultContainerId = 'speech-container';
     static readonly defaultConfidence = 0.8;
@@ -33,10 +33,40 @@ export class SpeechAdapter {
     static readonly supportedLangs = ['en', 'no', 'ta', 'si'];
 
     private readonly logger = Logger.getInstance();
-    
-    constructor(options: AdapterOptions) {        
-        this._init(options); 
-        this.logger.info("SpeechAdapter initialized", this);
+
+    async init(config: AdapterConfig) { 
+        this._containerId = config.containerId ?? SpeechAdapter.defaultContainerId;
+        this._lang = config.lang ?? SpeechAdapter.defaultLang;
+        this._speechEngine = config.speechEngine ?? SpeechAdapter.defaultSpeechEngine;
+        
+        // Set optional speech-to-text properties with defaults
+        this._speechApiKey = config.speechApiKey ?? '';
+        this._speechConfidence = config.speechConfidence ?? SpeechAdapter.defaultConfidence;
+        this._speechEngineParams = config.speechEngineParams || {};
+        
+        // Set UI options with defaults
+        this._autoStart = config.autoStart ?? false;
+        this._position = config.position ?? SpeechAdapter.defaultPosition;
+        this._width = config.width ?? SpeechAdapter.defaultWidth;
+        this._height = config.height ?? SpeechAdapter.defaultHeight;
+        this._theme = config.theme ?? SpeechAdapter.defaultTheme;
+        this._styles = config.styles || {
+            backgroundColor: '#ffffff',
+            textColor: '#333333',
+            buttonColor: '#4285f4',
+            buttonTextColor: '#ffffff'
+        };      
+        //Initialize core manager 
+        this._coreManager = new CoreManager();
+        await this._coreManager.init({
+            lang: this._lang, 
+            engineConfig: { 
+                            name: this._speechEngine, 
+                            confidence: this._speechConfidence,
+                            params: this._speechEngineParams 
+                        }
+                    });
+        this.logger.info("SpeechAdapter initialised with config", config);
     }
     
     renderUI() {        
@@ -50,14 +80,14 @@ export class SpeechAdapter {
         }
     }
 
-    start():void {
-        this.logger.info("Listening started");
-        this._core.start();
+    async start() {
+        this.logger.info("SpeechAdapter recording started");
+        this._coreManager.startRecording();
     }
 
-    stop():void {
-        this.logger.info("Listening stopped");
-        this._core.stop();
+    async stop() {
+        this.logger.info("SpeechAdapter recording stopped");
+        this._coreManager.stopRecording();
     }
 
     setContainerId(value: string){
@@ -224,40 +254,6 @@ export class SpeechAdapter {
         return this._theme;
     }
 
-    private async _init(options: AdapterOptions) {
-        this._containerId = options.containerId ?? SpeechAdapter.defaultContainerId;
-        this._lang = options.lang ?? SpeechAdapter.defaultLang;
-        this._speechEngine = options.speechEngine ?? SpeechAdapter.defaultSpeechEngine;
-        
-        // Set optional speech-to-text properties with defaults
-        this._speechApiKey = options.speechApiKey ?? '';
-        this._speechConfidence = options.speechConfidence ?? SpeechAdapter.defaultConfidence;
-        this._speechEngineParams = options.speechEngineParams || {};
-        
-        // Set UI options with defaults
-        this._autoStart = options.autoStart ?? false;
-        this._position = options.position ?? SpeechAdapter.defaultPosition;
-        this._width = options.width ?? SpeechAdapter.defaultWidth;
-        this._height = options.height ?? SpeechAdapter.defaultHeight;
-        this._theme = options.theme ?? SpeechAdapter.defaultTheme;
-        this._styles = options.styles || {
-            backgroundColor: '#ffffff',
-            textColor: '#333333',
-            buttonColor: '#4285f4',
-            buttonTextColor: '#ffffff'
-        };
-        this._core = new Core({
-            lang: this._lang, 
-            engineOptions: { 
-                            name: this._speechEngine, 
-                            apiKey: this._speechApiKey, 
-                            confidence: this._speechConfidence,
-                            params: this._speechEngineParams 
-                        }
-                    });
-        await this._core.init();
-    }
-    
     private _createDefaultUI() {
         // TODO: Create default container to support speech, change accordingly
         const container = document.createElement('div');
@@ -275,5 +271,3 @@ export class SpeechAdapter {
         this.setCustomStyles(styles || {});
     }
 }
-
-export default SpeechAdapter;

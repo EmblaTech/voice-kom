@@ -1,4 +1,4 @@
-interface AdapterOptions {  
+interface AdapterConfig {  
     containerId?: string;
     lang?: string;
 

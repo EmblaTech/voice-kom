@@ -1,4 +1,4 @@
-interface SpeechEngineOptions {
+interface EngineConfig {
     name: string;
     model?: string;
     apiKey?: string;

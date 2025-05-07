@@ -1,24 +1,26 @@
-import Logger from "../util/logger";
+import { NLPModule } from "../nlu/nlpModule";
+import { Logger } from "../util/logger";
 
-class CoreManager {
+export class CoreManager {
     private _lang:string
     private readonly logger = Logger.getInstance();
-
-    constructor(options: CoreOptions) {
-        this._lang = options.lang;
-        this.logger.info("Core started with options:", options);
+    private _nlpModule: NLPModule;
+    
+    async init(config: CoreConfig): Promise<void> {
+        this._lang = config.lang;
+        this._nlpModule = new NLPModule();
+        this._nlpModule.init({});
+        this.logger.info("Core initialized with config", config);
     }
 
-    async init(): Promise<void> {
-        this.logger.info("Core initialized");
+    async startRecording() {
+        this.logger.info("Core recording started");
+        await this._nlpModule.startRecording();        
     }
 
-    start() {
-        this.logger.info("Core started");
-    }
-
-    stop() {
-        this.logger.info("Core stopped");
+    async stopRecording() {
+        this.logger.info("Core recording topped");
+        await this._nlpModule.stopRecording();        
     }
 
     setLang(value: string) {
@@ -26,4 +28,3 @@ class CoreManager {
         this.logger.info("Language set to:", value);
     }
 }
-export default CoreManager;

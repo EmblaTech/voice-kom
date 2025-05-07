@@ -1,4 +1,4 @@
-export interface IntentResult {
+interface IntentResult {
     intent: string;
     confidence: number;
     alternatives?: Array<{
