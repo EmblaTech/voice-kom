@@ -19,10 +19,14 @@ export class CoreManager {
     }
 
     async stopRecording() {
-        this.logger.info("Core recording topped");
+        this.logger.info("Core recording stopped");
         await this._nlpModule.stopRecording()
-        .then((result) => {})
-        .catch((error) => {})      
+        .then((result) => {
+            this.logger.info("Core::Successfully processed audio", result);
+        })
+        .catch((error) => {
+            this.logger.error("Core::There's an error while processing", error);
+        })      
     }
 
     setLang(value: string) {

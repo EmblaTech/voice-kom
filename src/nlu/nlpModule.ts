@@ -30,28 +30,25 @@ export class NLPModule {
         }
 
         this.logger.info("NLP recording stopped");
-        await this.audioRecorder.stopRecording()
-        .then((audioBlob) => {
-            this.isRecording = false;
-            this.speechManager.processAudio(audioBlob)
-            .then((result) => {
-                this.logger.info("Successfully processed audio", result);
+        return new Promise<IntentEntityResult>((resolve, reject) => {
+            this.audioRecorder.stopRecording()
+            .then((rawAudio) => {
+                this.isRecording = false;
+                this.speechManager.processAudio(rawAudio)
+                .then((result) => {
+                    this.logger.info("NLP::Successfully processed audio", result);
+                    resolve(result);
+                })
+                .catch((error) => {
+                    this.logger.info("NLP::Failed to process audio", error);
+                    reject(new Error("Failed to process audio: " + error.message));
+                })
+                
             })
             .catch((error) => {
-                this.logger.info("Failed to process audio", error);
+                this.isRecording = false;
+                reject(new Error("Failed to stop recording: " + error.message));
             })
-            
-        })
-        .catch((error) => {
-            this.isRecording = false;
-        });        
-        
-        return Promise.resolve({
-            intent: '',
-            confidence: 0,
-            entities: {},
-            rawText: '',
-            alternatives: []
-        })
+        });
     }
 }
