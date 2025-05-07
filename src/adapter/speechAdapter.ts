@@ -1,10 +1,16 @@
+import Core from "../core/coreManager";
+import Logger from "../util/logger";
+
 export class SpeechAdapter {
     private _containerId: string;
     private _lang: string;
+
+    // Speech to text engine options
     private _speechEngine: string;
     private _speechApiKey: string;
     private _speechConfidence: number;
-    private _speechEngineParams: Record<string, any>;    
+    private _speechEngineParams: Record<string, any>;  
+
     // UI options with defaults
     private _autoStart: boolean;
     private _position: string;
@@ -13,6 +19,7 @@ export class SpeechAdapter {
     private _theme: string;
     private _styles: Record<string, string>;
 
+    private _core: Core;
     //Constants
     static readonly defaultContainerId = 'speech-container';
     static readonly defaultConfidence = 0.8;
@@ -20,54 +27,40 @@ export class SpeechAdapter {
     static readonly defaultWidth = '300px';
     static readonly defaultHeight = '400px';
     static readonly defaultTheme = 'light';
+    static readonly defaultSpeechEngine = 'default';
+    static readonly defaultLang = 'en';
     static readonly supportedEngines = ['default', 'openai', 'google', 'azure'];
     static readonly supportedLangs = ['en', 'no', 'ta', 'si'];
 
-    constructor(options: AdapterOptions) {
-        this._containerId = options.containerId ?? SpeechAdapter.defaultContainerId;
-        this._lang = options.lang ?? 'en';
-        this._speechEngine = options.speechEngine ?? 'default';
-        
-        // Set optional speech-to-text properties with defaults
-        this._speechApiKey = options.speechApiKey ?? '';
-        this._speechConfidence = options.speechConfidence ?? 0.8;
-        this._speechEngineParams = options.speechEngineParams || {};
-        
-        // Set UI options with defaults
-        this._autoStart = options.autoStart ?? false;
-        this._position = options.position ?? SpeechAdapter.defaultPosition;
-        this._width = options.width ?? SpeechAdapter.defaultWidth;
-        this._height = options.height ?? SpeechAdapter.defaultHeight;
-        this._theme = options.theme ?? SpeechAdapter.defaultTheme;
-        this._styles = options.styles || {
-            backgroundColor: '#ffffff',
-            textColor: '#333333',
-            buttonColor: '#4285f4',
-            buttonTextColor: '#ffffff'
-        };
-        console.log("SpeechAdapter initialized", this);
+    private readonly logger = Logger.getInstance();
+    
+    constructor(options: AdapterOptions) {        
+        this._init(options); 
+        this.logger.info("SpeechAdapter initialized", this);
     }
     
     renderUI() {        
         if(!this._containerId) { //If container is empty, then inject default container into the DOM
-            this.createDefaultUI();
-            console.log("Default UI container created");
+            this._createDefaultUI();
+            this.logger.info("Default UI container created");
         }
         else{
-            this.setUI(this._position, this._width, this._height, this._styles);
-            console.log("Set container with these options", this._position, this._width, this._height, this._styles);
+            this._setUI(this._position, this._width, this._height, this._styles);
+            this.logger.info("Set container with these options", this._position, this._width, this._height, this._styles);
         }
     }
 
     start():void {
-        console.log("Listening started");
+        this.logger.info("Listening started");
+        this._core.start();
     }
 
     stop():void {
-        console.log("Listening stopped");
+        this.logger.info("Listening stopped");
+        this._core.stop();
     }
 
-    set containerId(value: string) {
+    setContainerId(value: string){
         this._containerId = value;
     }
 
@@ -75,9 +68,9 @@ export class SpeechAdapter {
         return this._containerId;
     }   
 
-    set lang(value: string) {
+    setLang(value: string) {
         if (!SpeechAdapter.supportedLangs.includes(value)) {
-            console.warn(`Language '${value}' might not be supported. Valid options are: ${SpeechAdapter.supportedLangs.join(', ')}`);
+            this.logger.warn(`Language '${value}' might not be supported. Valid options are: ${SpeechAdapter.supportedLangs.join(', ')}`);
         }
         this._lang = value;
     }
@@ -86,9 +79,9 @@ export class SpeechAdapter {
         return this._lang;
     }
 
-    set speechEngine(value: string) {
+    setSpeechEngine(value: string) {
         if (!SpeechAdapter.supportedEngines.includes(value)) {
-            console.warn(`Speech engine '${value}' might not be supported. Valid options are: ${SpeechAdapter.supportedEngines.join(', ')}`);
+            this.logger.warn(`Speech engine '${value}' might not be supported. Valid options are: ${SpeechAdapter.supportedEngines.join(', ')}`);
         }
         this._speechEngine = value;
     }    
@@ -97,7 +90,7 @@ export class SpeechAdapter {
         return this._speechEngine;
     }
    
-    set speechApiKey(value: string) {
+    setSpeechApiKey(value: string) {
         this._speechApiKey = value;
     }
 
@@ -105,9 +98,9 @@ export class SpeechAdapter {
         return this._speechApiKey;
     }
 
-    set speechConfidence(value: number) {
+    setSpeechConfidence(value: number) {
         if (value < 0 || value > 1) {
-            console.warn(`Confidence value '${value}' is out of range. It should be between 0 and 1.`);
+            this.logger.warn(`Confidence value '${value}' is out of range. It should be between 0 and 1.`);
         }
         this._speechConfidence = value;
     }
@@ -116,7 +109,7 @@ export class SpeechAdapter {
         return this._speechConfidence;
     }
 
-    set speechEngineParams(value: Record<string, any>) {
+    setSpeechEngineParams(value: Record<string, any>) {
         this._speechEngineParams = value;
     }
 
@@ -124,14 +117,14 @@ export class SpeechAdapter {
         return this._speechEngineParams;
     }
 
-    set autoStart(value: boolean) {
+    setAutoStart(value: boolean) {
         this._autoStart = value;
     }
     get autoStart(): boolean {
         return this._autoStart;
     }
 
-    set width(width: number | string) {
+    setWidth(width: number | string) {
         const container = document.getElementById(this._containerId);
         if (container) {
             container.style.width = typeof width === 'number' ? `${width}px` : width;
@@ -143,7 +136,7 @@ export class SpeechAdapter {
         return this._width;
     }
 
-    set height(height: number | string) {
+    setHeight(height: number | string) {
         const container = document.getElementById(this._containerId);
         if (container) {
             container.style.height = typeof height === 'number' ? `${height}px` : height;
@@ -155,7 +148,7 @@ export class SpeechAdapter {
         return this._height;
     }
     
-    set position(position: string) {
+    setPosition(position: string) {
         const container = document.getElementById(this._containerId);
         if (container) {
             switch (position) {
@@ -191,7 +184,7 @@ export class SpeechAdapter {
         return this._position;
     }
     
-    set customStyles(styles: Record<string, any>) {
+    setCustomStyles(styles: Record<string, any>) {
         const container = document.getElementById(this._containerId);
         if (container) {
             Object.keys(styles).forEach((key) => {
@@ -205,7 +198,7 @@ export class SpeechAdapter {
         return this._styles;
     }
 
-    set theme(theme: string){
+    setTheme(theme: string){
         const container = document.getElementById(this._containerId);
         if (container) {
             switch (theme) {
@@ -230,22 +223,56 @@ export class SpeechAdapter {
     get theme(): string {
         return this._theme;
     }
+
+    private async _init(options: AdapterOptions) {
+        this._containerId = options.containerId ?? SpeechAdapter.defaultContainerId;
+        this._lang = options.lang ?? SpeechAdapter.defaultLang;
+        this._speechEngine = options.speechEngine ?? SpeechAdapter.defaultSpeechEngine;
+        
+        // Set optional speech-to-text properties with defaults
+        this._speechApiKey = options.speechApiKey ?? '';
+        this._speechConfidence = options.speechConfidence ?? SpeechAdapter.defaultConfidence;
+        this._speechEngineParams = options.speechEngineParams || {};
+        
+        // Set UI options with defaults
+        this._autoStart = options.autoStart ?? false;
+        this._position = options.position ?? SpeechAdapter.defaultPosition;
+        this._width = options.width ?? SpeechAdapter.defaultWidth;
+        this._height = options.height ?? SpeechAdapter.defaultHeight;
+        this._theme = options.theme ?? SpeechAdapter.defaultTheme;
+        this._styles = options.styles || {
+            backgroundColor: '#ffffff',
+            textColor: '#333333',
+            buttonColor: '#4285f4',
+            buttonTextColor: '#ffffff'
+        };
+        this._core = new Core({
+            lang: this._lang, 
+            engineOptions: { 
+                            name: this._speechEngine, 
+                            apiKey: this._speechApiKey, 
+                            confidence: this._speechConfidence,
+                            params: this._speechEngineParams 
+                        }
+                    });
+        await this._core.init();
+    }
     
-    private createDefaultUI() {
+    private _createDefaultUI() {
         // TODO: Create default container to support speech, change accordingly
         const container = document.createElement('div');
         container.id = SpeechAdapter.defaultContainerId;
         //Inject div into DOM
-        this.setUI(SpeechAdapter.defaultPosition, SpeechAdapter.defaultWidth, SpeechAdapter.defaultHeight, {});
-        this.theme = this._theme ?? SpeechAdapter.defaultTheme;
+        this._setUI(SpeechAdapter.defaultPosition, SpeechAdapter.defaultWidth, SpeechAdapter.defaultHeight, {});
+        this.setTheme(this._theme ?? SpeechAdapter.defaultTheme);
     }
 
-    private setUI(position: string, width: number | string, height: number | string, styles: Record<string, string>) {
+    private _setUI(position: string, width: number | string, height: number | string, styles: Record<string, string>) {
         // TODO: Set the given styles , UI options and set the speech container
-        this.position = position ?? SpeechAdapter.defaultPosition;
-        this.width = width ?? SpeechAdapter.defaultWidth;  
-        this.height = height ?? SpeechAdapter.defaultHeight;   
-        this.customStyles = styles || {};
+        this.setPosition(position ?? SpeechAdapter.defaultPosition);
+        this.setWidth(width ?? SpeechAdapter.defaultWidth);  
+        this.setHeight(height ?? SpeechAdapter.defaultHeight);   
+        this.setCustomStyles(styles || {});
     }
 }
 

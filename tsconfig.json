@@ -9,7 +9,8 @@
       "strict": true,
       "lib": ["dom", "es2017"],
       "experimentalDecorators": true,
-      "emitDecoratorMetadata": true
+      "emitDecoratorMetadata": true,
+      "strictPropertyInitialization": false,
     },
     "include": ["src/**/*"]
   }

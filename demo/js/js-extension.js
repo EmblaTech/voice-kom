@@ -1,5 +1,5 @@
 import { SpeechAdapter } from './speech-plug.js';
-let speechAdapter = null
+let speechAdapter = null;
 document.addEventListener("DOMContentLoaded", function() {
     speechAdapter = new SpeechAdapter({
         containerId: "speech-container", 
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
         styles: {backgroundColor: "white", color: "black", fontSize: "16px", fontFamily: "Arial"},
         speechEngineParams: {}
     });    
-    speechAdapter.autoStart = true;   //Another way to pass parameter
+    speechAdapter.setAutoStart(true);   //Another way to pass parameter
     speechAdapter.renderUI();
 })
 

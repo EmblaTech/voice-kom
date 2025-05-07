@@ -1,7 +1,7 @@
-interface SpeechToTextProviderOptions {
+interface SpeechEngineOptions {
     name: string;
+    model?: string;
     apiKey?: string;
-    endpoint?: string;
     confidence?: number;
     params?: Record<string, any>;
 }
