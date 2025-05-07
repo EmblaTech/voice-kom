@@ -10,9 +10,6 @@ export const TYPES = {
   NLUDriver: Symbol.for('NLUDriver'),
   CommandRegistry: Symbol.for('CommandRegistry'),
   VoiceActuator: Symbol.for('VoiceActuator'),
-
-
-
 };
 
 // Recording status enum
@@ -22,6 +19,15 @@ export enum RecordingStatus {
   PROCESSING = 'processing',
   EXECUTING = 'executing',
   ERROR = 'error'
+}
+
+export enum IntentTypes {
+  CLICK_ELEMENT = 'click_element',
+  SCROLL_TO_ELEMENT = 'scroll_to_element',
+  FILL_INPUT = 'fill_input',
+  SPEAK_TEXT = 'speak_text',
+  SUBMIT_FORM = 'submit_form',
+  UNKNOWN = 'UNKNOWN'
 }
 
 // STT Driver interface
@@ -44,7 +50,7 @@ export interface IAudioCapturer {
   startRecording(): void;
   stopRecording(): Promise<Blob>;
 }
-
+// UIcomponent Interface
 export interface IUIComponent {
   init(container: HTMLElement): void;
   updateFromState(): void;
@@ -69,10 +75,11 @@ export interface IVoiceLib {
 
 // Intent recognition result
 export interface IntentResult {
-  intent: string;
+  intent: IntentTypes;
   confidence: number;
-  entities?: Record<string, any>;
+  entities?: Entities;
 }
+export type Entities = Record<string, any>;
 
 // NLU Driver interface
 export interface INLUDriver {
@@ -80,6 +87,7 @@ export interface INLUDriver {
   identifyIntent(text: string): IntentResult;
   getAvailableIntents(): string[];
 }
+
 export interface CommandIntent {
   name: string;
   utterances: string[];
@@ -91,5 +99,16 @@ export interface CommandRegistry {
 }
 
 export interface IVoiceActuator {
-  performAction(intent: IntentResult): boolean;
+  performAction(intent: IntentResult): Promise<boolean>;
+}
+
+//Actuator
+export interface Action {
+  execute(entities: Entities): boolean;
+}
+export interface IActionRegistry {
+  registerAction(name: string, action: Action): void;
+  mapIntentToAction(intent: string, actionName: string): void;
+  getActions(intent: string): Action[];
+  getRegisteredActionNames(): string[];
 }

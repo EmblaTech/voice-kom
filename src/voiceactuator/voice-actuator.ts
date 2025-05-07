@@ -1,90 +1,171 @@
-// voice-actuator.ts
 import { injectable, inject } from 'inversify';
-import { TYPES, IntentResult } from '../types';
+import { TYPES, IntentResult, Entities, Action, IntentTypes } from '../types';
 import { EventBus, VoiceLibEvents } from '../eventbus';
+
+// Interface for processed entities with resolved DOM elements
+interface ProcessedEntities extends Entities {
+  targetElement?: HTMLElement | null;
+  // Add other processed entity types here as needed
+}
 
 @injectable()
 export class VoiceActuator {
+  private actionMap!: Map<IntentTypes, Action>;
+  
   constructor(
     @inject(TYPES.EventBus) private eventBus: EventBus
-  ) {}
+  ) {
+    this.initializeActionMap();
+  }
 
-  /**
-   * Performs an action based on the intent
-   * @param intent The intent result from NLU processing
-   * @returns A boolean indicating whether an action was performed
-   */
-  public performAction(intent: IntentResult): boolean {
-    console.log('VoiceActuator: Performing action for intent', intent);
+  private initializeActionMap(): void {
+    this.actionMap = new Map<IntentTypes, Action>();
     
-    // Only process click_element intents
-    if (intent.intent === 'click_element' && intent.entities && intent.entities.target) {
-      const targetName = intent.entities.target.toLowerCase();
-      return this.clickElementByVoiceName(targetName);
-    }
-    
-    console.log('VoiceActuator: No matching action for intent', intent.intent);
-    return false;
+    // Register all actions here
+    this.registerAction(IntentTypes.CLICK_ELEMENT, { execute: (entities) => this.clickElementAction(entities)});
+    this.registerAction(IntentTypes.FILL_INPUT, { execute: (entities) => this.fillInputAction(entities)});
+
+    // Add more actions as needed
+    // this.registerAction('open_menu', { execute: (entities) => this.openMenuAction(entities) });
+    // this.registerAction('navigate_to', { execute: (entities) => this.navigateToAction(entities) });
   }
   
-  /**
-   * Finds and clicks an element with the matching voice.name attribute
-   * @param targetName The target name to match against voice.name attributes
-   * @returns True if an element was found and clicked, false otherwise
-   */
-  private clickElementByVoiceName(targetName: string): boolean {
+  private registerAction(intentName: IntentTypes, action: Action): void {
+    this.actionMap.set(intentName, action);
+  }
+
+  private processEntities(intent: string, entities: Entities): ProcessedEntities {
+    const processedEntities: ProcessedEntities = { ...entities };
+    
+    // Process target entity for actions that need DOM elements
+    if (entities.target) {
+      const targetName = entities.target.toLowerCase();
+      const element = this.findTargetElement(targetName);
+      processedEntities.targetElement = element;
+      
+      if (!element) {
+        console.log(`VoiceActuator: No matching element found for target "${targetName}"`);
+      }
+    }
+    if (processedEntities.targetElement instanceof HTMLInputElement && processedEntities.targetElement.type === 'email') {
+      processedEntities.value= this.normalizeEmailValue(entities.value);
+      console.log(processedEntities.value)
+    }
+
+    return processedEntities;
+  }
+  private normalizeEmailValue(spoken: string): string {
+    return spoken
+      .replace(/\bat\b/gi, '@')
+      .replace(/\bdot\b/gi, '.')
+      .replace(/\bunderscore\b/gi, '_')
+      .replace(/\bdash\b/gi, '-')
+      .replace(/\bplus\b/gi, '+')
+      .replace(/\s+/g, '') // remove spaces
+      .trim();
+  }
+  public performAction(intent: IntentResult): boolean {
+    const action = this.actionMap.get(intent.intent);
+    
+    if (!action) {
+      console.log(`VoiceActuator: No action registered for intent '${intent.intent}'`);
+      this.eventBus.emit(VoiceLibEvents.ACTION_PAUSED);
+      return false;
+    }
+    
+    // Process and validate entities before executing the action
+    const processedEntities = this.processEntities(intent.intent, intent.entities || {});
+    const result = action.execute(processedEntities);
+    
+    if (result) {
+      this.eventBus.emit(VoiceLibEvents.ACTION_PERFORMED, {
+        intent: intent.intent,
+        entities: intent.entities
+      });
+    } else {
+      this.eventBus.emit(VoiceLibEvents.ACTION_PAUSED);
+    }
+    
+    return result;
+  }
+  
+  private findTargetElement(targetName: string): HTMLElement | null {
     // Query all elements with voice.name attribute
     const elements = document.querySelectorAll('[voice\\.name]');
     console.log(`VoiceActuator: Found ${elements.length} elements with voice.name attributes`);
     
-    // Convert NodeList to Array to ensure TypeScript recognizes it as iterable
-    const elementsArray = Array.from(elements);
-    
     // Try to find an element with a matching voice.name
-    for (const element of elementsArray) {
+    for (const element of Array.from(elements)) {
       const voiceName = element.getAttribute('voice.name')?.toLowerCase();
       
       if (voiceName && this.isMatchingTarget(voiceName, targetName)) {
         console.log(`VoiceActuator: Found matching element with voice.name "${voiceName}"`);
         
-        // Click the element
         if (element instanceof HTMLElement) {
-          console.log(`VoiceActuator: Clicking element:`, element);
-          element.click();
-          
-          // Emit an event that the action was performed
-          this.eventBus.emit(VoiceLibEvents.ACTION_PERFORMED, {
-            intent: 'click_element',
-            target: voiceName
-          });
-          
-          return true;
+          return element;
         }
       }
     }
-    
-    console.log(`VoiceActuator: No matching element found for target "${targetName}"`);
-    this.eventBus.emit(VoiceLibEvents.ACTION_PAUSED);
-    return false;
+    return null;
   }
-  
-  /**
-   * Checks if the target name matches the voice name
-   * Implements fuzzy matching logic if needed
-   */
+
   private isMatchingTarget(voiceName: string, targetName: string): boolean {
     // Basic direct match
     if (voiceName === targetName) {
       return true;
     }
-    
     // Contains match (e.g., "cancel button" matches "cancel")
     if (voiceName.includes(targetName) || targetName.includes(voiceName)) {
       return true;
-    }
-    
-    // Could add more sophisticated matching logic here if needed
-    
+    }    
     return false;
   }
+
+
+    /* ACTIONS DEFINED HERE */
+
+  private clickElementAction(entities: ProcessedEntities): boolean {
+      if (!entities.target) {
+        console.log('VoiceActuator: No target specified for click_element intent');
+        return false;
+      }
+      const targetElement = entities.targetElement;
+      if (!targetElement) {
+        // Already logged in processEntities
+        return false;
+      }
+      console.log(`VoiceActuator: Clicking element:`, targetElement);
+      targetElement.click();
+      return true;
+    }
+
+  private fillInputAction(entities: ProcessedEntities): boolean {
+    if (!entities.target) {
+      console.log('VoiceActuator: No target specified for fill_input intent');
+      return false;
+    }
+    if (!entities.value) {
+      console.log('VoiceActuator: No value provided for fill_input intent');
+      return false;
+    }
+  
+    const targetElement = entities.targetElement;
+    if (!targetElement) {
+      // Already logged in processEntities
+      return false;
+    }
+  
+    if (targetElement instanceof HTMLInputElement || targetElement instanceof HTMLTextAreaElement) {
+      targetElement.value = entities.value;
+      targetElement.dispatchEvent(new Event('input', { bubbles: true }));
+      targetElement.dispatchEvent(new Event('change', { bubbles: true }));
+      console.log(`VoiceActuator: Filled input "${entities.target}" with value "${entities.value}"`);
+      return true;
+    } else {
+      console.log(`VoiceActuator: Target element is not an input or textarea`);
+      return false;
+    }
+  }
+
+
 }

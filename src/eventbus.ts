@@ -16,10 +16,10 @@ export enum VoiceLibEvents {
   TRANSCRIPTION_STARTED = 'transcriptionStarted',
   TRANSCRIPTION_COMPLETED = 'transcriptionCompleted',
   NLU_COMPLETED ='nluCompleted',
-    // Action Events
+  // Action Events
   ACTION_PERFORMED = 'actionPerformed',
   ACTION_PAUSED = 'actionPaused',
-
+  EXECUTION_COMPLETE = 'execution-complete',
   // Error Events
   ERROR_OCCURRED = 'errorOccurred'
 }

@@ -21,7 +21,6 @@ import { StateStore } from './stateStore';
 import { CompromiseNLUDriver } from './nlp/nlu-driver';
 import { VoiceActuator } from './voiceactuator/voice-actuator';
 
-
 @injectable()
 class VoiceLib implements IVoiceLib {
   private container: Container;
@@ -41,7 +40,7 @@ class VoiceLib implements IVoiceLib {
     this.container.bind(TYPES.NLUDriver).to(CompromiseNLUDriver).inSingletonScope();
     this.container.bind<INLPModule>(TYPES.NLPModule).to(NLPModule).inSingletonScope();
     this.container.bind<IUIComponent>(TYPES.UIComponent).to(UIComponent).inSingletonScope();
-    this.container.bind<IVoiceActuator>(TYPES.VoiceActuator).to(VoiceActuator).inSingletonScope();
+    this.container.bind<VoiceActuator>(TYPES.VoiceActuator).to(VoiceActuator).inSingletonScope();    
     this.container.bind<ICoreModule>(TYPES.CoreModule).to(CoreModule).inSingletonScope();
   }
 
