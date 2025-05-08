@@ -9,10 +9,18 @@
 </head>
 <body>
   <h1>VoiceLib Speech-to-Text Demo</h1>
-  <div id="speech-container" class="voice-container"></div>
-  <div class="controls">
-    <button id="btn-ok" voice.name = "ok">Ok</button>
-    <button id="btn-cancel" voice.name = "cancel" >Cancel</button>
+  <div id="voice-container">
+    <div class="voice-header">
+      <div class="voice-status">
+        <div id="status-indicator" class="status-indicator"></div>
+        <span id="status-text">Voice inactive</span>
+      </div>
+      <button id="toggle-voice" class="btn btn-voice">Start Voice</button>
+    </div>
+    <div class="transcript-area">
+      <div class="transcript-label">Transcript:</div>
+      <div class="transcript" id="transcript">Click "Start Voice" to begin</div>
+    </div>
   </div>
 </body>
 </html>

@@ -17,4 +17,8 @@ interface AdapterConfig {
     showProgress?: boolean;
     showTranscription?: boolean;
     styles?: Record<string, string>;
+
+    //Other options
+    retryAttempts?: number;
+    timeout?: number;
 }

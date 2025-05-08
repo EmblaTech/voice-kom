@@ -18,6 +18,10 @@ export class SpeechAdapter {
     private _height: number | string;
     private _theme: string;
     private _styles: Record<string, string>;
+    private _showProgress: boolean;
+    private _showTranscription: boolean;
+    private _retryAttemps: number;
+    private _timeout: number;
 
     private _core: SpeechCore;
     //Constants
@@ -31,6 +35,8 @@ export class SpeechAdapter {
     static readonly defaultLang = 'en';
     static readonly supportedEngines = ['default', 'openai', 'google', 'azure'];
     static readonly supportedLangs = ['en', 'no', 'ta', 'si'];
+    static readonly defaultRetryAttempt = 3;
+    static readonly defaultTimeout = 5000; //ms
 
     private readonly logger = Logger.getInstance();
 
@@ -55,7 +61,11 @@ export class SpeechAdapter {
             textColor: '#333333',
             buttonColor: '#4285f4',
             buttonTextColor: '#ffffff'
-        };      
+        };  
+        this._showProgress = config.showProgress ?? true;
+        this._showTranscription = config.showTranscription ?? true;
+        this._retryAttemps = config.retryAttempts ?? SpeechAdapter.defaultRetryAttempt;
+        this._timeout = config.timeout ?? SpeechAdapter.defaultTimeout; //ms    
         //Initialize core manager 
         this._core = new SpeechCore();
         await this._core.init({
@@ -64,8 +74,20 @@ export class SpeechAdapter {
                             name: this._speechEngine, 
                             confidence: this._speechConfidence,
                             params: this._speechEngineParams 
-                        }
-                    });
+                        },
+            uiConfig: {                        
+                        position: this._position,
+                        width: this._width,
+                        height: this._height,
+                        autoStart: this._autoStart, 
+                        showProgress: this._showProgress,
+                        showTranscription: this._showTranscription,
+                        theme: this._theme,
+                        styles: this._styles
+                    },
+                retryAttempts: this._retryAttemps,
+                timeout: this._timeout
+            });
         this.logger.info("SpeechAdapter initialised with config", config);
     }
     

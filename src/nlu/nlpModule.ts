@@ -12,7 +12,7 @@ export class NLPModule {
     async init(config: any): Promise<void> {
         this.audioRecorder = new AudioRecorder();
         this.speechManager = new SpeechManager();
-        this.speechManager.init({});
+        this.speechManager.init(config.speechEngineConfig);
         this.logger.info("NLPModule initialized with config", config);
     }
 

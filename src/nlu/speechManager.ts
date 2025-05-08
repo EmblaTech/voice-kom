@@ -10,7 +10,7 @@ export class SpeechManager {
     
     async init(config: SpeechEngineConfig) {
         this.config = config;
-        this.speechEngine = SpeechEngineFactory.getEngine("default");
+        this.speechEngine = SpeechEngineFactory.getEngine(config.type);
         this.logger.info("Speech manager initialized with config", config);
     }
 

@@ -1,4 +1,5 @@
 export interface SpeechEngineConfig {
+    type: string;
     transcribeModel?: string;
     intentModel?: string;
     entityRecognitionModel?: string;

@@ -1,5 +1,6 @@
 import { SpeechAdapter } from './speech-plug.js';
 let speechAdapter = null;
+let isStarted = false
 document.addEventListener("DOMContentLoaded", function() {
     speechAdapter = new SpeechAdapter();   
     speechAdapter.init({
@@ -18,10 +19,15 @@ document.addEventListener("DOMContentLoaded", function() {
 })
 
 // Start voice recognition on button click
-document.getElementById('btn-ok').addEventListener('click', () => {
-    speechAdapter.start();
-});
-
-document.getElementById('btn-cancel').addEventListener('click', () => {
-    speechAdapter.stop();
+document.getElementById('toggle-voice').addEventListener('click', () => {
+    if(isStarted) {
+        document.getElementById('toggle-voice').innerText = "Start Voice";
+        speechAdapter.stop();
+        isStarted = false;        
+    }
+    else {
+        document.getElementById('toggle-voice').innerText = "Stop Voice";
+        speechAdapter.start();
+        isStarted = true;
+    }
 });

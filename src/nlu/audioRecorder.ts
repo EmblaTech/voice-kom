@@ -56,6 +56,5 @@ export class AudioRecorder {
                 reject(new Error("MediaRecorder not available or already stopped"));
             }
         });
-    }
-    
+    }    
 }
