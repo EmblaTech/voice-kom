@@ -29,47 +29,7 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.15);
       z-index: 1000;
     }
-    .voice-header {
-      background-color: #e9ecef;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #dee2e6;
-    }
-    .voice-status {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .status-indicator {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background-color: #dc3545;
-    }
-    .status-indicator.active {
-      background-color: #28a745;
-    }
-    .transcript-area {
-      padding: 12px;
-      min-height: 60px;
-    }
-    .transcript-label {
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: #495057;
-      font-size: 14px;
-    }
-    .transcript {
-      font-style: italic;
-      color: #555;
-      padding: 8px;
-      background-color: #e2f3ff;
-      border-radius: 4px;
-      min-height: 30px;
-      font-size: 14px;
-    }
+    
     .form-container {
       background-color: #f8f9fa;
       border-radius: 8px;
@@ -140,17 +100,6 @@
   
   <!-- Simplified floating voice container -->
   <div id="voice-lib-container">
-    <div class="voice-header">
-      <div class="voice-status">
-        <div id="status-indicator" class="status-indicator"></div>
-        <span id="status-text">Voice inactive</span>
-      </div>
-      <button id="toggle-voice" class="btn btn-voice">Start Voice</button>
-    </div>
-    <div class="transcript-area">
-      <div class="transcript-label">Transcript:</div>
-      <div class="transcript" id="transcript">Click "Start Voice" to begin</div>
-    </div>
   </div>
   
   <div class="form-container">
@@ -170,7 +119,7 @@
   </div>
   
   <div class="help-text">
-    <p>Try voice commands like: <strong>"Fill name field with John Smith"</strong> or <strong>"Click submit button"</strong></p>
+    <p>Try voice commands like: <strong>"Fill name as John Smith"</strong> or <strong>"Click submit button"</strong></p>
   </div>
 
   <script>
@@ -186,23 +135,6 @@
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         alert('Form submitted successfully!');
-      });
-      
-      // Simple toggle button functionality
-      toggleButton.addEventListener('click', () => {
-        const isActive = statusIndicator.classList.contains('active');
-        
-        if (!isActive) {
-          statusIndicator.classList.add('active');
-          statusText.textContent = 'Voice active - listening...';
-          toggleButton.textContent = 'Stop Voice';
-          transcript.textContent = 'Listening...';
-        } else {
-          statusIndicator.classList.remove('active');
-          statusText.textContent = 'Voice inactive';
-          toggleButton.textContent = 'Start Voice';
-          transcript.textContent = 'Click "Start Voice" to begin';
-        }
       });
       
       // Initialize VoiceLib
