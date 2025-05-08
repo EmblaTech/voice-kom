@@ -11,7 +11,8 @@ export enum VoiceLibEvents {
   // Recording Events
   RECORDING_STARTED = 'recordingStarted',
   RECORDING_STOPPED = 'recordingStopped',
-  
+  AUDIO_CAPTURED = 'audio_captured',  // New event for when speech is detected and captured
+
   // Processing Events
   TRANSCRIPTION_STARTED = 'transcriptionStarted',
   TRANSCRIPTION_COMPLETED = 'transcriptionCompleted',

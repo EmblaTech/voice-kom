@@ -19,6 +19,13 @@ export class CompromiseNLUDriver implements INLUDriver {
   private commandRegistry: CommandRegistry | null = null;
   private availableIntents: IntentTypes[] = [IntentTypes.UNKNOWN];
   private entityMap: Map<string, string[]> = new Map();
+  
+  // Common polite phrases to strip from input
+  private politePhrases: string[] = [
+    'please', 'can you', 'could you', 'would you', 
+    'kindly', 'i want to', 'i would like to', 'i need to',
+    'thanks', 'thank you'
+  ];
 
   /**
    * Initialize the NLU driver with configuration options
@@ -75,18 +82,68 @@ export class CompromiseNLUDriver implements INLUDriver {
   }
 
   /**
+   * Preprocess input text to remove polite phrases and clean up
+   */
+  private preprocessInputText(text: string): string {
+    let cleanedText = text.trim();
+    
+    // Remove polite phrases from beginning and end
+    for (const phrase of this.politePhrases) {
+      // Remove from beginning
+      const startRegex = new RegExp(`^${phrase}\\s+`, 'i');
+      cleanedText = cleanedText.replace(startRegex, '');
+      
+      // Remove from end
+      const endRegex = new RegExp(`\\s+${phrase}[,.!?]*$`, 'i');
+      cleanedText = cleanedText.replace(endRegex, '');
+    }
+    
+    return cleanedText.trim();
+  }
+
+  /**
+   * Clean extracted entity values
+   */
+  private cleanEntityValue(value: string): string {
+    if (!value) return '';
+    
+    // Remove leading/trailing punctuation
+    let cleaned = value.trim();
+    cleaned = cleaned.replace(/^[,.!?;:]+|[,.!?;:]+$/g, '');
+    
+    // Remove polite phrases that might be part of entity extraction
+    for (const phrase of this.politePhrases) {
+      // Remove from beginning
+      const startRegex = new RegExp(`^${phrase}\\s+`, 'i');
+      cleaned = cleaned.replace(startRegex, '');
+      
+      // Remove from end
+      const endRegex = new RegExp(`\\s+${phrase}$`, 'i');
+      cleaned = cleaned.replace(endRegex, '');
+    }
+    
+    return cleaned.trim();
+  }
+
+  /**
    * Extract entity values from text based on the pattern
    */
   private extractEntities(text: string, pattern: string): Record<string, string> {
     const entities: Record<string, string> = {};
     const entityMatches = pattern.match(/\(([a-zA-Z0-9_]+)\)/g) || [];
     
+    // First preprocess the text
+    const preprocessedText = this.preprocessInputText(text);
+    
     for (const entityMatch of entityMatches) {
       const entityName = entityMatch.replace(/[()]/g, '');
       const [beforePattern, afterPattern] = this.getContextPatterns(pattern, entityMatch);
       
-      // Try to extract entity value with appropriate regex pattern
-      entities[entityName] = this.extractEntityValue(text, beforePattern, afterPattern);
+      // Extract entity value with appropriate regex pattern
+      const rawValue = this.extractEntityValue(preprocessedText, beforePattern, afterPattern);
+      
+      // Clean the extracted entity value
+      entities[entityName] = this.cleanEntityValue(rawValue);
     }
     
     return entities;
@@ -157,7 +214,9 @@ export class CompromiseNLUDriver implements INLUDriver {
       return this.createUnknownResult();
     }
     
-    const doc = nlp(text);
+    // Preprocess the input text to remove polite phrases
+    const preprocessedText = this.preprocessInputText(text);
+    const doc = nlp(preprocessedText);
     let bestMatch = this.createUnknownResult();
     
     // Try to match each intent pattern
@@ -168,7 +227,7 @@ export class CompromiseNLUDriver implements INLUDriver {
       if (!CommandConfig) continue;
       
       for (const pattern of CommandConfig.utterances) {
-        const result = this.matchPattern(doc, pattern, text);
+        const result = this.matchPattern(doc, pattern, preprocessedText);
         
         if (result.confidence > bestMatch.confidence) {
           bestMatch = result;

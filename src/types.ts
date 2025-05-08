@@ -1,4 +1,4 @@
-// Type identifiers for dependency injection
+// enhanced-types.ts
 export const TYPES = {
   CoreModule: Symbol.for('CoreModule'),
   NLPModule: Symbol.for('NLPModule'),
@@ -12,13 +12,21 @@ export const TYPES = {
   VoiceActuator: Symbol.for('VoiceActuator'),
 };
 
-// Recording status enum
+// Enhanced Recording status enum with WAITING state
 export enum RecordingStatus {
   IDLE = 'idle',
+  WAITING = 'waiting', // New state for when we're waiting for speech in listening mode
   RECORDING = 'recording',
   PROCESSING = 'processing',
   EXECUTING = 'executing',
   ERROR = 'error'
+}
+
+export enum ErrorType {
+  MICROPHONE_ACCESS = 'microphone_access',
+  TRANSCRIPTION = 'transcription',
+  NETWORK = 'network',
+  UNKNOWN = 'unknown'
 }
 
 export enum IntentTypes {
@@ -50,6 +58,7 @@ export interface IAudioCapturer {
   startRecording(): void;
   stopRecording(): Promise<Blob>;
 }
+
 // UIcomponent Interface
 export interface IUIComponent {
   init(container: HTMLElement): void;
