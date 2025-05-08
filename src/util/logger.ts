@@ -38,4 +38,3 @@ export class Logger {
         console.log(`[${timestamp}] [${level}] ${message}`, ...args);
     }
 }
-export default Logger;

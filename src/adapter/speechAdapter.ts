@@ -1,4 +1,4 @@
-import { CoreManager } from "../core/coreManager";
+import { SpeechCore } from "../core/speechCore";
 import { Logger } from "../util/logger";
 
 export class SpeechAdapter {
@@ -19,7 +19,7 @@ export class SpeechAdapter {
     private _theme: string;
     private _styles: Record<string, string>;
 
-    private _coreManager: CoreManager;
+    private _core: SpeechCore;
     //Constants
     static readonly defaultContainerId = 'speech-container';
     static readonly defaultConfidence = 0.8;
@@ -57,8 +57,8 @@ export class SpeechAdapter {
             buttonTextColor: '#ffffff'
         };      
         //Initialize core manager 
-        this._coreManager = new CoreManager();
-        await this._coreManager.init({
+        this._core = new SpeechCore();
+        await this._core.init({
             lang: this._lang, 
             engineConfig: { 
                             name: this._speechEngine, 
@@ -82,12 +82,12 @@ export class SpeechAdapter {
 
     async start() {
         this.logger.info("SpeechAdapter recording started");
-        this._coreManager.startRecording();
+        this._core.startRecording();
     }
 
     async stop() {
         this.logger.info("SpeechAdapter recording stopped");
-        this._coreManager.stopRecording();
+        this._core.stopRecording();
     }
 
     setContainerId(value: string){
