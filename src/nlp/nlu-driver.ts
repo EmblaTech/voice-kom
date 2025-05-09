@@ -2,6 +2,7 @@
 import { injectable } from 'inversify';
 import { INLUDriver, IntentResult, IntentTypes } from '../types';
 import nlp from 'compromise';
+import { NLUEngineConfig } from './model/nlpConfig';
 
 // Updated interface for the new registry format
 interface CommandConfig {
@@ -30,9 +31,9 @@ export class CompromiseNLUDriver implements INLUDriver {
   /**
    * Initialize the NLU driver with configuration options
    */
-  init(config: { language?: string }): void {
-    if (config.language) {
-      this.language = config.language;
+  init(lang: string, config:NLUEngineConfig): void {
+    if (lang) {
+      this.language = lang;
     }
     
     // Initialize with default command registry if needed
@@ -42,7 +43,7 @@ export class CompromiseNLUDriver implements INLUDriver {
         entities: ["target"]
       },
       [IntentTypes.FILL_INPUT]: {
-        utterances: ["Fill (target) as (value)", "Enter (target) as (value)"],
+        utterances: ["Fill (target) as (value)", "Enter (target) as (value)","Enter (target) with (value)", "Fill (target) with (value)"],
         entities: ["target", "value"]
       },
       [IntentTypes.SCROLL_TO_ELEMENT]: {

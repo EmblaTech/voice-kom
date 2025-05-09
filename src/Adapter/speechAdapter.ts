@@ -10,16 +10,17 @@ import {
   TYPES, 
   CommandRegistry,
   IVoiceActuator
-} from './types';
-import { WebAudioCapturer } from './nlp/audio-capturer';
-import { WhisperSTTDriver } from './nlp/sst-driver';
-import { NLPModule } from './nlp/nlp-module';
-import { UIComponent } from './uicomponent/ui-component';
-import { CoreModule } from './core/core-module';
-import { EventBus } from './eventbus';
-import { StateStore } from './stateStore';
-import { CompromiseNLUDriver } from './nlp/nlu-driver';
-import { VoiceActuator } from './voiceactuator/voice-actuator';
+} from '../types';
+import { WebAudioCapturer } from '../nlp/audio-capturer';
+import { WhisperSTTDriver } from '../nlp/sst-driver';
+import { NLPModule } from '../nlp/nlp-module';
+import { UIComponent } from '../uicomponent/ui-component';
+import { CoreModule } from '../core/core-module';
+import { EventBus } from '../eventbus';
+import { StateStore } from '../stateStore';
+import { CompromiseNLUDriver } from '../nlp/nlu-driver';
+import { VoiceActuator } from '../voiceactuator/voice-actuator';
+import { AdapterConfig } from './model/adaperConfig';
 
 @injectable()
 class VoiceLib implements IVoiceLib {
@@ -50,22 +51,33 @@ class VoiceLib implements IVoiceLib {
     }
   }
   
-  public async init(config: { 
-    container: HTMLElement; 
-    language?: string;
-    apiKey?: string; 
-  }): Promise<void> {
-    
+  public async init(config: AdapterConfig): Promise<void> {
     // Initialize dependencies before using them
     this.initializeDependencies();
     
-    await this.coreModule!.init(
-      config.container, 
-      { 
-        language: config.language, 
-        apiKey: config.apiKey
-      }
-    );
+    await this.coreModule!.init({
+      nlp: {
+        lang: config.lang,
+        sst: config.sttEngine ? {
+          sttEngine: config.sttEngine,
+          sttApiKey: config.sttApiKey,
+          speechEngineParams: config.speechEngineParams
+        } : undefined
+      },
+      ui: {
+        container: config.container,
+        autoStart: config.autoStart,
+        position: config.position,
+        width: config.width,
+        height: config.height,
+        theme: config.theme,
+        showProgress: config.showProgress,
+        showTranscription: config.showTranscription,
+        styles: config.styles
+      },
+      retryAttempts: config.retryAttempts,
+      timeout: config.timeout
+    });
   }
 }
 

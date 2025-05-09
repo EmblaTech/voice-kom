@@ -3,10 +3,9 @@ import { injectable, inject } from 'inversify';
 import { ICoreModule, INLPModule, IntentResult, IUIComponent, RecordingStatus, TYPES, IVoiceActuator } from '../types';
 import { EventBus, VoiceLibEvents } from '../eventbus';
 import { StateStore } from '../stateStore';
-
+import { CoreConfig } from './model/coreonfig';
 @injectable()
 export class CoreModule implements ICoreModule {
-  private config: { language: string, apiKey?: string } = { language: 'en' };
   
   constructor(
     @inject(TYPES.NLPModule) private nlpModule: INLPModule,
@@ -16,25 +15,13 @@ export class CoreModule implements ICoreModule {
     @inject(TYPES.VoiceActuator) private voiceActuator: IVoiceActuator
   ) {}
   
-  public async init(container: HTMLElement, config: { language?: string, apiKey?: string }): Promise<void> {
-    // Update config with any provided values
-    if (config?.language) {
-      this.config.language = config.language;
-    }
-    
-    if (config?.apiKey) {
-      this.config.apiKey = config.apiKey;
-    }
-    
-    // Initialize UI component
-    this.uiComponent.init(container);
-    
-    // Initialize NLP module with config
-    await this.nlpModule.init({
-      language: this.config.language,
-      apiKey: this.config.apiKey
-    });
-    
+  public async init(config: CoreConfig): Promise<void> {
+
+    this.uiComponent.init(config.ui);
+  
+    // Initialize NLP module
+    await this.nlpModule.init(config.nlp || {});
+
     // Set up UI event listeners through EventBus
     this.eventBus.on(VoiceLibEvents.RECORD_BUTTON_PRESSED, () => {
       this.startListening();

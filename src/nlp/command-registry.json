@@ -1,9 +1,0 @@
-{
-    "intents": [
-      {
-        "name": "click_element",
-        "utterances": ["click (target)", "press (target)", "tap (target)", "select (target)", "choose (target)", "push (target)"],
-        "entities": ["target"]
-      }
-    ]
-  }

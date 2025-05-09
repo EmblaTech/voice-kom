@@ -1,4 +1,9 @@
 // enhanced-types.ts
+import {AdapterConfig} from "../src/Adapter/model/adaperConfig";
+import {NLPConfig,NLUEngineConfig,SSTEngineConfig} from "../src/nlp/model/nlpConfig";
+import {CoreConfig} from "../src/core/model/coreonfig";
+import {UIConfig} from "../src/uicomponent/model/uiConfig";
+
 export const TYPES = {
   CoreModule: Symbol.for('CoreModule'),
   NLPModule: Symbol.for('NLPModule'),
@@ -40,14 +45,14 @@ export enum IntentTypes {
 
 // STT Driver interface
 export interface ISTTDriver {
-  init(config: { language?: string, apiKey?: string }): void;
+  init( lang:string ,config: SSTEngineConfig): void;
   transcribe(audioBlob: Blob): Promise<string>;
   getAvailableLanguages(): string[];
 }
 
 // NLP Module interface
 export interface INLPModule {
-  init(config: { language?: string, apiKey?: string }): Promise<void>;
+  init( config: NLPConfig): Promise<void>;
   startListening(): void;
   stopListening(): Promise<void>;
   getAvailableLanguages(): string[];
@@ -61,25 +66,21 @@ export interface IAudioCapturer {
 
 // UIcomponent Interface
 export interface IUIComponent {
-  init(container: HTMLElement): void;
+  init(config:UIConfig): void;
   updateFromState(): void;
   setTranscription(transcription: string): void;
 }
 
 // Core Module interface
 export interface ICoreModule {
-  init(container: HTMLElement, config: { language?: string, apiKey?: string }): Promise<void>;
+  init(config: CoreConfig): Promise<void>;
   startListening(): void;
   stopListening(): void;
 }
 
 // Voice Lib interface
 export interface IVoiceLib {
-  init(config: { 
-    container: HTMLElement; 
-    language?: string;
-    apiKey?: string; 
-  }): Promise<void>;
+  init(config: AdapterConfig): Promise<void>;
 }
 
 // Intent recognition result
@@ -92,7 +93,7 @@ export type Entities = Record<string, any>;
 
 // NLU Driver interface
 export interface INLUDriver {
-  init(config: { language?: string, commandRegistry?: CommandRegistry }): void;
+  init( lang:string , config: NLUEngineConfig): void;
   identifyIntent(text: string): IntentResult;
   getAvailableIntents(): string[];
 }

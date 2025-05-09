@@ -3,6 +3,7 @@ import { injectable, inject } from 'inversify';
 import { IUIComponent, RecordingStatus, TYPES, ErrorType } from '../types';
 import { EventBus, VoiceLibEvents } from '../eventbus';
 import { StateStore } from '../stateStore';
+import { UIConfig } from './model/uiConfig';
 
 @injectable()
 export class UIComponent implements IUIComponent {
@@ -22,8 +23,8 @@ export class UIComponent implements IUIComponent {
     this.eventBus.on(VoiceLibEvents.ERROR_OCCURRED, this.handleError.bind(this));
   }
   
-  public init(container: HTMLElement): void {
-    this.container = container;
+  public init(config: UIConfig): void {
+    this.container = config.container;
     this.container.classList.add('voice-recorder-container');
     
     this.injectStyles();
@@ -357,7 +358,7 @@ export class UIComponent implements IUIComponent {
 
       
       .status-display.error-state {
-        font-size: 1px;
+        font-size: 11px;
         color: #c62828;
         background-color: #ffebee;
         border-color: #f5c6cb;
@@ -381,15 +382,15 @@ export class UIComponent implements IUIComponent {
         to { opacity: 1; transform: translateY(0); }
       }
       
-      .recording-indicator {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        background-color: #E53E3E;
-        border-radius: 50%;
-        margin-right: 8px;
-        animation: pulse 1.5s infinite;
-      }
+      // .recording-indicator {
+      //   display: inline-block;
+      //   width: 8px;
+      //   height: 8px;
+      //   background-color: #E53E3E;
+      //   border-radius: 50%;
+      //   margin-right: 8px;
+      //   animation: pulse 1.5s infinite;
+      // }
       
       @keyframes pulse {
         0% { opacity: 1; transform: scale(1); }

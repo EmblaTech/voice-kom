@@ -1,5 +1,6 @@
 import { injectable } from 'inversify';
 import { ISTTDriver } from '../types';
+import { SSTEngineConfig } from './model/nlpConfig';
 
 @injectable()
 export class WhisperSTTDriver implements ISTTDriver {
@@ -27,14 +28,14 @@ export class WhisperSTTDriver implements ISTTDriver {
   }
   
   // Initialization
-  public init(config: { language?: string, apiKey?: string }): void {
+  public init(lang: string, config: SSTEngineConfig): void {
     // Set API key if provided
-    if (config.language) {
-      this.language = config.language;
+    if (lang) {
+      this.language = lang;
     }
     // Set API key if provided
-    if (config.apiKey) {
-      this.apiKey = config.apiKey;
+    if (config.sttApiKey) {
+      this.apiKey = config.sttApiKey;
     } else {
       throw new Error('OpenAI API key is required for Whisper transcription');
     }

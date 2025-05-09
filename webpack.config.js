@@ -3,11 +3,11 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: './src/voice-lib.ts',
+  entry: './src/Adapter/speechAdapter.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'voice-lib.js',
-    library: 'VoiceLib',
+    filename: 'speech-plug.js',
+    library: 'SpeechPlug',
     libraryTarget: 'umd',
     libraryExport: 'default',
     umdNamedDefine: true,

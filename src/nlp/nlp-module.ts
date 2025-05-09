@@ -3,6 +3,7 @@ import { injectable, inject } from 'inversify';
 import { INLPModule, INLUDriver, IAudioCapturer, ISTTDriver, CommandRegistry, TYPES, CommandIntent } from '../types';
 import { EventBus, VoiceLibEvents } from '../eventbus';
 import { StateStore } from '../stateStore';
+import { NLPConfig } from './model/nlpConfig';
 
 @injectable()
 export class NLPModule implements INLPModule {
@@ -17,26 +18,23 @@ export class NLPModule implements INLPModule {
 
   ) {}
   
-  public async init(config: { 
-    language?: string, 
-    apiKey?: string, 
-    }): Promise<void> {
-
-    // if(config.language) this.language = config.language;
-    // this.commandRegistry = this.getCommands();
+  public async init(config: NLPConfig): Promise<void> {
+    const language = config.lang || this.language;
     
-    // Initialize the STT driver with language and optional API key
-    this.sttDriver.init({
-      language: config.language || this.language,
-      apiKey: config.apiKey
-    });
-
-    // Initialize the NLU driver with language and command registry
+    this.sttDriver.init(
+      language,
+      config.sst || {
+        sttEngine: "default" 
+      }
+    );
+  
     this.commandRegistry = this.getCommands();
-    this.nluDriver.init({
-      language: config.language || this.language,
-      commandRegistry: this.commandRegistry || undefined
-    });
+    this.nluDriver.init(
+      language,
+      config.nlu || {
+        nluEngine: "default" 
+      }
+    );
   }
 
   

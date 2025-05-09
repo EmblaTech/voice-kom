@@ -5,7 +5,6 @@ import { EventBus, VoiceLibEvents } from '../eventbus';
 // Interface for processed entities with resolved DOM elements
 interface ProcessedEntities extends Entities {
   targetElement?: HTMLElement | null;
-  // Add other processed entity types here as needed
 }
 
 @injectable()
@@ -110,14 +109,25 @@ export class VoiceActuator {
   }
 
   private isMatchingTarget(voiceName: string, targetName: string): boolean {
-    // Basic direct match
-    if (voiceName === targetName) {
+    const normalize = (str: string) =>
+      str.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
+  
+    const voiceTokens = normalize(voiceName);
+    const targetTokens = normalize(targetName);
+  
+    // Exact or subset matches
+    if (voiceName === targetName || 
+        voiceName.includes(targetName) || 
+        targetName.includes(voiceName)) {
       return true;
     }
-    // Contains match (e.g., "cancel button" matches "cancel")
-    if (voiceName.includes(targetName) || targetName.includes(voiceName)) {
+  
+    // Token overlap check (e.g., "full name" and "my name" share "name")
+    const overlap = voiceTokens.filter(token => targetTokens.includes(token));
+    if (overlap.length > 0) {
       return true;
-    }    
+    }
+  
     return false;
   }
 

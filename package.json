@@ -1,12 +1,12 @@
 {
-  "name": "voice-lib",
+  "name": "speech-plug",
   "version": "1.0.0",
   "description": "A speech-to-text library with InversifyJS",
-  "main": "dist/voice-lib.js",
-  "types": "dist/types/voice-lib.d.ts",
+  "main": "dist/speech-plug.js",
+  "types": "dist/types/speech-plug.d.ts",
   "files": [
     "dist"
-  ],
+  ], 
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack",
     "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist/types",
