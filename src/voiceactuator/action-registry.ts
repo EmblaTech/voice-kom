@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { TYPES, IActionRegistry, Action } from '../types';
-import { EventBus, VoiceLibEvents } from '../eventbus';
+import { EventBus, VoiceLibEvents } from '../utils/eventbus';
 
 @injectable()
 export class ActionRegistry implements IActionRegistry {

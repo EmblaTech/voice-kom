@@ -1,6 +1,6 @@
 // enhanced-types.ts
 import {AdapterConfig} from "../src/Adapter/model/adaperConfig";
-import {NLPConfig,NLUEngineConfig,SSTEngineConfig} from "../src/nlp/model/nlpConfig";
+import {NLPConfig,NLUEngineConfig,STTConfig} from "../src/nlp/model/nlpConfig";
 import {CoreConfig} from "../src/core/model/coreonfig";
 import {UIConfig} from "../src/uicomponent/model/uiConfig";
 
@@ -45,7 +45,7 @@ export enum IntentTypes {
 
 // STT Driver interface
 export interface ISTTDriver {
-  init( lang:string ,config: SSTEngineConfig): void;
+  init( lang:string ,config: STTConfig): void;
   transcribe(audioBlob: Blob): Promise<string>;
   getAvailableLanguages(): string[];
 }

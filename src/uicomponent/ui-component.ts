@@ -1,8 +1,7 @@
-// enhanced-ui-component.ts
 import { injectable, inject } from 'inversify';
 import { IUIComponent, RecordingStatus, TYPES, ErrorType } from '../types';
-import { EventBus, VoiceLibEvents } from '../eventbus';
-import { StateStore } from '../stateStore';
+import { EventBus, VoiceLibEvents } from '../utils/eventbus';
+import { StateStore } from '../utils/stateStore';
 import { UIConfig } from './model/uiConfig';
 
 @injectable()
@@ -24,13 +23,30 @@ export class UIComponent implements IUIComponent {
   }
   
   public init(config: UIConfig): void {
-    this.container = config.container;
+    // Set up container based on provided options
+    if (config.container) {
+      // Use provided container element
+      this.container = config.container;
+    } else {
+      // Get existing or create new container
+      const containerId = config.containerId || 'voice-lib-default-container';
+      this.container = document.getElementById(containerId) || this.createContainer(containerId);
+    }
+    
     this.container.classList.add('voice-recorder-container');
+    this.container.classList.add('voice-floating-container');
     
     this.injectStyles();
     this.createUIElements();
     this.setupEventListeners();
     this.updateFromState();
+  }
+  
+  private createContainer(id: string): HTMLElement {
+    const container = document.createElement('div');
+    container.id = id;
+    document.body.appendChild(container);
+    return container;
   }
   
   public updateFromState(): void {
@@ -74,7 +90,7 @@ export class UIComponent implements IUIComponent {
       setTimeout(() => {
         if (this.statusDisplay) {
           this.statusDisplay.classList.remove('error-state');
-          this.statusDisplay.textContent = 'Click mic button';
+          this.statusDisplay.textContent = 'SpeechPlug';
         }
       }, 3000);
     }
@@ -118,7 +134,7 @@ export class UIComponent implements IUIComponent {
     
     switch (status) {
       case RecordingStatus.IDLE:
-        this.statusDisplay.textContent = 'Click mic button';
+        this.statusDisplay.textContent = 'SpeechPlug';
         break;
       case RecordingStatus.RECORDING:
         this.statusDisplay.textContent = 'Recording...';
@@ -227,7 +243,7 @@ export class UIComponent implements IUIComponent {
     // Status display
     this.statusDisplay = document.createElement('div');
     this.statusDisplay.className = 'status-display';
-    this.statusDisplay.textContent = 'Click mic button';
+    this.statusDisplay.textContent = 'SpeechPlug';
     
     // Add button and status to interface
     interfaceContainer.appendChild(buttonContainer);
@@ -267,19 +283,25 @@ export class UIComponent implements IUIComponent {
     styleElement.textContent = `
       .voice-recorder-container {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        max-width: 240px;
+        max-width: 280px;
         margin: 0;
-        background-color: #f5f5f5;
+        background-color: #f0f4f8;
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      }
+      
+      .voice-floating-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
       }
       
       .voice-interface {
         display: flex;
         align-items: center;
         padding: 10px;
-        background-color: #f5f5f5;
         gap: 8px;
       }
       
@@ -355,7 +377,6 @@ export class UIComponent implements IUIComponent {
         white-space: normal;
         word-break: break-word;
       }
-
       
       .status-display.error-state {
         font-size: 11px;
@@ -377,11 +398,6 @@ export class UIComponent implements IUIComponent {
         color: #2D3748;
       }
       
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      
       // .recording-indicator {
       //   display: inline-block;
       //   width: 8px;
@@ -392,17 +408,29 @@ export class UIComponent implements IUIComponent {
       //   animation: pulse 1.5s infinite;
       // }
       
-      @keyframes pulse {
-        0% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.6; transform: scale(1.2); }
-        100% { opacity: 1; transform: scale(1); }
-      }
+      // @keyframes pulse {
+      //   0% { opacity: 1; transform: scale(1); }
+      //   50% { opacity: 0.6; transform: scale(1.2); }
+      //   100% { opacity: 1; transform: scale(1); }
+      // }
       
       @media (max-width: 480px) {
         .voice-recorder-container {
           max-width: 100%;
           border-radius: 0;
         }
+        
+        .voice-floating-container {
+          width: calc(100% - 20px);
+          right: 10px;
+          left: 10px;
+          bottom: 10px;
+        }
+          
+      }
+      .voice-recorder-container button:focus {
+        outline: none;
+        box-shadow: none;
       }
     `;
     

@@ -1,48 +1,77 @@
-// webpack.config.js
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
-module.exports = {
-  entry: './src/Adapter/speechAdapter.ts',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'speech-plug.js',
-    library: 'SpeechPlug',
-    libraryTarget: 'umd',
-    libraryExport: 'default',
-    umdNamedDefine: true,
-    globalObject: 'this'
-  },
-  module: {
-    rules: [
-      {
-        test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/,
-      },
-      {
-        test: /\.css$/,
-        use: ['style-loader', 'css-loader']
-      }
-    ]
-  },
-  resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: './demo/usage-example.html',
-      filename: 'index.html',
-      inject: 'body'
-    })
-  ],
-  devServer: {
-    static: {
-      directory: path.join(__dirname, 'dist'),
+const isProduction = process.env.NODE_ENV === 'production';
+const isFirstBuild = process.env.WEBPACK_FIRST_BUILD === 'true';
+
+const createConfig = (target, outputFile, options = {}) => {
+  const config = {
+    mode: isProduction ? 'production' : 'development',
+    entry: './src/Adapter/speechAdapter.ts',
+    devtool: isProduction ? false : 'source-map',
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      filename: outputFile,
+      library: target === 'module' ? undefined : 'SpeechPlug',
+      libraryTarget: target,
+      libraryExport: 'default',
+      globalObject: 'this',
     },
-    compress: true,
-    port: 9000
-  },
-  // Use production for the actual build, development for dev server
-  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development'
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    },
+    module: {
+      rules: [
+        {
+          test: /\.tsx?$/,
+          use: 'ts-loader',
+          exclude: /node_modules/,
+        },
+      ],
+    },
+    optimization: {
+      minimize: isProduction,
+      minimizer: isProduction
+        ? [
+            new TerserPlugin({
+              terserOptions: {
+                compress: {
+                  drop_console: false,
+                },
+              },
+            }),
+          ]
+        : [],
+    },
+    plugins: [],
+    experiments: target === 'module' ? { outputModule: true } : {},
+  };
+
+  // Special plugin injection
+  if (options.clean) {
+    config.plugins.push(
+      new CleanWebpackPlugin({
+        cleanStaleWebpackAssets: false,
+      })
+    );
+  }
+
+  return config;
 };
+
+const configs = [];
+
+if (isProduction) {
+  // Minified production builds
+  configs.push(createConfig('umd', 'speechplug.min.js', { clean: isFirstBuild }));
+  configs.push(createConfig('commonjs2', 'speechplug.cjs.min.js'));
+  configs.push(createConfig('module', 'speechplug.esm.min.js'));
+} else {
+  // Unminified development builds
+  configs.push(createConfig('umd', 'speechplug.js', { clean: isFirstBuild }));
+  configs.push(createConfig('commonjs2', 'speechplug.cjs.js'));
+  configs.push(createConfig('module', 'speechplug.esm.js'));
+}
+
+module.exports = configs;

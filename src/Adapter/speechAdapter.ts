@@ -16,8 +16,8 @@ import { WhisperSTTDriver } from '../nlp/sst-driver';
 import { NLPModule } from '../nlp/nlp-module';
 import { UIComponent } from '../uicomponent/ui-component';
 import { CoreModule } from '../core/core-module';
-import { EventBus } from '../eventbus';
-import { StateStore } from '../stateStore';
+import { EventBus } from '../utils/eventbus';
+import { StateStore } from '../utils/stateStore';
 import { CompromiseNLUDriver } from '../nlp/nlu-driver';
 import { VoiceActuator } from '../voiceactuator/voice-actuator';
 import { AdapterConfig } from './model/adaperConfig';
@@ -65,6 +65,7 @@ class VoiceLib implements IVoiceLib {
         } : undefined
       },
       ui: {
+        containerId: config.containerId,
         container: config.container,
         autoStart: config.autoStart,
         position: config.position,
@@ -81,6 +82,14 @@ class VoiceLib implements IVoiceLib {
   }
 }
 
-// Export singleton instance
+// Create singleton instance
 const voiceLib = new VoiceLib();
+
+// Make sure it's properly exposed for both module systems and global context
+if (typeof window !== 'undefined') {
+  (window as any).SpeechPlug = voiceLib;
+}
+
+// Export as both default and named export for better compatibility
+export { voiceLib };
 export default voiceLib;

@@ -1,5 +1,6 @@
 export interface UIConfig {
     container: HTMLElement;
+    containerId: string;
     autoStart?: boolean;
     position?: string;
     width?: number | string;

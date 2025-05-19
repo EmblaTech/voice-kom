@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { TYPES, IntentResult, Entities, Action, IntentTypes } from '../types';
-import { EventBus, VoiceLibEvents } from '../eventbus';
+import { EventBus, VoiceLibEvents } from '../utils/eventbus';
 
 // Interface for processed entities with resolved DOM elements
 interface ProcessedEntities extends Entities {
@@ -131,8 +131,7 @@ export class VoiceActuator {
     return false;
   }
 
-
-    /* ACTIONS DEFINED HERE */
+  /* ACTIONS DEFINED HERE */
 
   private clickElementAction(entities: ProcessedEntities): boolean {
       if (!entities.target) {

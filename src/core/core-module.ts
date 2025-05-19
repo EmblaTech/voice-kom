@@ -1,8 +1,8 @@
 // Updated core-module.ts
 import { injectable, inject } from 'inversify';
 import { ICoreModule, INLPModule, IntentResult, IUIComponent, RecordingStatus, TYPES, IVoiceActuator } from '../types';
-import { EventBus, VoiceLibEvents } from '../eventbus';
-import { StateStore } from '../stateStore';
+import { EventBus, VoiceLibEvents } from '../utils/eventbus';
+import { StateStore } from '../utils/stateStore';
 import { CoreConfig } from './model/coreonfig';
 @injectable()
 export class CoreModule implements ICoreModule {

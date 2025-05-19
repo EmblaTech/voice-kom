@@ -1,8 +1,8 @@
 // nlp-module.ts
 import { injectable, inject } from 'inversify';
 import { INLPModule, INLUDriver, IAudioCapturer, ISTTDriver, CommandRegistry, TYPES, CommandIntent } from '../types';
-import { EventBus, VoiceLibEvents } from '../eventbus';
-import { StateStore } from '../stateStore';
+import { EventBus, VoiceLibEvents } from '../utils/eventbus';
+import { StateStore } from '../utils/stateStore';
 import { NLPConfig } from './model/nlpConfig';
 
 @injectable()

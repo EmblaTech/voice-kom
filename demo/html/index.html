@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceLib Form Demo</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <h1>Contact Form</h1>
+  
+  <div class="form-container">
+    <form id="contact-form">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" voice.name="name field" placeholder="Enter your full name">
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" voice.name="email field" placeholder="Enter your email address">
+      </div>
+      
+      <button type="submit" id="submit-button" voice.name="submit button" class="btn btn-submit">Submit</button>
+    </form>
+  </div>
+  
+  <!-- <div class="help-text">
+    <p>Try voice commands like: <strong>"Fill name as John Smith"</strong> or <strong>"Click submit button"</strong></p>
+  </div> -->
+  
+  <!-- Updated script paths with ../ to go up one directory level -->
+  <script src="../../dist/speechplug.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

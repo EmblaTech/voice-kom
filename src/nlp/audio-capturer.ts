@@ -1,7 +1,7 @@
 // audio-capturer.ts
 import { injectable, inject } from 'inversify';
 import { IAudioCapturer, TYPES } from '../types';
-import { EventBus } from '../eventbus';
+import { EventBus } from '../utils/eventbus';
 
 @injectable()
 export class WebAudioCapturer implements IAudioCapturer {

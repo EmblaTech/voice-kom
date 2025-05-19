@@ -1,6 +1,6 @@
 // stateStore.ts
 import { injectable } from 'inversify';
-import { RecordingStatus } from './types';
+import { RecordingStatus } from '../types';
 
 // Interface for state structure
 interface VoiceLibState {

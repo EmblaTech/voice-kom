@@ -1,40 +1,53 @@
 {
-  "name": "speech-plug",
+  "name": "speechplug",
   "version": "1.0.0",
-  "description": "A speech-to-text library with InversifyJS",
-  "main": "dist/speech-plug.js",
-  "types": "dist/types/speech-plug.d.ts",
+  "description": "Voice library for speech recognition and processing",
+  "main": "dist/speechplug.cjs.js",
+  "module": "dist/speechplug.esm.js",
+  "browser": "dist/speechplug.js",
+  "unpkg": "dist/speechplug.min.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/speechplug.esm.js",
+      "require": "./dist/speechplug.cjs.js",
+      "browser": "./dist/speechplug.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
   "files": [
     "dist"
-  ], 
+  ],
   "scripts": {
-    "build": "cross-env NODE_ENV=production webpack",
-    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist/types",
-    "build:all": "npm run build && npm run build:types",
-    "start": "webpack serve",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prebuild": "cross-env WEBPACK_FIRST_BUILD=true",
+    "build:dev": "cross-env NODE_ENV=development webpack --config webpack.config.js",
+    "build:prod": "cross-env NODE_ENV=production webpack --config webpack.config.js",
+    "build": "npm run prebuild && npm run build:dev && npm run build:prod",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist/types",
+    "build:all": "npm run build && npm run build:types"
   },
   "keywords": [
-    "speech",
-    "stt",
     "voice",
-    "audio",
-    "inversify"
+    "speech",
+    "recognition",
+    "nlp",
+    "stt"
   ],
   "dependencies": {
-    "compromise": "^14.14.4",
-    "inversify": "^6.2.2",
-    "reflect-metadata": "^0.2.2"
+    "inversify": "^6.0.1",
+    "reflect-metadata": "^0.1.13",
+    "compromise": "^14.8.2"
   },
   "devDependencies": {
+    "clean-webpack-plugin": "^4.0.0",
     "cross-env": "^7.0.3",
-    "html-webpack-plugin": "^5.6.3",
-    "style-loader": "^3.3.4",
-    "css-loader": "^6.8.1",
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.8.3",
-    "webpack": "^5.99.7",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.2"
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
+    "webpack": "^5.81.0",
+    "webpack-cli": "^5.0.2",
+    "terser-webpack-plugin": "^5.3.7",
+    "@types/jest": "^29.5.1",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0"
   }
 }

@@ -1,5 +1,6 @@
 export interface AdapterConfig {  
     container: HTMLElement;
+    containerId :string;
     lang?: string;
 
     //Speech to text provider options

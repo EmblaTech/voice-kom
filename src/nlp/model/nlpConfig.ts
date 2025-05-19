@@ -1,10 +1,10 @@
 export interface NLPConfig{
     lang?:string;
-    sst?:SSTEngineConfig;
+    sst?:STTConfig;
     nlu?:NLUEngineConfig
 }
 
-export interface SSTEngineConfig{
+export interface STTConfig{
     sttEngine: string;
     sttApiKey?: string;
     speechEngineParams?: Record<string, any>;

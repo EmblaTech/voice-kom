@@ -1,18 +1,27 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "module": "ESNext",
+    "target": "es2020",
+    "module": "esnext",
     "moduleResolution": "node",
-    "esModuleInterop": true,
-    "sourceMap": true,
-    "outDir": "./dist",
+    "declaration": true,
+    "outDir": "./dist/types",
     "strict": true,
-    "lib": ["dom", "es2017"],
+    "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "declaration": true,
-    "declarationDir": "./dist/types"
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": false,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*", "src/types/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "demo"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

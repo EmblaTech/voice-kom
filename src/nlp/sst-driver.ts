@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { ISTTDriver } from '../types';
-import { SSTEngineConfig } from './model/nlpConfig';
+import { STTConfig } from './model/nlpConfig';
 
 @injectable()
 export class WhisperSTTDriver implements ISTTDriver {
@@ -28,7 +28,7 @@ export class WhisperSTTDriver implements ISTTDriver {
   }
   
   // Initialization
-  public init(lang: string, config: SSTEngineConfig): void {
+  public init(lang: string, config: STTConfig): void {
     // Set API key if provided
     if (lang) {
       this.language = lang;
