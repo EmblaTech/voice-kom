@@ -2,7 +2,7 @@
 import {NLPConfig,NLUEngineConfig,STTConfig} from "../src/nlp/model/nlpConfig";
 import {CoreConfig} from "./core/model/coreConfig";
 import {UIConfig} from "../src/uicomponent/model/uiConfig";
-import { SpeechAdapterConfig } from "./adapter/model/adapterConfig";
+import { SpeechPlugConfig } from "./adapter/model/plugConfig";
 
 export const TYPES = {
   CoreModule: Symbol.for('CoreModule'),
@@ -80,7 +80,7 @@ export interface ICoreModule {
 
 // Voice Lib interface
 export interface IVoiceLib {
-  init(config: SpeechAdapterConfig): Promise<void>;
+  init(config: SpeechPlugConfig): Promise<void>;
 }
 
 // Intent recognition result

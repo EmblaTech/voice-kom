@@ -8,7 +8,7 @@ const isFirstBuild = process.env.WEBPACK_FIRST_BUILD === 'true';
 const createConfig = (target, outputFile, options = {}) => {
   const config = {
     mode: isProduction ? 'production' : 'development',
-    entry: './src/Adapter/speechAdapter.ts',
+    entry: './src/adapter/speechPlug.ts',
     devtool: isProduction ? false : 'source-map',
     output: {
       path: path.resolve(__dirname, 'dist'),

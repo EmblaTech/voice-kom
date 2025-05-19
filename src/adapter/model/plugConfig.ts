@@ -1,11 +1,13 @@
-export interface SpeechAdapterConfig {  
+export interface SpeechPlugConfig {
+    transcription: any;
+    nlu: any;  
     //Key configs
     containerId? :string;
     lang?: string;   
 
     //Speech engine configs
-    transcription?: SpeechEngineConfig;  //Transcription options
-    nlu?: SpeechEngineConfig; // NLU options    
+    transcriptionProvider?: SpeechProviderConfig;  //Transcription options
+    recognitionProvider?: SpeechProviderConfig; // NLU options    
 
     //UI configs
     ui?: UIConfig; 
@@ -15,8 +17,8 @@ export interface SpeechAdapterConfig {
     timeout?: number;
 }
 
-interface SpeechEngineConfig {
-    provider?: string; // Provider name (e.g., 'default' | 'openai' | 'google' | 'azure' | 'custom',)
+interface SpeechProviderConfig {
+    name?: string; // Provider name (e.g., 'default' | 'openai' | 'google' | 'azure' | 'custom',)
     apiUrl?: string;  // API endpoint URL 
     apiKey?: string; // API key if required  
     model?: string;  // Model name if applicable
