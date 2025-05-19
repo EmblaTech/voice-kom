@@ -1,5 +1,4 @@
-export interface UIConfig {
-    container?: HTMLElement;
+interface VisualConfig {
     containerId?: string;
     autoStart?: boolean;
     position?: string;

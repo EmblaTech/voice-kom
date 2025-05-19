@@ -1,8 +1,8 @@
 // enhanced-types.ts
-import {AdapterConfig} from "../src/Adapter/model/adaperConfig";
 import {NLPConfig,NLUEngineConfig,STTConfig} from "../src/nlp/model/nlpConfig";
-import {CoreConfig} from "../src/core/model/coreonfig";
+import {CoreConfig} from "./core/model/coreConfig";
 import {UIConfig} from "../src/uicomponent/model/uiConfig";
+import { SpeechAdapterConfig } from "./adapter/model/adapterConfig";
 
 export const TYPES = {
   CoreModule: Symbol.for('CoreModule'),
@@ -80,7 +80,7 @@ export interface ICoreModule {
 
 // Voice Lib interface
 export interface IVoiceLib {
-  init(config: AdapterConfig): Promise<void>;
+  init(config: SpeechAdapterConfig): Promise<void>;
 }
 
 // Intent recognition result
