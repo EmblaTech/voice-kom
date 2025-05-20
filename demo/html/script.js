@@ -1,10 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {  
-  // Initialize SpeechPlug with just the ID string
-  SpeechPlug.init({
+  SpeechPlug.init({   // Initialize SpeechPlug with params
     containerId: 'speech-plug-container',
     lang: 'en',
     transcriptionProvider: {
-      name: 'dd',
+      name: 'default',
     },
     recognitionProvider: {
       name: 'default',
@@ -14,11 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'backgroundColor': '#ffffff',
       },
     }
-  })
-  .then(() => {
-    console.log('VoiceLib initialized successfully');
+  }).then(() => {
+    console.log('Speech plug library initialized successfully');
   })
   .catch(error => {
-    console.error('Failed to initialize VoiceLib:', error);
+    console.error('Speech plug library failed to initialize: ', error);
   });
 });

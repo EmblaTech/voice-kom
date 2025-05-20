@@ -1,22 +1,23 @@
 // eventbus.ts
 import { EventEmitter } from 'events';
-import { injectable } from 'inversify';
+import { Logger } from '../utils/logger';
 
 // Define event types
-export enum VoiceLibEvents {
+export enum SpeechEvents {
   // UI Events
-  RECORD_BUTTON_PRESSED = 'recordButtonPressed',
-  STOP_BUTTON_PRESSED = 'stopButtonPressed',
+  RECORD_BUTTON_CLICKED = 'recordButtonClicked',
+  STOP_BUTTON_CLICKED = 'stopButtonClicked',
   
   // Recording Events
   RECORDING_STARTED = 'recordingStarted',
   RECORDING_STOPPED = 'recordingStopped',
-  AUDIO_CAPTURED = 'audio_captured',  // New event for when speech is detected and captured
+  AUDIO_CAPTURED = 'audioCaptured',  // New event for when speech is detected and captured
 
   // Processing Events
   TRANSCRIPTION_STARTED = 'transcriptionStarted',
   TRANSCRIPTION_COMPLETED = 'transcriptionCompleted',
   NLU_COMPLETED ='nluCompleted',
+
   // Action Events
   ACTION_PERFORMED = 'actionPerformed',
   ACTION_PAUSED = 'actionPaused',
@@ -25,20 +26,20 @@ export enum VoiceLibEvents {
   ERROR_OCCURRED = 'errorOccurred'
 }
 
-@injectable()
 export class EventBus {
-  private events = new EventEmitter();
-  
+  private readonly events = new EventEmitter();
+  private readonly logger = Logger.getInstance();
+
   constructor() {
     this.events.setMaxListeners(20);
   }
   
-  public on(eventName: VoiceLibEvents, callback: (...args: any[]) => void): void {
+  public on(eventName: SpeechEvents, callback: (...args: any[]) => void): void {
     this.events.on(eventName, callback);
   }
   
-  public emit(eventName: VoiceLibEvents, ...args: any[]): void {
+  public emit(eventName: SpeechEvents, ...args: any[]): void {
     this.events.emit(eventName, ...args);
-    console.log(eventName);
+    this.logger.debug(`[SpeechEventBus] Event emitted: ${eventName}`, ...args);;
   }
 }

@@ -1,11 +1,8 @@
-import { injectable, inject } from 'inversify';
-import { IUIComponent, RecordingStatus, TYPES, ErrorType } from '../types';
-import { EventBus, VoiceLibEvents } from '../utils/eventbus';
-import { StateStore } from '../utils/stateStore';
+import { EventBus, SpeechEvents } from '../common/eventbus';
+import { ErrorType, Status, StatusType } from '../common/status';
 import { UIConfig } from './model/uiConfig';
 
-@injectable()
-export class UIComponent implements IUIComponent {
+export class UIHandler {
   private container: HTMLElement | null = null;
   private actionButton: HTMLButtonElement | null = null;
   private statusDisplay: HTMLDivElement | null = null;
@@ -14,27 +11,27 @@ export class UIComponent implements IUIComponent {
   private transcription: string | null = null;
   
   constructor(
-    @inject(TYPES.EventBus) private eventBus: EventBus,
-    @inject(TYPES.StateStore) private stateStore: StateStore
+    private eventBus: EventBus,
+    private status: Status
   ) {
     // Subscribe to events
-    this.eventBus.on(VoiceLibEvents.TRANSCRIPTION_COMPLETED, this.handleTranscription.bind(this));
-    this.eventBus.on(VoiceLibEvents.ERROR_OCCURRED, this.handleError.bind(this));
+    this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, this.handleTranscription.bind(this));
+    this.eventBus.on(SpeechEvents.ERROR_OCCURRED, this.handleError.bind(this));
   }
   
   public init(config: UIConfig): void {
     // Set up container based on provided options
-    if (config.container) {
+    if (config.containerId) {
       // Use provided container element
-      this.container = config.container;
+      //this.container = config.containerId;
     } else {
       // Get existing or create new container
       const containerId = config.containerId || 'voice-lib-default-container';
       this.container = document.getElementById(containerId) || this.createContainer(containerId);
     }
     
-    this.container.classList.add('voice-recorder-container');
-    this.container.classList.add('voice-floating-container');
+   // this.container.classList.add('voice-recorder-container');
+  //  this.container.classList.add('voice-floating-container');
     
     this.injectStyles();
     this.createUIElements();
@@ -52,7 +49,7 @@ export class UIComponent implements IUIComponent {
   public updateFromState(): void {
     if (!this.container) return;
     
-    const state = this.stateStore.getState();
+    const state = this.status.get();
     this.updateStatusDisplay(state.recordingStatus);
     this.updateButton(state.recordingStatus);
     
@@ -126,33 +123,33 @@ export class UIComponent implements IUIComponent {
     return message;
   }
   
-  private updateStatusDisplay(status: RecordingStatus): void {
+  private updateStatusDisplay(status: StatusType): void {
     if (!this.statusDisplay) return;
     
     // Reset status display styling
     this.statusDisplay.classList.remove('error-state');
     
     switch (status) {
-      case RecordingStatus.IDLE:
+      case StatusType.IDLE:
         this.statusDisplay.textContent = 'SpeechPlug';
         break;
-      case RecordingStatus.RECORDING:
+      case StatusType.RECORDING:
         this.statusDisplay.textContent = 'Recording...';
         break;
-      case RecordingStatus.PROCESSING:
+      case StatusType.PROCESSING:
         this.statusDisplay.textContent = 'Processing...';
         break;
-      case RecordingStatus.ERROR:
+      case StatusType.ERROR:
         // Don't update text here - let the error handler set the message
         this.statusDisplay.classList.add('error-state');
         break;
     }
     
     // Handle recording indicator
-    this.updateRecordingIndicator(status === RecordingStatus.RECORDING);
+    this.updateRecordingIndicator(status === StatusType.RECORDING);
     
     // Hide transcription when returning to idle if it's empty
-    if (status === RecordingStatus.IDLE && this.transcriptionDisplay) {
+    if (status === StatusType.IDLE && this.transcriptionDisplay) {
       if (!this.transcription || this.transcription.trim() === '') {
         this.transcriptionDisplay.style.display = 'none';
       }
@@ -172,24 +169,24 @@ export class UIComponent implements IUIComponent {
     }
   }
   
-  private updateButton(status: RecordingStatus): void {
+  private updateButton(status: StatusType): void {
     if (!this.actionButton) return;
     
     // Common button reset
     this.actionButton.disabled = false;
     
     switch (status) {
-      case RecordingStatus.IDLE:
+      case StatusType.IDLE:
         this.setButtonAppearance('record');
         break;
-      case RecordingStatus.RECORDING:
+      case StatusType.RECORDING:
         this.setButtonAppearance('stop');
         break;
-      case RecordingStatus.PROCESSING:
+      case StatusType.PROCESSING:
         this.setButtonAppearance('processing');
         this.actionButton.disabled = true;
         break;
-      case RecordingStatus.ERROR:
+      case StatusType.ERROR:
         this.setButtonAppearance('record');
         break;
     }
@@ -267,9 +264,9 @@ export class UIComponent implements IUIComponent {
       
       const action = this.actionButton.getAttribute('data-action');
       if (action === 'record') {
-        this.eventBus.emit(VoiceLibEvents.RECORD_BUTTON_PRESSED);
+        this.eventBus.emit(SpeechEvents.RECORD_BUTTON_CLICKED);
       } else if (action === 'stop') {
-        this.eventBus.emit(VoiceLibEvents.STOP_BUTTON_PRESSED);
+        this.eventBus.emit(SpeechEvents.STOP_BUTTON_CLICKED);
       }
     });
   }

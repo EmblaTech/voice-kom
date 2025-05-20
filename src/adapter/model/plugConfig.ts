@@ -10,7 +10,14 @@ export interface SpeechPlugConfig {
     recognitionProvider?: SpeechProviderConfig; // NLU options    
 
     //UI configs
-    ui?: UIConfig; 
+    autoStart?: boolean;
+    position?: string;
+    width?: number | string;
+    height?: number | string;
+    theme?: string;
+    showProgress?: boolean;
+    showTranscription?: boolean;
+    styles?: Record<string, string>;
     
     //Other configs
     retries?: number; 
@@ -24,15 +31,4 @@ interface SpeechProviderConfig {
     model?: string;  // Model name if applicable
     confidence?: number; // Confidence threshold (0.0-1.0)    
     options?: Record<string, any>; // Any additional options needed
-}
-
-interface UIConfig {
-    autoStart?: boolean;
-    position?: string;
-    width?: number | string;
-    height?: number | string;
-    theme?: string;
-    showProgress?: boolean;
-    showTranscription?: boolean;
-    styles?: Record<string, string>;
 }

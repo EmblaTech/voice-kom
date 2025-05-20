@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { TYPES, IntentResult, Entities, Action, IntentTypes } from '../types';
-import { EventBus, VoiceLibEvents } from '../utils/eventbus';
+import { EventBus, SpeechEvents } from '../common/eventbus';
 
 // Interface for processed entities with resolved DOM elements
 interface ProcessedEntities extends Entities {
@@ -68,7 +68,7 @@ export class VoiceActuator {
     
     if (!action) {
       console.log(`VoiceActuator: No action registered for intent '${intent.intent}'`);
-      this.eventBus.emit(VoiceLibEvents.ACTION_PAUSED);
+      this.eventBus.emit(SpeechEvents.ACTION_PAUSED);
       return false;
     }
     
@@ -77,12 +77,12 @@ export class VoiceActuator {
     const result = action.execute(processedEntities);
     
     if (result) {
-      this.eventBus.emit(VoiceLibEvents.ACTION_PERFORMED, {
+      this.eventBus.emit(SpeechEvents.ACTION_PERFORMED, {
         intent: intent.intent,
         entities: intent.entities
       });
     } else {
-      this.eventBus.emit(VoiceLibEvents.ACTION_PAUSED);
+      this.eventBus.emit(SpeechEvents.ACTION_PAUSED);
     }
     
     return result;

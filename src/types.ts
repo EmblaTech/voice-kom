@@ -1,8 +1,49 @@
 // enhanced-types.ts
 import {NLPConfig,NLUEngineConfig,STTConfig} from "../src/nlp/model/nlpConfig";
 import {CoreConfig} from "./core/model/coreConfig";
-import {UIConfig} from "../src/uicomponent/model/uiConfig";
-import { SpeechPlugConfig } from "./adapter/model/plugConfig";
+import {UIConfig} from "./ui/model/uiConfig";
+
+export interface SpeechPlugConfig {
+  transcription: any;
+  nlu: any;  
+  //Key configs
+  containerId? :string;
+  lang?: string;   
+
+  //Speech engine configs
+  transcriptionProvider?: TranscriptionProviderConfig;  //Transcription options
+  recognitionProvider?: RecognitionProviderConfig; // NLU options    
+
+  //UI configs
+  autoStart?: boolean;
+  position?: string;
+  width?: number | string;
+  height?: number | string;
+  theme?: string;
+  showProgress?: boolean;
+  showTranscription?: boolean;
+  styles?: Record<string, string>;
+  
+  //Other configs
+  retries?: number; 
+  timeout?: number;
+}
+
+interface ProviderConfig {
+  name?: string; // Provider name (e.g., 'default' | 'openai' | 'google' | 'azure' | 'custom',)
+  apiUrl?: string;  // API endpoint URL 
+  apiKey?: string; // API key if required  
+  model?: string;  // Model name if applicable
+  confidence?: number; // Confidence threshold (0.0-1.0)    
+  options?: Record<string, any>; // Any additional options needed
+}
+
+export interface RecognitionProviderConfig extends ProviderConfig {
+}
+
+export interface TranscriptionProviderConfig extends ProviderConfig {
+  lang?: string;
+}
 
 export const TYPES = {
   CoreModule: Symbol.for('CoreModule'),
@@ -16,23 +57,6 @@ export const TYPES = {
   CommandRegistry: Symbol.for('CommandRegistry'),
   VoiceActuator: Symbol.for('VoiceActuator'),
 };
-
-// Enhanced Recording status enum with WAITING state
-export enum RecordingStatus {
-  IDLE = 'idle',
-  WAITING = 'waiting', // New state for when we're waiting for speech in listening mode
-  RECORDING = 'recording',
-  PROCESSING = 'processing',
-  EXECUTING = 'executing',
-  ERROR = 'error'
-}
-
-export enum ErrorType {
-  MICROPHONE_ACCESS = 'microphone_access',
-  TRANSCRIPTION = 'transcription',
-  NETWORK = 'network',
-  UNKNOWN = 'unknown'
-}
 
 export enum IntentTypes {
   CLICK_ELEMENT = 'click_element',

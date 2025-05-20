@@ -1,0 +1,45 @@
+// Enhanced Recording status enum with WAITING state
+export enum StatusType {
+  IDLE = 'idle',
+  WAITING = 'waiting', // New state for when we're waiting for speech in listening mode
+  RECORDING = 'recording',
+  PROCESSING = 'processing',
+  EXECUTING = 'executing',
+  ERROR = 'error'
+}
+
+export enum ErrorType {
+  MICROPHONE_ACCESS = 'microphone_access_error',
+  TRANSCRIPTION = 'transcription_error',
+  NETWORK = 'network_error',
+  UNKNOWN = 'unknown_error'
+}
+
+export class Status {
+  private currentStatus: StatusType;
+  private message?: string;
+
+  constructor() {
+    this.currentStatus = StatusType.IDLE;
+    this.message = "";
+  }
+  
+  // Get current state (immutable)
+  public get(): Readonly<any> {
+    return { 
+        status: this.currentStatus,
+        message: this.message
+     };
+  }
+  
+  // Set recording status
+  public set(status: StatusType, message?: string): void {
+    this.currentStatus = status;
+    this.message = message;
+  }
+  
+  // Reset state
+  public reset(): void {
+    this.set(StatusType.IDLE, "");
+  }
+}

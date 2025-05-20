@@ -1,8 +1,8 @@
 // nlp-module.ts
 import { injectable, inject } from 'inversify';
 import { INLPModule, INLUDriver, IAudioCapturer, ISTTDriver, CommandRegistry, TYPES, CommandIntent } from '../types';
-import { EventBus, VoiceLibEvents } from '../utils/eventbus';
-import { StateStore } from '../utils/stateStore';
+import { EventBus, SpeechEvents } from '../common/eventbus';
+import { Status, StatusType } from '../common/status';
 import { NLPConfig } from './model/nlpConfig';
 
 @injectable()
@@ -14,7 +14,7 @@ export class NLPModule implements INLPModule {
     @inject(TYPES.STTDriver) private sttDriver: ISTTDriver,
     @inject(TYPES.NLUDriver) private nluDriver: INLUDriver,
     @inject(TYPES.EventBus) private eventBus: EventBus,
-    @inject(TYPES.StateStore) private stateStore: StateStore,
+    @inject(TYPES.StateStore) private stateStore: Status,
 
   ) {}
   
@@ -41,33 +41,33 @@ export class NLPModule implements INLPModule {
   public startListening(): void {
     // Start audio capture
     this.audioCapturer.startRecording();
-    this.eventBus.emit(VoiceLibEvents.RECORDING_STARTED);
+    this.eventBus.emit(SpeechEvents.RECORDING_STARTED);
   }
   
   public async stopListening(): Promise<void> {
     try {
       // Stop audio capture and get audio blob directly
       const audioBlob = await this.audioCapturer.stopRecording();
-      this.eventBus.emit(VoiceLibEvents.RECORDING_STOPPED);
+      this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
             
       try {
         // Transcribe the audio using the STT driver
         const transcription = await this.sttDriver.transcribe(audioBlob);
-        this.eventBus.emit(VoiceLibEvents.TRANSCRIPTION_COMPLETED, transcription);
+        this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
 
         // Identify intent using the NLU driver
         const intentResult = this.nluDriver.identifyIntent(transcription);
-        this.eventBus.emit(VoiceLibEvents.NLU_COMPLETED, intentResult);
+        this.eventBus.emit(SpeechEvents.NLU_COMPLETED, intentResult);
 
-      } catch (error: unknown) {
+      } catch (error: any) {
         console.error('Error:', error);
-        this.stateStore.setError(error);
-        this.eventBus.emit(VoiceLibEvents.ERROR_OCCURRED, error);
+        this.stateStore.set(StatusType.ERROR, error.message);
+        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error stopping recording:', error);
-      this.stateStore.setError(error);
-      this.eventBus.emit(VoiceLibEvents.ERROR_OCCURRED, error);
+      this.stateStore.set(StatusType.ERROR, error.message);
+      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
     }
   }
   
