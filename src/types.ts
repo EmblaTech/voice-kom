@@ -4,8 +4,6 @@ import {CoreConfig} from "./core/model/coreConfig";
 import {UIConfig} from "./ui/model/uiConfig";
 
 export interface SpeechPlugConfig {
-  transcription: any;
-  nlu: any;  
   //Key configs
   containerId? :string;
   lang?: string;   
@@ -17,8 +15,8 @@ export interface SpeechPlugConfig {
   //UI configs
   autoStart?: boolean;
   position?: string;
-  width?: number | string;
-  height?: number | string;
+  width?: string;
+  height?: string;
   theme?: string;
   showProgress?: boolean;
   showTranscription?: boolean;

@@ -1,8 +1,13 @@
+import { Logger } from '../utils/logger';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { ErrorType, Status, StatusType } from '../common/status';
-import { UIConfig } from './model/uiConfig';
+import { DEFAULT_UI_CONFIG, UIConfig } from './model/uiConfig';
 
 export class UIHandler {
+  private config: UIConfig = { ...DEFAULT_UI_CONFIG };
+  private readonly logger = Logger.getInstance();
+  private readonly CONTAINER_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+
   private container: HTMLElement | null = null;
   private actionButton: HTMLButtonElement | null = null;
   private statusDisplay: HTMLDivElement | null = null;
@@ -11,39 +16,156 @@ export class UIHandler {
   private transcription: string | null = null;
   
   constructor(
-    private eventBus: EventBus,
-    private status: Status
+    private readonly eventBus: EventBus,
+    private readonly status: Status
   ) {
     // Subscribe to events
-    this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, this.handleTranscription.bind(this));
-    this.eventBus.on(SpeechEvents.ERROR_OCCURRED, this.handleError.bind(this));
+    this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, this.onTranscriptionCompleted.bind(this));
+    this.eventBus.on(SpeechEvents.ERROR_OCCURRED, this.onError.bind(this));
   }
   
   public init(config: UIConfig): void {
-    // Set up container based on provided options
-    if (config.containerId) {
-      // Use provided container element
-      //this.container = config.containerId;
-    } else {
-      // Get existing or create new container
-      const containerId = config.containerId || 'voice-lib-default-container';
-      this.container = document.getElementById(containerId) || this.createContainer(containerId);
+    // Merge provided config with defaults
+    this.config = { ...DEFAULT_UI_CONFIG, ...config };
+
+    if(!this.config.containerId) { //Determine if we need to create a default container or use an existing one
+      this.container = this.createDefaultUI(DEFAULT_UI_CONFIG.containerId ?? '');
     }
-    
-   // this.container.classList.add('voice-recorder-container');
-  //  this.container.classList.add('voice-floating-container');
-    
+    else {
+      let existingContainer = document.getElementById(this.config.containerId);
+      if (existingContainer) {
+        this.container = existingContainer;
+      } else {
+        this.container = this.createDefaultUI(this.config.containerId);
+      }
+    }
     this.injectStyles();
     this.createUIElements();
-    this.setupEventListeners();
+    this.bindEventListeners();
     this.updateFromState();
+  }
+
+  private createDefaultUI(containerId: string): HTMLElement { 
+    this.container = this.createContainer(containerId); 
+    this.setUI(
+      DEFAULT_UI_CONFIG.position!,
+      DEFAULT_UI_CONFIG.width!,
+      DEFAULT_UI_CONFIG.height!,
+      DEFAULT_UI_CONFIG.styles!
+    );
+    return this.container;
+  }
+
+  private setUI(position: string, width: string, height: string, customStyles: {}): void {
+    if (!this.container) return;
+    
+    // Apply base container class
+    this.container.classList.add('voice-recorder-container');
+    
+    // Position settings
+    if (position) {
+      // Remove any existing position classes first
+      this.CONTAINER_POSITIONS.forEach(pos => {
+        this.container!.classList.remove(`voice-${pos}`);
+      });
+      
+      // Apply position class
+      this.container.classList.add(`voice-${position}`);
+      
+      // For floating UI
+      if (position !== 'center') {
+        this.container.classList.add('voice-floating-container');
+      } else {
+        this.container.classList.remove('voice-floating-container');
+      }
+    }
+    
+    // Apply dimensions
+    if (width) {
+      this.container.style.width = width;
+    }
+    
+    if (height) {
+      this.container.style.maxHeight = height;
+    }
+    
+    // Apply any custom inline styles
+    if (customStyles) {
+      Object.keys(customStyles).forEach((key) => {
+        //this.container.style[key as any] = customStyles[key];
+      });
+    }
   }
   
   private createContainer(id: string): HTMLElement {
     const container = document.createElement('div');
     container.id = id;
+    this.config.containerId = id;
     document.body.appendChild(container);
     return container;
+  }
+
+  private injectStyles(): void {
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'stylesheet';
+    linkElement.type = 'text/css';
+    linkElement.href = '../../src/ui/speech-container.css';  //TODO: need to check to get from dist?
+    document.head.appendChild(linkElement);
+  }
+
+  //TODO:Refactor: move out html parts to a separate file
+  private createUIElements(): void {
+    if (!this.container) return;
+    this.container.innerHTML = '';
+    
+    // Create main interface container
+    const interfaceContainer = document.createElement('div');
+    interfaceContainer.className = 'voice-interface';
+    
+    // Create button container (circular)
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'button-container';
+    
+    // Create single action button
+    this.actionButton = document.createElement('button');
+    this.actionButton.className = 'action-button record-mode';
+    this.actionButton.setAttribute('data-action', 'record');
+    this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15c2.21 0 4-1.79 4-4V5c0-2.21-1.79-4-4-4S8 2.79 8 5v6c0 2.21 1.79 4 4 4zm0-2c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2zm4 2v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1H4v1c0 3.53 2.61 6.43 6 6.92V23h4v-2.08c3.39-.49 6-3.39 6-6.92v-1h-2z" fill="currentColor"/></svg>';
+    
+    buttonContainer.appendChild(this.actionButton);
+    
+    // Status display
+    this.statusDisplay = document.createElement('div');
+    this.statusDisplay.className = 'status-display';
+    this.statusDisplay.textContent = 'SpeechPlug';
+    
+    // Add button and status to interface
+    interfaceContainer.appendChild(buttonContainer);
+    interfaceContainer.appendChild(this.statusDisplay);
+    
+    // Transcription area (hidden initially)
+    this.transcriptionDisplay = document.createElement('div');
+    this.transcriptionDisplay.className = 'transcription-display';
+    this.transcriptionDisplay.textContent = '';
+    this.transcriptionDisplay.style.display = 'none'; // Hide initially
+    
+    this.container.appendChild(interfaceContainer);
+    this.container.appendChild(this.transcriptionDisplay);
+  }
+
+  private bindEventListeners(): void {
+    if (!this.actionButton) return;
+    
+    this.actionButton.addEventListener('click', () => {
+      if (!this.actionButton) return;
+      
+      const action = this.actionButton.getAttribute('data-action');
+      if (action === 'record') {
+        this.eventBus.emit(SpeechEvents.RECORD_BUTTON_CLICKED);
+      } else if (action === 'stop') {
+        this.eventBus.emit(SpeechEvents.STOP_BUTTON_CLICKED);
+      }
+    });
   }
   
   public updateFromState(): void {
@@ -71,11 +193,11 @@ export class UIHandler {
     }
   }
   
-  private handleTranscription(transcription: string): void {
+  private onTranscriptionCompleted(transcription: string): void {
     this.setTranscription(transcription);
   }
   
-  private handleError(error: unknown): void {
+  private onError(error: unknown): void {
     // Display a user-friendly message instead of the actual error
     const userMessage = this.getUserFriendlyErrorMessage(error);
     
@@ -217,220 +339,4 @@ export class UIHandler {
     }
   }
   
-  private createUIElements(): void {
-    if (!this.container) return;
-    this.container.innerHTML = '';
-    
-    // Create main interface container
-    const interfaceContainer = document.createElement('div');
-    interfaceContainer.className = 'voice-interface';
-    
-    // Create button container (circular)
-    const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'button-container';
-    
-    // Create single action button
-    this.actionButton = document.createElement('button');
-    this.actionButton.className = 'action-button record-mode';
-    this.actionButton.setAttribute('data-action', 'record');
-    this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15c2.21 0 4-1.79 4-4V5c0-2.21-1.79-4-4-4S8 2.79 8 5v6c0 2.21 1.79 4 4 4zm0-2c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2zm4 2v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1H4v1c0 3.53 2.61 6.43 6 6.92V23h4v-2.08c3.39-.49 6-3.39 6-6.92v-1h-2z" fill="currentColor"/></svg>';
-    
-    buttonContainer.appendChild(this.actionButton);
-    
-    // Status display
-    this.statusDisplay = document.createElement('div');
-    this.statusDisplay.className = 'status-display';
-    this.statusDisplay.textContent = 'SpeechPlug';
-    
-    // Add button and status to interface
-    interfaceContainer.appendChild(buttonContainer);
-    interfaceContainer.appendChild(this.statusDisplay);
-    
-    // Transcription area (hidden initially)
-    this.transcriptionDisplay = document.createElement('div');
-    this.transcriptionDisplay.className = 'transcription-display';
-    this.transcriptionDisplay.textContent = '';
-    this.transcriptionDisplay.style.display = 'none'; // Hide initially
-    
-    this.container.appendChild(interfaceContainer);
-    this.container.appendChild(this.transcriptionDisplay);
-  }
-  
-  private setupEventListeners(): void {
-    if (!this.actionButton) return;
-    
-    this.actionButton.addEventListener('click', () => {
-      if (!this.actionButton) return;
-      
-      const action = this.actionButton.getAttribute('data-action');
-      if (action === 'record') {
-        this.eventBus.emit(SpeechEvents.RECORD_BUTTON_CLICKED);
-      } else if (action === 'stop') {
-        this.eventBus.emit(SpeechEvents.STOP_BUTTON_CLICKED);
-      }
-    });
-  }
-  
-  private injectStyles(): void {
-    const styleId = 'voice-recorder-styles';
-    if (document.getElementById(styleId)) return;
-    
-    const styleElement = document.createElement('style');
-    styleElement.id = styleId;
-    styleElement.textContent = `
-      .voice-recorder-container {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        max-width: 280px;
-        margin: 0;
-        background-color: #f0f4f8;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-      }
-      
-      .voice-floating-container {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1000;
-      }
-      
-      .voice-interface {
-        display: flex;
-        align-items: center;
-        padding: 10px;
-        gap: 8px;
-      }
-      
-      .button-container {
-        width: 40px;
-        height: 40px;
-        background-color: #fff;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        flex-shrink: 0;
-      }
-      
-      .action-button {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        padding: 0;
-        background-color: transparent;
-      }
-      
-      .action-button svg {
-        width: 20px;
-        height: 20px;
-      }
-      
-      .action-button.record-mode {
-        color: #5A67D8;
-      }
-      
-      .action-button.record-mode:hover:not(:disabled) {
-        background-color: rgba(90, 103, 216, 0.1);
-      }
-      
-      .action-button.stop-mode {
-        color: #E53E3E;
-      }
-      
-      .action-button.stop-mode:hover:not(:disabled) {
-        background-color: rgba(229, 62, 62, 0.1);
-      }
-      
-      .action-button.processing-mode {
-        color: #718096;
-        cursor: not-allowed;
-      }
-      
-      .action-button:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-      }
-      
-      .status-display {
-        font-size: 14px;
-        text-align: left;
-        color: #4A5568;
-        font-weight: 400;
-        flex-grow: 1;
-        padding: 0 8px;
-        border: 1px solid transparent;
-        border-radius: 4px;
-        line-height: 26px;
-        height: auto;
-        transition: all 0.2s ease;
-        white-space: normal;
-        word-break: break-word;
-      }
-      
-      .status-display.error-state {
-        font-size: 11px;
-        color: #c62828;
-        background-color: #ffebee;
-        border-color: #f5c6cb;
-      }
-      
-      .transcription-display {
-        padding: 10px;
-        min-height: 30px;
-        max-height: 120px;
-        overflow-y: auto;
-        background-color: white;
-        font-size: 13px;
-        line-height: 1.4;
-        white-space: pre-wrap;
-        border-top: 1px solid #e0e0e0;
-        color: #2D3748;
-      }
-      
-      // .recording-indicator {
-      //   display: inline-block;
-      //   width: 8px;
-      //   height: 8px;
-      //   background-color: #E53E3E;
-      //   border-radius: 50%;
-      //   margin-right: 8px;
-      //   animation: pulse 1.5s infinite;
-      // }
-      
-      // @keyframes pulse {
-      //   0% { opacity: 1; transform: scale(1); }
-      //   50% { opacity: 0.6; transform: scale(1.2); }
-      //   100% { opacity: 1; transform: scale(1); }
-      // }
-      
-      @media (max-width: 480px) {
-        .voice-recorder-container {
-          max-width: 100%;
-          border-radius: 0;
-        }
-        
-        .voice-floating-container {
-          width: calc(100% - 20px);
-          right: 10px;
-          left: 10px;
-          bottom: 10px;
-        }
-          
-      }
-      .voice-recorder-container button:focus {
-        outline: none;
-        box-shadow: none;
-      }
-    `;
-    
-    document.head.appendChild(styleElement);
-  }
 }

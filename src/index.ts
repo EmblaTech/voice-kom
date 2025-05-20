@@ -23,6 +23,17 @@ export class SpeechPlug {
 
       //throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
     }
+    this.uiHandler?.init({
+      containerId: config.containerId,
+      autoStart: config.autoStart,
+      position: config.position,
+      width: config.width,
+      height: config.height,
+      theme: config.theme,
+      showProgress: config.showProgress,
+      showTranscription: config.showTranscription,
+      styles: config.styles
+    });
     /*
     await this.coreModule!.init({
       nlp: {
