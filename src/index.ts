@@ -1,5 +1,6 @@
 import { EventBus } from "./common/eventbus";
 import { Status } from "./common/status";
+import { CoreModule } from "./core/core-module";
 import { SpeechPlugConfig } from "./types";
 import { UIHandler } from "./ui/ui-handler";
 import { Logger } from "./utils/logger";
@@ -9,9 +10,10 @@ export class SpeechPlug {
   private readonly logger = Logger.getInstance();
   private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure'];
   private readonly VALID_UI_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-  private eventBus: EventBus | undefined;
-  private status: Status | undefined;
-  private uiHandler: UIHandler | undefined;
+  private eventBus!: EventBus;
+  private status!: Status;
+  private coreModule!: CoreModule; 
+  private uiHandler!: UIHandler;
   constructor() {
     this.injectDependencies();
   }
@@ -23,48 +25,30 @@ export class SpeechPlug {
 
       //throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
     }
-    this.uiHandler?.init({
-      containerId: config.containerId,
-      autoStart: config.autoStart,
-      position: config.position,
-      width: config.width,
-      height: config.height,
-      theme: config.theme,
-      showProgress: config.showProgress,
-      showTranscription: config.showTranscription,
-      styles: config.styles
-    });
-    /*
-    await this.coreModule!.init({
-      nlp: {
-        lang: config.lang,
-        sst: {
-          sttEngine: config.transcription?.provider ?? '',
-          sttApiKey: config.transcription?.apiKey ?? ''
-          //speechEngineParams: config.transcription?.options,
-        } 
-      },
-      ui: {
+    await this.coreModule.init({
+      uiConfig: {
         containerId: config.containerId,
-        autoStart: config.ui?.autoStart,
-        position: config.ui?.position,
-        width: config.ui?.width,
-        height: config.ui?.height,
-        theme: config.ui?.theme,
-        showProgress: config.ui?.showProgress,
-        showTranscription: config.ui?.showTranscription,
-        styles: config.ui?.styles
+        autoStart: config.autoStart,
+        position: config.position,
+        width: config.width,
+        height: config.height,
+        theme: config.theme,
+        showProgress: config.showProgress,
+        showTranscription: config.showTranscription,
+        styles: config.styles
       },
-      retryAttempts: config.retries,
-      timeout: config.timeout
+      actuatorConfig: { 
+        retries: config.retries,
+        timeout: config.timeout
+      }
     });
-    */
   }
 
   private injectDependencies() {
     this.eventBus = new EventBus();
     this.status = new Status();
     this.uiHandler = new UIHandler(this.eventBus, this.status);
+    this.coreModule = new CoreModule(this.uiHandler, this.eventBus, this.status);
   }
   // Function to validate the configuration
  private validateSpeechPlugConfig(config: SpeechPlugConfig): { isValid: boolean; errors: string[] } {
