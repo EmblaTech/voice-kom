@@ -1,18 +1,10 @@
-// audio-capturer.ts
-import { injectable, inject } from 'inversify';
-import { IAudioCapturer, TYPES } from '../types';
-import { EventBus } from '../common/eventbus';
+import { AudioCapturer } from '../types';
 
-@injectable()
-export class WebAudioCapturer implements IAudioCapturer {
+export class WebAudioCapturer implements AudioCapturer {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private resolveAudioPromise: ((value: Blob) => void) | null = null;
   private rejectAudioPromise: ((reason?: any) => void) | null = null;
-  
-  constructor(
-    @inject(TYPES.EventBus) private eventBus: EventBus,
-  ) {}
   
   public startRecording(): void {
     console.log("Starting audio recording");

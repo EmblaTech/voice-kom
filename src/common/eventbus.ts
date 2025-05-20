@@ -5,8 +5,8 @@ import { Logger } from '../utils/logger';
 // Define event types
 export enum SpeechEvents {
   // UI Events
-  RECORD_BUTTON_CLICKED = 'recordButtonClicked',
-  STOP_BUTTON_CLICKED = 'stopButtonClicked',
+  RECORD_BUTTON_PRESSED = 'recordButtonPressed',
+  STOP_BUTTON_PRESSED = 'stopButtonPressed',
   
   // Recording Events
   RECORDING_STARTED = 'recordingStarted',

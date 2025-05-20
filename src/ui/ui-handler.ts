@@ -161,9 +161,9 @@ export class UIHandler {
       
       const action = this.actionButton.getAttribute('data-action');
       if (action === 'record') {
-        this.eventBus.emit(SpeechEvents.RECORD_BUTTON_CLICKED);
+        this.eventBus.emit(SpeechEvents.RECORD_BUTTON_PRESSED);
       } else if (action === 'stop') {
-        this.eventBus.emit(SpeechEvents.STOP_BUTTON_CLICKED);
+        this.eventBus.emit(SpeechEvents.STOP_BUTTON_PRESSED);
       }
     });
   }
@@ -171,9 +171,9 @@ export class UIHandler {
   public updateFromState(): void {
     if (!this.container) return;
     
-    const state = this.status.get();
-    this.updateStatusDisplay(state.recordingStatus);
-    this.updateButton(state.recordingStatus);
+    const status = this.status.get();
+    this.updateStatusDisplay(status.value);
+    this.updateButton(status.value);
     
     if (this.transcriptionDisplay && this.transcription) {
       this.transcriptionDisplay.textContent = this.transcription;

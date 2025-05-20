@@ -1,5 +1,5 @@
 // enhanced-types.ts
-import {NLPConfig,NLUEngineConfig,STTConfig} from "../src/nlp/model/nlpConfig";
+import {NLPConfig,NLUEngineConfig,STTConfig} from "./nlu/model/nluConfig";
 import {CoreConfig} from "./core/model/coreConfig";
 import {UIConfig} from "./ui/model/uiConfig";
 
@@ -81,7 +81,7 @@ export interface INLPModule {
 }
 
 // Audio Capturer interface
-export interface IAudioCapturer {
+export interface AudioCapturer {
   startRecording(): void;
   stopRecording(): Promise<Blob>;
 }
@@ -130,7 +130,7 @@ export interface CommandRegistry {
   intents: CommandIntent[];
 }
 
-export interface IVoiceActuator {
+export interface Actuator {
   performAction(intent: IntentResult): Promise<boolean>;
 }
 

@@ -1,7 +1,12 @@
+import { VoiceActuator } from "./actuator/voice-actuator";
 import { EventBus } from "./common/eventbus";
 import { Status } from "./common/status";
 import { CoreModule } from "./core/core-module";
-import { SpeechPlugConfig } from "./types";
+import { WebAudioCapturer } from "./nlu/audio-capturer";
+import { CompromiseNLUDriver } from "./nlu/nlu-driver";
+import { NLUModule } from "./nlu/nlu-module";
+import { WhisperSTTDriver } from "./nlu/sst-driver";
+import { AudioCapturer, INLUDriver, ISTTDriver, SpeechPlugConfig } from "./types";
 import { UIHandler } from "./ui/ui-handler";
 import { Logger } from "./utils/logger";
 import { Validator } from "./utils/validator";
@@ -12,8 +17,14 @@ export class SpeechPlug {
   private readonly VALID_UI_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
   private eventBus!: EventBus;
   private status!: Status;
+  private audioCapturer!: AudioCapturer;
+  private whisperDriver!: ISTTDriver;
+  private compromiseDriver!: INLUDriver;
+  private voiceActuator!: VoiceActuator;
   private coreModule!: CoreModule; 
+  private nluModule!: NLUModule; 
   private uiHandler!: UIHandler;
+  
   constructor() {
     this.injectDependencies();
   }
@@ -47,8 +58,15 @@ export class SpeechPlug {
   private injectDependencies() {
     this.eventBus = new EventBus();
     this.status = new Status();
+
+    this.audioCapturer = new WebAudioCapturer();
+    this.whisperDriver = new WhisperSTTDriver();
+    this.compromiseDriver = new CompromiseNLUDriver();  
+
+    this.voiceActuator = new VoiceActuator(this.eventBus);
     this.uiHandler = new UIHandler(this.eventBus, this.status);
-    this.coreModule = new CoreModule(this.uiHandler, this.eventBus, this.status);
+    this.nluModule = new NLUModule(this.audioCapturer, this.whisperDriver, this.compromiseDriver, this.eventBus, this.status);
+    this.coreModule = new CoreModule(this.nluModule, this.uiHandler, this.eventBus, this.status, this.voiceActuator);
   }
   // Function to validate the configuration
  private validateSpeechPlugConfig(config: SpeechPlugConfig): { isValid: boolean; errors: string[] } {

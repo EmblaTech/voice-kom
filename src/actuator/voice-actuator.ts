@@ -1,5 +1,4 @@
-import { injectable, inject } from 'inversify';
-import { TYPES, IntentResult, Entities, Action, IntentTypes } from '../types';
+import { IntentResult, Entities, Action, IntentTypes } from '../types';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 
 // Interface for processed entities with resolved DOM elements
@@ -7,12 +6,11 @@ interface ProcessedEntities extends Entities {
   targetElement?: HTMLElement | null;
 }
 
-@injectable()
-export class VoiceActuator {
+export class VoiceActuator  {
   private actionMap!: Map<IntentTypes, Action>;
   
   constructor(
-    @inject(TYPES.EventBus) private eventBus: EventBus
+    private readonly eventBus: EventBus
   ) {
     this.initializeActionMap();
   }

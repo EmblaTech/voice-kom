@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { ISTTDriver } from '../types';
-import { STTConfig } from './model/nlpConfig';
+import { STTConfig } from './model/nluConfig';
 
 @injectable()
 export class WhisperSTTDriver implements ISTTDriver {

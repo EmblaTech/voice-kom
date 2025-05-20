@@ -2,7 +2,7 @@
 import { injectable } from 'inversify';
 import { INLUDriver, IntentResult, IntentTypes } from '../types';
 import nlp from 'compromise';
-import { NLUEngineConfig } from './model/nlpConfig';
+import { NLUEngineConfig } from './model/nluConfig';
 
 // Updated interface for the new registry format
 interface CommandConfig {

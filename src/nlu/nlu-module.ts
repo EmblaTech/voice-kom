@@ -1,21 +1,17 @@
-// nlp-module.ts
-import { injectable, inject } from 'inversify';
-import { INLPModule, INLUDriver, IAudioCapturer, ISTTDriver, CommandRegistry, TYPES, CommandIntent } from '../types';
+import { INLUDriver, AudioCapturer, ISTTDriver, CommandRegistry } from '../types';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { Status, StatusType } from '../common/status';
-import { NLPConfig } from './model/nlpConfig';
+import { NLPConfig } from './model/nluConfig';
 
-@injectable()
-export class NLPModule implements INLPModule {
+export class NLUModule  {
   private commandRegistry: CommandRegistry | null = null;
-  private language: string = 'en';
+  private readonly language: string = 'en';
   constructor(
-    @inject(TYPES.AudioCapturer) private audioCapturer: IAudioCapturer,
-    @inject(TYPES.STTDriver) private sttDriver: ISTTDriver,
-    @inject(TYPES.NLUDriver) private nluDriver: INLUDriver,
-    @inject(TYPES.EventBus) private eventBus: EventBus,
-    @inject(TYPES.StateStore) private stateStore: Status,
-
+    private readonly audioCapturer: AudioCapturer,
+    private readonly sttDriver: ISTTDriver,
+    private readonly nluDriver: INLUDriver,
+    private readonly eventBus: EventBus,
+    private readonly status: Status
   ) {}
   
   public async init(config: NLPConfig): Promise<void> {
@@ -61,12 +57,12 @@ export class NLPModule implements INLPModule {
 
       } catch (error: any) {
         console.error('Error:', error);
-        this.stateStore.set(StatusType.ERROR, error.message);
+        this.status.set(StatusType.ERROR, error.message);
         this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
       }
     } catch (error: any) {
       console.error('Error stopping recording:', error);
-      this.stateStore.set(StatusType.ERROR, error.message);
+      this.status.set(StatusType.ERROR, error.message);
       this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
     }
   }

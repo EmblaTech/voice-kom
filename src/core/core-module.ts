@@ -2,21 +2,33 @@ import { UIHandler } from '../ui/ui-handler';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { Status, StatusType } from '../common/status';
 import { CoreConfig } from './model/coreConfig';
-import { IntentResult } from '../types';
+import { INLPModule, IntentResult } from '../types';
+import { VoiceActuator } from '../actuator/voice-actuator';
 export class CoreModule {
   
   constructor(
-    //private nlpModule: INLPModule,
-    private uiHandler: UIHandler,
-    private eventBus: EventBus,
-    private status: Status,
-    //private voiceActuator: IVoiceActuator
+    private readonly nluModule: INLPModule,
+    private readonly uiHandler: UIHandler,
+    private readonly eventBus: EventBus,
+    private readonly status: Status,
+    private readonly voiceActuator: VoiceActuator
   ) {}
   
   public async init(config: CoreConfig): Promise<void> {
     await this.uiHandler.init(config.uiConfig);  
     // Initialize NLP module
-    //await this.nlpModule.init(config.nlp || {});
+    await this.nluModule.init({
+      lang: config.nluConfig?.transcriptionProvider?.lang,
+      sst: {
+        sttEngine: config.nluConfig?.transcriptionProvider?.name || 'default',
+        sttApiKey: config.nluConfig?.transcriptionProvider?.apiKey || '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',
+        speechEngineParams: config.nluConfig?.transcriptionProvider?.options
+      },
+      nlu: {
+        nluEngine: config.nluConfig?.recognitionProvider?.name || 'default',
+        nluApiKey: config.nluConfig?.recognitionProvider?.apiKey || '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'
+      }
+    })
     this.bindEvents();
     
     // Set initial state
@@ -25,14 +37,14 @@ export class CoreModule {
   }
 
   private bindEvents(): void {
-    this.eventBus.on(SpeechEvents.RECORD_BUTTON_CLICKED, () => {
+    this.eventBus.on(SpeechEvents.RECORD_BUTTON_PRESSED, () => {
       this.startListening();
     });
     
-    this.eventBus.on(SpeechEvents.STOP_BUTTON_CLICKED, () => {
+    this.eventBus.on(SpeechEvents.STOP_BUTTON_PRESSED, () => {
       // Check recording state before stopping
-      const state = this.status.get();
-      if (state.recordingStatus === StatusType.RECORDING) {
+      const status = this.status.get();
+      if (status.value === StatusType.RECORDING) {
         this.stopListening();
       }
     });
@@ -69,11 +81,11 @@ export class CoreModule {
       this.uiHandler.updateFromState();
       
       // Try to perform the action
-      //const actionPerformed = this.voiceActuator.performAction(intent);
+      const actionPerformed = this.voiceActuator.performAction(intent);
       
-      //if (!actionPerformed) {
-      //  console.log('No action was performed for intent:', intent);
-      //}
+      if (!actionPerformed) {
+        console.log('No action was performed for intent:', intent);
+      }
     });
     
     // Handle action performed event
@@ -100,16 +112,16 @@ export class CoreModule {
   }
   
   public startListening(): void {
-    const state = this.status.get();
-    if (state.recordingStatus !== StatusType.RECORDING) {
-      //this.nlpModule.startListening();
+    const status = this.status.get();
+    if (status.value !== StatusType.RECORDING) {
+      this.nluModule.startListening();
     }
   }
   
   public stopListening(): void {
-    const state = this.status.get();
-    if (state.recordingStatus == StatusType.RECORDING) {
-      //this.nlpModule.stopListening();
+    const status = this.status.get();
+    if (status.value == StatusType.RECORDING) {
+      this.nluModule.stopListening();
     }
   }
 }

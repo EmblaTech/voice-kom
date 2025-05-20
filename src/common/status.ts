@@ -27,7 +27,7 @@ export class Status {
   // Get current state (immutable)
   public get(): Readonly<any> {
     return { 
-        status: this.currentStatus,
+        value: this.currentStatus,
         message: this.message
      };
   }
