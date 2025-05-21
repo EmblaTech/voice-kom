@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {  
   SpeechPlug.init({   // Initialize SpeechPlug with params
-    containerId: 'speech-plug-container',
+    containerId: 'speech-container',
     lang: 'en',
-    transcriptionProvider: {
-      name: 'default',
+    transcription: {
+      provider: 'default',
+      apiKey: ''
     },
-    recognitionProvider: {
-      name: 'default',
+    recognition: {
+      provider: 'default',
     },
     ui: {
       styles: {

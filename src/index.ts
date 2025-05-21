@@ -29,8 +29,7 @@ export class SpeechPlug {
     const validation = this.validateSpeechPlugConfig(config);
     if (!validation.isValid) {
       this.logger.error(`Invalid configuration: ${validation.errors.join(', ')}`);
-
-      //throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
+      throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
     }
     await this.coreModule.init({
       transcriptionConfig: {
