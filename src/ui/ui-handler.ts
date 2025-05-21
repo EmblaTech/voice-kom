@@ -7,6 +7,9 @@ export class UIHandler {
   private config: UIConfig = { ...DEFAULT_UI_CONFIG };
   private readonly logger = Logger.getInstance();
   private readonly CONTAINER_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+  private readonly SPEECH_PLUG_TEMPLATE_PATH = '../../src/ui/speech-container.html';
+  private readonly SPEECH_PLUG_STYLE_ELEMENT_ID = 'speech-container-style';
+  private readonly SPEECH_PLUG_STYLE_PATH = '../../src/ui/speech-container.css';
 
   private container: HTMLElement | null = null;
   private actionButton: HTMLButtonElement | null = null;
@@ -41,7 +44,6 @@ export class UIHandler {
     }
     this.injectStyles();
     this.createUIElements();
-    this.bindEventListeners();
     this.updateFromState();
   }
 
@@ -105,52 +107,59 @@ export class UIHandler {
     return container;
   }
 
-  private injectStyles(): void {
-    const linkElement = document.createElement('link');
-    linkElement.rel = 'stylesheet';
-    linkElement.type = 'text/css';
-    linkElement.href = '../../src/ui/speech-container.css';  //TODO: need to check to get from dist?
-    document.head.appendChild(linkElement);
+  private async injectStyles(): Promise<void> {
+    if (document.getElementById(this.SPEECH_PLUG_STYLE_ELEMENT_ID)) return;
+  
+    // Create style element
+    const styleElement = document.createElement('style');
+    styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
+  
+    try {
+    // Fetch CSS content from external file
+      const response = await fetch(this.SPEECH_PLUG_STYLE_PATH);
+    
+      if (!response.ok) {
+        this.logger.error(`Failed to load CSS: ${response.status} ${response.statusText}`);
+      }
+    
+      // Get the CSS content and inject it
+      const cssContent = await response.text();
+      styleElement.textContent = cssContent;
+      document.head.appendChild(styleElement);
+      
+    } catch (error) {
+      this.logger.error('Error loading CSS:', error);
+      // Fallback to embedded styles if loading fails
+      throw Error('Failed to load CSS');
+    }
   }
 
-  //TODO:Refactor: move out html parts to a separate file
   private createUIElements(): void {
     if (!this.container) return;
-    this.container.innerHTML = '';
-    
-    // Create main interface container
-    const interfaceContainer = document.createElement('div');
-    interfaceContainer.className = 'voice-interface';
-    
-    // Create button container (circular)
-    const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'button-container';
-    
-    // Create single action button
-    this.actionButton = document.createElement('button');
-    this.actionButton.className = 'action-button record-mode';
-    this.actionButton.setAttribute('data-action', 'record');
-    this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15c2.21 0 4-1.79 4-4V5c0-2.21-1.79-4-4-4S8 2.79 8 5v6c0 2.21 1.79 4 4 4zm0-2c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2zm4 2v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1H4v1c0 3.53 2.61 6.43 6 6.92V23h4v-2.08c3.39-.49 6-3.39 6-6.92v-1h-2z" fill="currentColor"/></svg>';
-    
-    buttonContainer.appendChild(this.actionButton);
-    
-    // Status display
-    this.statusDisplay = document.createElement('div');
-    this.statusDisplay.className = 'status-display';
-    this.statusDisplay.textContent = 'SpeechPlug';
-    
-    // Add button and status to interface
-    interfaceContainer.appendChild(buttonContainer);
-    interfaceContainer.appendChild(this.statusDisplay);
-    
-    // Transcription area (hidden initially)
-    this.transcriptionDisplay = document.createElement('div');
-    this.transcriptionDisplay.className = 'transcription-display';
-    this.transcriptionDisplay.textContent = '';
-    this.transcriptionDisplay.style.display = 'none'; // Hide initially
-    
-    this.container.appendChild(interfaceContainer);
-    this.container.appendChild(this.transcriptionDisplay);
+    this.container.innerHTML = '';  
+
+    fetch(this.SPEECH_PLUG_TEMPLATE_PATH)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to load HTML template: ${response.status} ${response.statusText}`);
+      }
+      return response.text();
+    })
+    .then(htmlContent => {
+      this.container!.innerHTML = htmlContent;
+      this.actionButton = this.container!.querySelector('.action-button');
+      this.statusDisplay = this.container!.querySelector('.status-display');
+      this.transcriptionDisplay = this.container!.querySelector('.transcription-display');
+
+      // Initialize any event listeners or additional configuration here
+      if (this.actionButton) {
+        this.bindEventListeners();
+      }
+    })
+    .catch(error => {
+      this.logger.error('Error loading UI template:', error);
+      throw Error('Failed to load HTML template');
+    });
   }
 
   private bindEventListeners(): void {
@@ -338,5 +347,4 @@ export class UIHandler {
         break;
     }
   }
-  
 }
