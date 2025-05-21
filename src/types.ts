@@ -21,6 +21,7 @@ export interface SpeechPlugConfig {
   //Other configs
   retries?: number; 
   timeout?: number;
+  loglevel?: string; //TODO: Implement display log above configured log level
 }
 
 interface SpeechEngineConfig {
@@ -57,16 +58,6 @@ export interface UIConfig {
   showTranscription?: boolean;
   styles?: Record<string, string>;
 }
-
-export const DEFAULT_UI_CONFIG: UIConfig = {
-  containerId: 'speech-container',
-  position: 'bottom-right',
-  width: '300px',
-  height: '400px',
-  autoStart: false,
-  showProgress: true,
-  showTranscription: true
-};
 
 export interface ActuatorConfig {
   retries?:number,
@@ -117,4 +108,15 @@ export interface IActionRegistry {
   mapIntentToAction(intent: string, actionName: string): void;
   getActions(intent: string): Action[];
   getRegisteredActionNames(): string[];
+}
+
+export enum TranscriptionProviders {
+  DEFAULT = 'default',
+  GOOGLE = 'google',
+  AZURE = 'azure'
+}
+
+export enum ReconitionProvider {
+  DEFAULT = 'default',
+  OPENAI = 'openai'
 }

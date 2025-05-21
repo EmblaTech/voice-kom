@@ -1,10 +1,10 @@
 import { Logger } from '../utils/logger';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { ErrorType, Status, StatusType } from '../common/status';
-import { DEFAULT_UI_CONFIG, UIConfig } from '../../src/types';
+import { UIConfig } from '../../src/types';
 
 export class UIHandler {
-  private config: UIConfig = { ...DEFAULT_UI_CONFIG };
+  private config: UIConfig | null = null;
   private readonly logger = Logger.getInstance();
   private readonly CONTAINER_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
   private readonly SPEECH_PLUG_TEMPLATE_PATH = '../../src/ui/speech-container.html';
@@ -29,10 +29,10 @@ export class UIHandler {
   
   public async init(config: UIConfig): Promise<void> {
     // Merge provided config with defaults
-    this.config = { ...DEFAULT_UI_CONFIG, ...config };
-
+    this.config = config;
+    
     if(!this.config.containerId) { //Determine if we need to create a default container or use an existing one
-      this.container = this.createDefaultUI(DEFAULT_UI_CONFIG.containerId ?? '');
+      this.container = this.createDefaultUI(this.config.containerId!);
     }
     else {
       let existingContainer = document.getElementById(this.config.containerId);
@@ -49,12 +49,7 @@ export class UIHandler {
 
   private createDefaultUI(containerId: string): HTMLElement { 
     this.container = this.createContainer(containerId); 
-    this.setUI(
-      DEFAULT_UI_CONFIG.position!,
-      DEFAULT_UI_CONFIG.width!,
-      DEFAULT_UI_CONFIG.height!,
-      DEFAULT_UI_CONFIG.styles!
-    );
+    this.setUI(this.config!.position!, this.config!.width!, this.config!.height!, this.config!.styles! );
     return this.container;
   }
 
@@ -102,7 +97,7 @@ export class UIHandler {
   private createContainer(id: string): HTMLElement {
     const container = document.createElement('div');
     container.id = id;
-    this.config.containerId = id;
+    this.config!.containerId = id;
     document.body.appendChild(container);
     return container;
   }
@@ -182,8 +177,7 @@ export class UIHandler {
     
     const status = this.status.get();
     this.updateStatusDisplay(status.value);
-    this.updateButton(status.value);
-    
+    this.updateButton(status.value);    
     if (this.transcriptionDisplay && this.transcription) {
       this.transcriptionDisplay.textContent = this.transcription;
       this.transcriptionDisplay.style.display = 'block';
@@ -192,7 +186,6 @@ export class UIHandler {
   
   public setTranscription(transcription: string): void {
     this.transcription = transcription;
-    
     if (this.transcriptionDisplay) {
       this.transcriptionDisplay.textContent = transcription;
       // Show transcription area when we have content

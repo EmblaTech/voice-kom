@@ -4,15 +4,28 @@ import { Status } from "./common/status";
 import { CoreModule } from "./core/core-module";
 import { WebAudioCapturer } from "./nlu/audio-capturer";
 import { NLUModule } from "./nlu/nlu-module";
-import { AudioCapturer, SpeechPlugConfig } from "./types";
+import { AudioCapturer, ReconitionProvider, SpeechPlugConfig, TranscriptionProviders } from "./types";
 import { UIHandler } from "./ui/ui-handler";
-import { Logger } from "./utils/logger";
+import { Logger, LogLevel } from "./utils/logger";
 import { Validator } from "./utils/validator";
 
 export class SpeechPlug {
   private readonly logger = Logger.getInstance();
   private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure'];
   private readonly VALID_UI_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+  private readonly DEFAULT_CONTAINER_ID = 'speech-plug-container';
+  private readonly DEFAULT_LANG = 'en';
+  private readonly DEFAULT_TRANSCRIPTION_PROVIDER = TranscriptionProviders.DEFAULT;
+  private readonly DEFAULT_RECOGNITION_PROVIDER = ReconitionProvider.DEFAULT;
+  private readonly DEFAULT_RETRY_ATTEMPTS = 3;
+  private readonly DEFAULT_TIMEOUT = 5000;
+  private readonly DEFAULT_LOG_LEVEL = LogLevel.INFO;
+  private readonly DEFAULT_CONTAINER_POSITION = 'bottom-right';
+  private readonly DEFAULT_CONTAINER_WIDTH = '300px';
+  private readonly DEFAULT_CONTAINER_HEIGHT = '100px';
+  private readonly DEFAULT_AUTO_START = false;
+  private readonly DEFAULT_SHOW_PROGRESS = true;
+  private readonly DEFAULT_SHOW_TRANSCRIPTION = true;
   private eventBus!: EventBus;
   private status!: Status;
   private audioCapturer!: AudioCapturer;
@@ -33,8 +46,8 @@ export class SpeechPlug {
     }
     await this.coreModule.init({
       transcriptionConfig: {
-        lang: config.lang,
-        provider: config.transcription?.provider,
+        lang: config.lang ?? this.DEFAULT_LANG,
+        provider: config.transcription?.provider ?? this.DEFAULT_TRANSCRIPTION_PROVIDER,
         apiUrl: config.transcription?.apiUrl,
         apiKey: config.transcription?.apiKey,
         model: config.transcription?.model,
@@ -42,22 +55,22 @@ export class SpeechPlug {
         options: config.transcription?.options
       },
       recognitionConfig: {
-        lang: config.lang,
-        provider: config.recognition?.provider,
+        lang: config.lang ?? this.DEFAULT_LANG,
+        provider: config.recognition?.provider ?? this.DEFAULT_RECOGNITION_PROVIDER,
         apiUrl: config.recognition?.apiUrl,
         apiKey: config.recognition?.apiKey,
         model: config.recognition?.model,
         confidence: config.recognition?.confidence
       },
       uiConfig: {
-        containerId: config.containerId,
-        autoStart: config.autoStart,
-        position: config.position,
-        width: config.width,
-        height: config.height,
+        containerId: config.containerId ?? this.DEFAULT_CONTAINER_ID,
+        autoStart: config.autoStart ?? this.DEFAULT_AUTO_START,
+        position: config.position ?? this.DEFAULT_CONTAINER_POSITION,
+        width: config.width ?? this.DEFAULT_CONTAINER_WIDTH,
+        height: config.height ?? this.DEFAULT_CONTAINER_HEIGHT,
         theme: config.theme,
-        showProgress: config.showProgress,
-        showTranscription: config.showTranscription,
+        showProgress: config.showProgress ?? this.DEFAULT_SHOW_PROGRESS,
+        showTranscription: config.showTranscription ?? this.DEFAULT_SHOW_TRANSCRIPTION,
         styles: config.styles
       },
       actuatorConfig: { 
