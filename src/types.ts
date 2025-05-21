@@ -1,8 +1,4 @@
 // enhanced-types.ts
-import {NLPConfig,NLUEngineConfig,STTConfig} from "./nlu/model/nluConfig";
-import {CoreConfig} from "./core/model/coreConfig";
-import {UIConfig} from "./ui/model/uiConfig";
-
 export interface SpeechPlugConfig {
   //Key configs
   containerId? :string;
@@ -43,18 +39,39 @@ export interface RecognitionConfig extends SpeechEngineConfig {
 export interface TranscriptionConfig extends SpeechEngineConfig {  
 }
 
-export const TYPES = {
-  CoreModule: Symbol.for('CoreModule'),
-  NLPModule: Symbol.for('NLPModule'),
-  UIComponent: Symbol.for('UIComponent'),
-  AudioCapturer: Symbol.for('AudioCapturer'),
-  STTDriver: Symbol.for('STTDriver'),
-  EventBus: Symbol.for('EventBus'),
-  StateStore: Symbol.for('StateStore'),
-  NLUDriver: Symbol.for('NLUDriver'),
-  CommandRegistry: Symbol.for('CommandRegistry'),
-  VoiceActuator: Symbol.for('VoiceActuator'),
+export interface CoreConfig {
+  transcriptionConfig: TranscriptionConfig; 
+  recognitionConfig: RecognitionConfig;
+  uiConfig: UIConfig
+  actuatorConfig: ActuatorConfig
+}
+
+export interface UIConfig {
+  containerId?: string;
+  autoStart?: boolean;
+  position?: string;
+  width?: string;
+  height?: string;
+  theme?: string;
+  showProgress?: boolean;
+  showTranscription?: boolean;
+  styles?: Record<string, string>;
+}
+
+export const DEFAULT_UI_CONFIG: UIConfig = {
+  containerId: 'speech-container',
+  position: 'bottom-right',
+  width: '300px',
+  height: '400px',
+  autoStart: false,
+  showProgress: true,
+  showTranscription: true
 };
+
+export interface ActuatorConfig {
+  retries?:number,
+  timeout?: number,
+}
 
 export enum IntentTypes {
   CLICK_ELEMENT = 'click_element',
@@ -64,47 +81,11 @@ export enum IntentTypes {
   SUBMIT_FORM = 'submit_form',
   UNKNOWN = 'UNKNOWN'
 }
-
-// STT Driver interface
-export interface ISTTDriver {
-  init( lang:string ,config: STTConfig): void;
-  transcribe(audioBlob: Blob): Promise<string>;
-  getAvailableLanguages(): string[];
-}
-
-// NLP Module interface
-export interface INLPModule {
-  init( config: NLPConfig): Promise<void>;
-  startListening(): void;
-  stopListening(): Promise<void>;
-  getAvailableLanguages(): string[];
-}
-
 // Audio Capturer interface
 export interface AudioCapturer {
   startRecording(): void;
   stopRecording(): Promise<Blob>;
 }
-
-// UIcomponent Interface
-export interface IUIComponent {
-  init(config:UIConfig): void;
-  updateFromState(): void;
-  setTranscription(transcription: string): void;
-}
-
-// Core Module interface
-export interface ICoreModule {
-  init(config: CoreConfig): Promise<void>;
-  startListening(): void;
-  stopListening(): void;
-}
-
-// Voice Lib interface
-export interface IVoiceLib {
-  init(config: SpeechPlugConfig): Promise<void>;
-}
-
 // Intent recognition result
 export interface IntentResult {
   intent: IntentTypes;
@@ -112,13 +93,6 @@ export interface IntentResult {
   entities?: Entities;
 }
 export type Entities = Record<string, any>;
-
-// NLU Driver interface
-export interface INLUDriver {
-  init( lang:string , config: NLUEngineConfig): void;
-  identifyIntent(text: string): IntentResult;
-  getAvailableIntents(): string[];
-}
 
 export interface CommandIntent {
   name: string;

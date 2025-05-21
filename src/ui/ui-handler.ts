@@ -1,7 +1,7 @@
 import { Logger } from '../utils/logger';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { ErrorType, Status, StatusType } from '../common/status';
-import { DEFAULT_UI_CONFIG, UIConfig } from './model/uiConfig';
+import { DEFAULT_UI_CONFIG, UIConfig } from '../../src/types';
 
 export class UIHandler {
   private config: UIConfig = { ...DEFAULT_UI_CONFIG };

@@ -1,4 +1,4 @@
-import { INLUDriver, AudioCapturer, ISTTDriver, CommandRegistry, TranscriptionConfig, RecognitionConfig } from '../types';
+import { AudioCapturer, CommandRegistry, TranscriptionConfig, RecognitionConfig } from '../types';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { Status, StatusType } from '../common/status';
 import { TranscriptionDriver } from './transcription/driver';

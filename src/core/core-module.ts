@@ -1,8 +1,7 @@
 import { UIHandler } from '../ui/ui-handler';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { Status, StatusType } from '../common/status';
-import { CoreConfig } from './model/coreConfig';
-import { IntentResult } from '../types';
+import { CoreConfig, IntentResult } from '../types';
 import { VoiceActuator } from '../actuator/voice-actuator';
 import { NLUModule } from '../nlu/nlu-module';
 export class CoreModule {

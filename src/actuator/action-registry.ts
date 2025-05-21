@@ -1,14 +1,11 @@
-import { injectable, inject } from 'inversify';
-import { TYPES, IActionRegistry, Action } from '../types';
-import { EventBus, SpeechEvents } from '../common/eventbus';
+import { IActionRegistry, Action } from '../types';
+import { EventBus } from '../common/eventbus';
 
-@injectable()
 export class ActionRegistry implements IActionRegistry {
   private actionMap = new Map<string, Action>();               // name -> action instance
   private intentToActions = new Map<string, string[]>();       // intent -> action names
 
-  constructor(
-    @inject(TYPES.EventBus) private eventBus: EventBus
+  constructor(private eventBus: EventBus
     )
     {}
   registerAction(name: string, action: Action): void {
