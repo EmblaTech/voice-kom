@@ -9,8 +9,8 @@ export interface SpeechPlugConfig {
   lang?: string;   
 
   //Speech engine configs
-  transcriptionProvider?: TranscriptionProviderConfig;  //Transcription options
-  recognitionProvider?: RecognitionProviderConfig; // NLU options    
+  transcription?: TranscriptionConfig;  //Transcription options
+  recognition?: RecognitionConfig; // NLU options    
 
   //UI configs
   autoStart?: boolean;
@@ -27,8 +27,9 @@ export interface SpeechPlugConfig {
   timeout?: number;
 }
 
-interface ProviderConfig {
-  name?: string; // Provider name (e.g., 'default' | 'openai' | 'google' | 'azure' | 'custom',)
+interface SpeechEngineConfig {
+  provider?: string; // Provider name (e.g., 'default' | 'openai' | 'google' | 'azure' | 'custom',)
+  lang?: string;
   apiUrl?: string;  // API endpoint URL 
   apiKey?: string; // API key if required  
   model?: string;  // Model name if applicable
@@ -36,11 +37,10 @@ interface ProviderConfig {
   options?: Record<string, any>; // Any additional options needed
 }
 
-export interface RecognitionProviderConfig extends ProviderConfig {
+export interface RecognitionConfig extends SpeechEngineConfig {
 }
 
-export interface TranscriptionProviderConfig extends ProviderConfig {
-  lang?: string;
+export interface TranscriptionConfig extends SpeechEngineConfig {  
 }
 
 export const TYPES = {

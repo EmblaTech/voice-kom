@@ -1,31 +1,10 @@
+import { RecognitionConfig, TranscriptionConfig } from "../../types";
+
 export interface CoreConfig {
-    nluConfig?:NLUConfig;
+    transcriptionConfig: TranscriptionConfig; 
+    recognitionConfig: RecognitionConfig;
     uiConfig: UIConfig
-    actuatorConfig?: ActuatorConfig
-}
-
-interface NLUConfig {
-    transcriptionProvider?: TranscriptionProviderConfig; 
-    recognitionProvider?: RecongnitionProviderConfig; 
-}
-interface TranscriptionProviderConfig {
-    name?: string; 
-    lang?: string;
-    apiUrl?: string;  
-    apiKey?: string; 
-    model?: string;  
-    confidence?: number; 
-    options?: Record<string, any>; 
-}
-
-interface RecongnitionProviderConfig {
-    name?: string; 
-    lang?: string;
-    apiUrl?: string;  
-    apiKey?: string; 
-    model?: string;  
-    confidence?: number; 
-    options?: Record<string, any>; 
+    actuatorConfig: ActuatorConfig
 }
 
 interface UIConfig {

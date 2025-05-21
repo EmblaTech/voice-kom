@@ -2,33 +2,22 @@ import { UIHandler } from '../ui/ui-handler';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { Status, StatusType } from '../common/status';
 import { CoreConfig } from './model/coreConfig';
-import { INLPModule, IntentResult } from '../types';
+import { IntentResult } from '../types';
 import { VoiceActuator } from '../actuator/voice-actuator';
+import { NLUModule } from '../nlu/nlu-module';
 export class CoreModule {
   
   constructor(
-    private readonly nluModule: INLPModule,
+    private readonly nluModule: NLUModule,
     private readonly uiHandler: UIHandler,
+    private readonly voiceActuator: VoiceActuator,
     private readonly eventBus: EventBus,
-    private readonly status: Status,
-    private readonly voiceActuator: VoiceActuator
+    private readonly status: Status    
   ) {}
   
   public async init(config: CoreConfig): Promise<void> {
-    await this.uiHandler.init(config.uiConfig);  
-    // Initialize NLP module
-    await this.nluModule.init({
-      lang: config.nluConfig?.transcriptionProvider?.lang,
-      sst: {
-        sttEngine: config.nluConfig?.transcriptionProvider?.name || 'default',
-        sttApiKey: config.nluConfig?.transcriptionProvider?.apiKey || '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',
-        speechEngineParams: config.nluConfig?.transcriptionProvider?.options
-      },
-      nlu: {
-        nluEngine: config.nluConfig?.recognitionProvider?.name || 'default',
-        nluApiKey: config.nluConfig?.recognitionProvider?.apiKey || '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'
-      }
-    })
+    await this.uiHandler.init(config.uiConfig); 
+    await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig )
     this.bindEvents();
     
     // Set initial state

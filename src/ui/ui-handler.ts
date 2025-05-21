@@ -24,7 +24,7 @@ export class UIHandler {
     this.eventBus.on(SpeechEvents.ERROR_OCCURRED, this.onError.bind(this));
   }
   
-  public init(config: UIConfig): void {
+  public async init(config: UIConfig): Promise<void> {
     // Merge provided config with defaults
     this.config = { ...DEFAULT_UI_CONFIG, ...config };
 

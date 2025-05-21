@@ -2,6 +2,7 @@
 import { EventEmitter } from 'events';
 import { Logger } from '../utils/logger';
 
+//TODO: Remove this class and set status from necessary places to avoid complexity
 // Define event types
 export enum SpeechEvents {
   // UI Events

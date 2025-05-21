@@ -1,36 +1,24 @@
-import { INLUDriver, AudioCapturer, ISTTDriver, CommandRegistry } from '../types';
+import { INLUDriver, AudioCapturer, ISTTDriver, CommandRegistry, TranscriptionConfig, RecognitionConfig } from '../types';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { Status, StatusType } from '../common/status';
-import { NLPConfig } from './model/nluConfig';
+import { TranscriptionDriver } from './transcription/driver';
+import { RecognitionDriver } from './recognition/driver';
+import { DriverFactory } from './driver-factory';
 
 export class NLUModule  {
   private commandRegistry: CommandRegistry | null = null;
-  private readonly language: string = 'en';
+  private readonly language: string = 'en';  
+  private transcriptionDriver!: TranscriptionDriver
+  private recognitionDriver!: RecognitionDriver
   constructor(
-    private readonly audioCapturer: AudioCapturer,
-    private readonly sttDriver: ISTTDriver,
-    private readonly nluDriver: INLUDriver,
+    private readonly audioCapturer: AudioCapturer,    
     private readonly eventBus: EventBus,
     private readonly status: Status
   ) {}
   
-  public async init(config: NLPConfig): Promise<void> {
-    const language = config.lang || this.language;
-    
-    this.sttDriver.init(
-      language,
-      config.sst || {
-        sttEngine: "default" 
-      }
-    );
-  
-    this.commandRegistry = this.getCommands();
-    this.nluDriver.init(
-      language,
-      config.nlu || {
-        nluEngine: "default" 
-      }
-    );
+  public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): Promise<void> {    
+    this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig);
+    this.recognitionDriver = DriverFactory.getReconitionDriver(recogConfig);
   }
 
   
@@ -48,11 +36,11 @@ export class NLUModule  {
             
       try {
         // Transcribe the audio using the STT driver
-        const transcription = await this.sttDriver.transcribe(audioBlob);
+        const transcription = await this.transcriptionDriver.transcribe(audioBlob);
         this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
 
         // Identify intent using the NLU driver
-        const intentResult = this.nluDriver.identifyIntent(transcription);
+        const intentResult = this.recognitionDriver.detectIntent(transcription);
         this.eventBus.emit(SpeechEvents.NLU_COMPLETED, intentResult);
 
       } catch (error: any) {
@@ -65,10 +53,6 @@ export class NLUModule  {
       this.status.set(StatusType.ERROR, error.message);
       this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
     }
-  }
-  
-  public getAvailableLanguages(): string[] {
-    return this.sttDriver.getAvailableLanguages();
   }
 
   private getCommands(): CommandRegistry {

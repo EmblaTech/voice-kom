@@ -3,10 +3,8 @@ import { EventBus } from "./common/eventbus";
 import { Status } from "./common/status";
 import { CoreModule } from "./core/core-module";
 import { WebAudioCapturer } from "./nlu/audio-capturer";
-import { CompromiseNLUDriver } from "./nlu/nlu-driver";
 import { NLUModule } from "./nlu/nlu-module";
-import { WhisperSTTDriver } from "./nlu/sst-driver";
-import { AudioCapturer, INLUDriver, ISTTDriver, SpeechPlugConfig } from "./types";
+import { AudioCapturer, SpeechPlugConfig } from "./types";
 import { UIHandler } from "./ui/ui-handler";
 import { Logger } from "./utils/logger";
 import { Validator } from "./utils/validator";
@@ -18,8 +16,6 @@ export class SpeechPlug {
   private eventBus!: EventBus;
   private status!: Status;
   private audioCapturer!: AudioCapturer;
-  private whisperDriver!: ISTTDriver;
-  private compromiseDriver!: INLUDriver;
   private voiceActuator!: VoiceActuator;
   private coreModule!: CoreModule; 
   private nluModule!: NLUModule; 
@@ -37,6 +33,23 @@ export class SpeechPlug {
       //throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
     }
     await this.coreModule.init({
+      transcriptionConfig: {
+        lang: config.lang,
+        provider: config.transcription?.provider,
+        apiUrl: config.transcription?.apiUrl,
+        apiKey: config.transcription?.apiKey,
+        model: config.transcription?.model,
+        confidence: config.transcription?.confidence,
+        options: config.transcription?.options
+      },
+      recognitionConfig: {
+        lang: config.lang,
+        provider: config.recognition?.provider,
+        apiUrl: config.recognition?.apiUrl,
+        apiKey: config.recognition?.apiKey,
+        model: config.recognition?.model,
+        confidence: config.recognition?.confidence
+      },
       uiConfig: {
         containerId: config.containerId,
         autoStart: config.autoStart,
@@ -59,14 +72,12 @@ export class SpeechPlug {
     this.eventBus = new EventBus();
     this.status = new Status();
 
-    this.audioCapturer = new WebAudioCapturer();
-    this.whisperDriver = new WhisperSTTDriver();
-    this.compromiseDriver = new CompromiseNLUDriver();  
+    this.audioCapturer = new WebAudioCapturer(); 
 
     this.voiceActuator = new VoiceActuator(this.eventBus);
     this.uiHandler = new UIHandler(this.eventBus, this.status);
-    this.nluModule = new NLUModule(this.audioCapturer, this.whisperDriver, this.compromiseDriver, this.eventBus, this.status);
-    this.coreModule = new CoreModule(this.nluModule, this.uiHandler, this.eventBus, this.status, this.voiceActuator);
+    this.nluModule = new NLUModule(this.audioCapturer, this.eventBus, this.status);
+    this.coreModule = new CoreModule(this.nluModule, this.uiHandler, this.voiceActuator, this.eventBus, this.status);
   }
   // Function to validate the configuration
  private validateSpeechPlugConfig(config: SpeechPlugConfig): { isValid: boolean; errors: string[] } {
@@ -87,8 +98,8 @@ export class SpeechPlug {
         errors.push("Timeout must be a number");
     }
 
-    this.validateProviderConfig(config.transcriptionProvider, "TranscriptionProvider", errors);
-    this.validateProviderConfig(config.recognitionProvider, "RecognitionProvider", errors);
+    this.validateProviderConfig(config.transcription, "Transcription", errors);
+    this.validateProviderConfig(config.recognition, "Recognition", errors);
     this.validateUIConfig(config, errors);
 
     return {
@@ -100,7 +111,7 @@ export class SpeechPlug {
   private validateProviderConfig(providerConfig: any, type: string, errors: string[]) {
     if (!providerConfig) return;
     
-    const providerResult = Validator.isInValues(providerConfig.name, this.VALID_PROVIDERS, 'Speech Provider');
+    const providerResult = Validator.isInValues(providerConfig.provider, this.VALID_PROVIDERS, 'Speech Provider');
     if (!providerResult.valid && providerResult.message) {
         errors.push(providerResult.message);
     }

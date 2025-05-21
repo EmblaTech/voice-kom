@@ -1,3 +1,4 @@
+import { Logger } from '../utils/logger';
 import { AudioCapturer } from '../types';
 
 export class WebAudioCapturer implements AudioCapturer {
@@ -5,9 +6,9 @@ export class WebAudioCapturer implements AudioCapturer {
   private audioChunks: Blob[] = [];
   private resolveAudioPromise: ((value: Blob) => void) | null = null;
   private rejectAudioPromise: ((reason?: any) => void) | null = null;
-  
+  private readonly logger = Logger.getInstance();
   public startRecording(): void {
-    console.log("Starting audio recording");
+    this.logger.info("Starting audio recording");
     
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
@@ -35,7 +36,7 @@ export class WebAudioCapturer implements AudioCapturer {
         this.mediaRecorder.start();
       })
       .catch((error: unknown) => {
-        console.error('Error accessing microphone:', error);
+        this.logger.error('Error accessing microphone:', error);
         if (this.rejectAudioPromise) {
           this.rejectAudioPromise(error);
         }
@@ -43,7 +44,7 @@ export class WebAudioCapturer implements AudioCapturer {
   }
   
   public stopRecording(): Promise<Blob> {
-    console.log("Stopping audio recording");
+    this.logger.info("Stopping audio recording");
     
     return new Promise<Blob>((resolve, reject) => {
       this.resolveAudioPromise = resolve;
