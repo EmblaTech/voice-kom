@@ -8,6 +8,10 @@ export interface AdapterConfig {
     sttApiKey?: string;
     speechEngineParams?: Record<string, any>;
     
+    //Speech to text provider options
+    nluEngine?: string;
+    nluApiKey?: string;
+    
     //UI options
     autoStart?: boolean;
     position?: string;

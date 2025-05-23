@@ -1,23 +1,14 @@
 // compromise-nlu-driver.ts
-import { injectable } from 'inversify';
-import { INLUDriver, IntentResult, IntentTypes } from '../types';
+import { injectable, inject } from 'inversify';
+import { INLUDriver, IntentResult, IntentTypes, TYPES } from '../types';
 import nlp from 'compromise';
 import { NLUEngineConfig } from './model/nlpConfig';
-
-// Updated interface for the new registry format
-interface CommandConfig {
-  utterances: string[];
-  entities: string[];
-}
-
-interface CommandRegistry {
-  [key: string]: CommandConfig;
-}
+import { ICommandRegistry } from './commandRegistry';
 
 @injectable()
 export class CompromiseNLUDriver implements INLUDriver {
   private language: string = 'en';
-  private commandRegistry: CommandRegistry | null = null;
+  private commandRegistry: ICommandRegistry | null = null;
   private availableIntents: IntentTypes[] = [IntentTypes.UNKNOWN];
   private entityMap: Map<string, string[]> = new Map();
   
@@ -28,29 +19,20 @@ export class CompromiseNLUDriver implements INLUDriver {
     'thanks', 'thank you'
   ];
 
+  constructor(
+    @inject(TYPES.CommandRegistry) private registryService: ICommandRegistry
+  ) {}
+
   /**
    * Initialize the NLU driver with configuration options
    */
-  init(lang: string, config:NLUEngineConfig): void {
+  init(lang: string, config: NLUEngineConfig): void {
     if (lang) {
       this.language = lang;
     }
     
-    // Initialize with default command registry if needed
-    this.commandRegistry = {
-      [IntentTypes.CLICK_ELEMENT]: {
-        utterances: ["click (target)", "press (target)", "tap (target)"],
-        entities: ["target"]
-      },
-      [IntentTypes.FILL_INPUT]: {
-        utterances: ["Fill (target) as (value)", "Enter (target) as (value)","Enter (target) with (value)", "Fill (target) with (value)"],
-        entities: ["target", "value"]
-      },
-      [IntentTypes.SCROLL_TO_ELEMENT]: {
-        utterances: ["scroll to (target)", "go to (target) section"],
-        entities: ["target"]
-      }
-    };
+    // Use the injected command registry
+    this.commandRegistry = this.registryService;
     
     this.setupIntentsAndEntities();
   }
@@ -224,10 +206,10 @@ export class CompromiseNLUDriver implements INLUDriver {
     for (const intentName of this.availableIntents) {
       if (intentName === IntentTypes.UNKNOWN) continue;
       
-      const CommandConfig = this.commandRegistry[intentName];
-      if (!CommandConfig) continue;
+      const commandConfig = this.commandRegistry[intentName];
+      if (!commandConfig) continue;
       
-      for (const pattern of CommandConfig.utterances) {
+      for (const pattern of commandConfig.utterances) {
         const result = this.matchPattern(doc, pattern, preprocessedText);
         
         if (result.confidence > bestMatch.confidence) {
@@ -302,8 +284,9 @@ export class CompromiseNLUDriver implements INLUDriver {
   /**
    * Identify the intent from input text
    */
-  identifyIntent(text: string): IntentResult {
-    return this.findBestMatch(text);
+  identifyIntent(text: string): IntentResult[] {
+    let intent = this.findBestMatch(text);
+    return [intent];
   }
 
   /**

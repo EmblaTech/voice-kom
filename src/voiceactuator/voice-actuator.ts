@@ -1,32 +1,72 @@
 import { injectable, inject } from 'inversify';
-import { TYPES, IntentResult, Entities, Action, IntentTypes } from '../types';
+import { TYPES, IntentResult, Entities, Action, IntentTypes, IVoiceActuator } from '../types';
 import { EventBus, VoiceLibEvents } from '../utils/eventbus';
+import * as chrono from 'chrono-node';
 
 // Interface for processed entities with resolved DOM elements
 interface ProcessedEntities extends Entities {
   targetElement?: HTMLElement | null;
+  targetElements?: HTMLElement[];
+  groupElement?: HTMLElement | null;
+}
+
+// Interface for element processing strategies
+interface ElementProcessor {
+  canProcess(intent: string, entities: Entities): boolean;
+  process(entities: Entities): Partial<ProcessedEntities>;
+}
+
+// Interface for value normalizers
+interface ValueNormalizer {
+  canNormalize(element: HTMLElement, value: string): boolean;
+  normalize(element: HTMLElement, value: string): string;
 }
 
 @injectable()
-export class VoiceActuator {
+export class VoiceActuator implements IVoiceActuator {
   private actionMap!: Map<IntentTypes, Action>;
+  private elementProcessors: ElementProcessor[] = [];
+  private valueNormalizers: ValueNormalizer[] = [];
   
   constructor(
     @inject(TYPES.EventBus) private eventBus: EventBus
   ) {
+    this.initializeProcessors();
+    this.initializeNormalizers();
     this.initializeActionMap();
+  }
+
+  private initializeProcessors(): void {
+    // Register element processors in order of priority
+    this.elementProcessors = [
+      new GroupedTargetProcessor(this),
+      new MultipleTargetProcessor(),
+      new SingleTargetProcessor(this)
+    ];
+  }
+
+  private initializeNormalizers(): void {
+    this.valueNormalizers = [
+      new EmailNormalizer(),
+      new DateNormalizer(),
+      new TimeNormalizer()
+    ];
   }
 
   private initializeActionMap(): void {
     this.actionMap = new Map<IntentTypes, Action>();
     
-    // Register all actions here
-    this.registerAction(IntentTypes.CLICK_ELEMENT, { execute: (entities) => this.clickElementAction(entities)});
-    this.registerAction(IntentTypes.FILL_INPUT, { execute: (entities) => this.fillInputAction(entities)});
+    // Register actions using generalized handlers
+    this.registerAction(IntentTypes.CLICK_ELEMENT, { execute: (entities) => this.executeElementAction(entities, 'click')});
+    this.registerAction(IntentTypes.FILL_INPUT, { execute: (entities) => this.executeInputAction(entities)});
+    this.registerAction(IntentTypes.SCROLL_TO_ELEMENT, { execute: (entities) => this.executeElementAction(entities, 'scroll')});
+    this.registerAction(IntentTypes.CHECK_CHECKBOX, { execute: (entities) => this.executeCheckboxAction(entities, true)});
+    this.registerAction(IntentTypes.UNCHECK_CHECKBOX, { execute: (entities) => this.executeCheckboxAction(entities, false)});
+    this.registerAction(IntentTypes.CHECK_ALL, { execute: (entities) => this.executeMultipleCheckboxAction(entities, true)});
+    this.registerAction(IntentTypes.UNCHECK_ALL, { execute: (entities) => this.executeMultipleCheckboxAction(entities, false)});
+    this.registerAction(IntentTypes.SELECT_RADIO_OR_DROPDOWN, { execute: (entities) => this.executeSelectionAction(entities)});
+    this.registerAction(IntentTypes.OPEN_DROPDOWN, { execute: (entities) => this.executeOpenDropdownAction(entities)});
 
-    // Add more actions as needed
-    // this.registerAction('open_menu', { execute: (entities) => this.openMenuAction(entities) });
-    // this.registerAction('navigate_to', { execute: (entities) => this.navigateToAction(entities) });
   }
   
   private registerAction(intentName: IntentTypes, action: Action): void {
@@ -34,36 +74,52 @@ export class VoiceActuator {
   }
 
   private processEntities(intent: string, entities: Entities): ProcessedEntities {
-    const processedEntities: ProcessedEntities = { ...entities };
+    let processedEntities: ProcessedEntities = { ...entities };
     
-    // Process target entity for actions that need DOM elements
-    if (entities.target) {
-      const targetName = entities.target.toLowerCase();
-      const element = this.findTargetElement(targetName);
-      processedEntities.targetElement = element;
-      
-      if (!element) {
-        console.log(`VoiceActuator: No matching element found for target "${targetName}"`);
+    // Apply element processors
+    for (const processor of this.elementProcessors) {
+      if (processor.canProcess(intent, entities)) {
+        const processed = processor.process(entities);
+        processedEntities = { ...processedEntities, ...processed };
+        break; // Use first matching processor
       }
     }
-    if (processedEntities.targetElement instanceof HTMLInputElement && processedEntities.targetElement.type === 'email') {
-      processedEntities.value= this.normalizeEmailValue(entities.value);
-      console.log(processedEntities.value)
+    
+    // Apply value normalization if needed
+    if (entities.value && processedEntities.targetElement && intent === IntentTypes.FILL_INPUT) {
+      for (const normalizer of this.valueNormalizers) {
+        if (normalizer.canNormalize(processedEntities.targetElement, entities.value)) {
+          processedEntities.value = normalizer.normalize(processedEntities.targetElement, entities.value);
+          break;
+        }
+      }
     }
 
     return processedEntities;
   }
-  private normalizeEmailValue(spoken: string): string {
-    return spoken
-      .replace(/\bat\b/gi, '@')
-      .replace(/\bdot\b/gi, '.')
-      .replace(/\bunderscore\b/gi, '_')
-      .replace(/\bdash\b/gi, '-')
-      .replace(/\bplus\b/gi, '+')
-      .replace(/\s+/g, '') // remove spaces
-      .trim();
+
+  /**
+   * Process an array of intents sequentially
+   */
+  public async performAction(intents: IntentResult[]): Promise<boolean> {
+    if (!intents || intents.length === 0) {
+      console.log('VoiceActuator: No intents provided');
+      return false;
+    }
+
+    let allSuccessful = true;
+    
+    for (const intent of intents) {
+      const success = await this.executeIntent(intent);
+      if (!success) {
+        allSuccessful = false;
+      }
+    }
+    
+    return allSuccessful;
   }
-  public performAction(intent: IntentResult): boolean {
+
+  private async executeIntent(intent: IntentResult): Promise<boolean> {
     const action = this.actionMap.get(intent.intent);
     
     if (!action) {
@@ -72,7 +128,6 @@ export class VoiceActuator {
       return false;
     }
     
-    // Process and validate entities before executing the action
     const processedEntities = this.processEntities(intent.intent, intent.entities || {});
     const result = action.execute(processedEntities);
     
@@ -85,96 +140,501 @@ export class VoiceActuator {
       this.eventBus.emit(VoiceLibEvents.ACTION_PAUSED);
     }
     
+    await new Promise(resolve => setTimeout(resolve, 100));
     return result;
   }
-  
-  private findTargetElement(targetName: string): HTMLElement | null {
-    // Query all elements with voice.name attribute
-    const elements = document.querySelectorAll('[voice\\.name]');
-    console.log(`VoiceActuator: Found ${elements.length} elements with voice.name attributes`);
+
+  // Utility methods exposed for processors
+  public findElement(targetName: string, context?: HTMLElement): HTMLElement | null {
+    const selector = context ? 
+      context.querySelectorAll('[voice\\.name]') : 
+      document.querySelectorAll('[voice\\.name]');
     
-    // Try to find an element with a matching voice.name
-    for (const element of Array.from(elements)) {
-      const voiceName = element.getAttribute('voice.name')?.toLowerCase();
-      
-      if (voiceName && this.isMatchingTarget(voiceName, targetName)) {
-        console.log(`VoiceActuator: Found matching element with voice.name "${voiceName}"`);
-        
-        if (element instanceof HTMLElement) {
-          return element;
-        }
-      }
+    console.log(`VoiceActuator: Found ${selector.length} elements with voice.name attributes`);
+    
+    if (selector.length === 0) return null;
+    
+    const scoredElements = Array.from(selector)
+      .filter(element => element instanceof HTMLElement)
+      .map(element => ({
+        element: element as HTMLElement,
+        score: this.calculateMatchScore(
+          element.getAttribute('voice.name')?.toLowerCase() || '', 
+          targetName.toLowerCase()
+        ),
+        voiceName: element.getAttribute('voice.name') || ''
+      }))
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score);
+    
+    if (scoredElements.length > 0) {
+      const bestMatch = scoredElements[0];
+      console.log(`VoiceActuator: Selected best match "${bestMatch.voiceName}" with score ${bestMatch.score}`);
+      return bestMatch.element;
     }
+    
     return null;
   }
 
-  private isMatchingTarget(voiceName: string, targetName: string): boolean {
+  public findElementsInGroup(groupName: string): HTMLElement[] {
+    return Array.from(document.querySelectorAll(`[name="${groupName}"]`));
+  }
+
+  public calculateMatchScore(voiceName: string, targetName: string): number {
     const normalize = (str: string) =>
       str.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
   
     const voiceTokens = normalize(voiceName);
     const targetTokens = normalize(targetName);
+    
+    if (voiceTokens.length === 0 || targetTokens.length === 0) return 0;
+    
+    let score = 0;
+    
+    if (voiceName === targetName) score += 100;
+    if (voiceName.includes(targetName)) score += 50;
+    else if (targetName.includes(voiceName)) score += 40;
+    
+    const matchingTokens = voiceTokens.filter(token => targetTokens.includes(token));
+    score += matchingTokens.length * 10;
+    score += (matchingTokens.length / voiceTokens.length) * 30;
+    score += (matchingTokens.length / targetTokens.length) * 30;
+    
+    if (voiceTokens[0] === targetTokens[0]) score += 15;
+    score += this.getLevenshteinSimilarity(voiceName, targetName) * 25;
+    
+    return score;
+  }
   
-    // Exact or subset matches
-    if (voiceName === targetName || 
-        voiceName.includes(targetName) || 
-        targetName.includes(voiceName)) {
-      return true;
+  private getLevenshteinSimilarity(str1: string, str2: string): number {
+    const track = Array(str2.length + 1).fill(null).map(() => 
+      Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i += 1) track[0][i] = i;
+    for (let j = 0; j <= str2.length; j += 1) track[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j += 1) {
+      for (let i = 1; i <= str1.length; i += 1) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        track[j][i] = Math.min(
+          track[j][i - 1] + 1,
+          track[j - 1][i] + 1,
+          track[j - 1][i - 1] + indicator,
+        );
+      }
+    }
+    
+    const distance = track[str2.length][str1.length];
+    const maxLength = Math.max(str1.length, str2.length);
+    return maxLength > 0 ? 1 - (distance / maxLength) : 1;
+  }
+
+  /* GENERALIZED ACTION EXECUTORS */
+
+  private executeElementAction(entities: ProcessedEntities, actionType: string): boolean {
+    if (!entities.target || !entities.targetElement) {
+      console.log(`VoiceActuator: No valid target for ${actionType} action`);
+      return false;
+    }
+
+    switch (actionType) {
+      case 'click':
+        entities.targetElement.click();
+        console.log(`VoiceActuator: Clicked element:`, entities.targetElement);
+        break;
+      case 'scroll':
+        entities.targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        console.log(`VoiceActuator: Scrolled to element:`, entities.targetElement);
+        break;
+    }
+    return true;
+  }
+
+  private executeInputAction(entities: ProcessedEntities): boolean {
+    if (!entities.target || !entities.value || !entities.targetElement) {
+      console.log('VoiceActuator: Missing required parameters for input action');
+      return false;
     }
   
-    // Token overlap check (e.g., "full name" and "my name" share "name")
-    const overlap = voiceTokens.filter(token => targetTokens.includes(token));
-    if (overlap.length > 0) {
+    if (entities.targetElement instanceof HTMLInputElement || 
+        entities.targetElement instanceof HTMLTextAreaElement) {
+      entities.targetElement.value = entities.value;
+      entities.targetElement.dispatchEvent(new Event('input', { bubbles: true }));
+      entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
+      console.log(`VoiceActuator: Filled input "${entities.target}" with value "${entities.value}"`);
       return true;
     }
-  
+    
+    console.log(`VoiceActuator: Target element is not an input or textarea`);
     return false;
   }
 
-  /* ACTIONS DEFINED HERE */
-
-  private clickElementAction(entities: ProcessedEntities): boolean {
-      if (!entities.target) {
-        console.log('VoiceActuator: No target specified for click_element intent');
-        return false;
+  private executeCheckboxAction(entities: ProcessedEntities, check: boolean): boolean {
+    if (!entities.target || !entities.targetElement) {
+      console.log(`VoiceActuator: No valid target for checkbox action`);
+      return false;
+    }
+    
+    if (entities.targetElement instanceof HTMLInputElement && entities.targetElement.type === 'checkbox') {
+      if (entities.targetElement.checked !== check) {
+        entities.targetElement.checked = check;
+        entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      const targetElement = entities.targetElement;
-      if (!targetElement) {
-        // Already logged in processEntities
-        return false;
-      }
-      console.log(`VoiceActuator: Clicking element:`, targetElement);
-      targetElement.click();
+      console.log(`VoiceActuator: ${check ? 'Checked' : 'Unchecked'} checkbox "${entities.target}"`);
       return true;
     }
-
-  private fillInputAction(entities: ProcessedEntities): boolean {
-    if (!entities.target) {
-      console.log('VoiceActuator: No target specified for fill_input intent');
-      return false;
-    }
-    if (!entities.value) {
-      console.log('VoiceActuator: No value provided for fill_input intent');
-      return false;
-    }
-  
-    const targetElement = entities.targetElement;
-    if (!targetElement) {
-      // Already logged in processEntities
-      return false;
-    }
-  
-    if (targetElement instanceof HTMLInputElement || targetElement instanceof HTMLTextAreaElement) {
-      targetElement.value = entities.value;
-      targetElement.dispatchEvent(new Event('input', { bubbles: true }));
-      targetElement.dispatchEvent(new Event('change', { bubbles: true }));
-      console.log(`VoiceActuator: Filled input "${entities.target}" with value "${entities.value}"`);
-      return true;
-    } else {
-      console.log(`VoiceActuator: Target element is not an input or textarea`);
-      return false;
-    }
+    
+    console.log(`VoiceActuator: Target element is not a checkbox`);
+    return false;
   }
 
+  private executeMultipleCheckboxAction(entities: ProcessedEntities, check: boolean): boolean {
+    if (!entities.targetElements || entities.targetElements.length === 0) {
+      console.log(`VoiceActuator: No targets for multiple checkbox action`);
+      return false;
+    }
+    
+    let success = false;
+    for (const element of entities.targetElements) {
+      if (element instanceof HTMLInputElement && element.type === 'checkbox') {
+        if (element.checked !== check) {
+          element.checked = check;
+          element.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        success = true;
+      }
+    }
+    
+    return success;
+  }
 
+  private executeSelectionAction(entities: ProcessedEntities): boolean {
+    if (!entities.target || !entities.targetElement) {
+      console.log('VoiceActuator: No valid target for selection action');
+      return false;
+    }
+
+    // Handle dropdown
+    if (entities.groupElement instanceof HTMLSelectElement) {
+      return this.selectInDropdown(entities.groupElement, entities.target);
+    }
+    
+    // Handle radio button
+    if (entities.targetElement instanceof HTMLInputElement && entities.targetElement.type === 'radio') {
+      if (!entities.targetElement.checked) {
+        entities.targetElement.checked = true;
+        entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      console.log(`VoiceActuator: Selected radio button "${entities.target}"`);
+      return true;
+    }
+
+    console.log(`VoiceActuator: Invalid selection context`);
+    return false;
+  }
+
+  private executeOpenDropdownAction(entities: ProcessedEntities): boolean {
+    if (!entities.target || !entities.targetElement) {
+      console.log('VoiceActuator: No valid target for open dropdown action');
+      return false;
+    }
+
+    const element = entities.targetElement;
+
+    // Handle native select
+    if (element instanceof HTMLSelectElement) {
+      element.focus();
+      element.click();
+      // Force open with size attribute
+      element.size = element.options.length;
+      setTimeout(() => element.size = 1, 2000);
+      return true;
+    }
+
+    // Handle custom dropdowns - look for trigger within element
+    const trigger = element.querySelector('[aria-expanded], button, [role="button"]') || element;
+    
+    (trigger as HTMLElement).focus();
+    trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    
+    console.log(`VoiceActuator: Opened dropdown "${entities.target}"`);
+    return true;
+  }
+
+  private selectInDropdown(selectElement: HTMLSelectElement, targetValue: string): boolean {
+    const options = Array.from(selectElement.options);
+    const targetLower = targetValue.toLowerCase();
+    
+    for (const option of options) {
+      const optionText = option.textContent?.toLowerCase() || '';
+      const optionValue = option.value.toLowerCase();
+      
+      if (optionText === targetLower || 
+          optionValue === targetLower || 
+          optionText.includes(targetLower) || 
+          this.calculateMatchScore(optionText, targetLower) > 50) {
+        
+        selectElement.value = option.value;
+        selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log(`VoiceActuator: Selected dropdown option "${option.textContent}"`);
+        return true;
+      }
+    }
+    
+    console.log(`VoiceActuator: No matching option found for "${targetValue}"`);
+    return false;
+  }
+}
+
+/* ELEMENT PROCESSORS */
+
+class SingleTargetProcessor implements ElementProcessor {
+  constructor(private actuator: VoiceActuator) {}
+
+  canProcess(intent: string, entities: Entities): boolean {
+    return !!entities.target && !entities.group && !entities.targetGroup;
+  }
+
+  process(entities: Entities): Partial<ProcessedEntities> {
+    const targetElement = this.actuator.findElement(entities.target!);
+    return { targetElement };
+  }
+}
+
+class MultipleTargetProcessor implements ElementProcessor {
+  canProcess(intent: string, entities: Entities): boolean {
+    return !!entities.targetGroup;
+  }
+
+  process(entities: Entities): Partial<ProcessedEntities> {
+    const targetElements = Array.from(
+      document.querySelectorAll(`[name="${entities.targetGroup}"]`)
+    ).filter((element): element is HTMLElement => element instanceof HTMLElement);
+    return { targetElements };
+  }
+}
+
+class GroupedTargetProcessor implements ElementProcessor {
+  constructor(private actuator: VoiceActuator) {}
+
+  canProcess(intent: string, entities: Entities): boolean {
+    return !!entities.target && (!!entities.group || this.shouldAutoDetectGroup(intent, entities));
+  }
+
+  process(entities: Entities): Partial<ProcessedEntities> {
+    let groupElement: HTMLElement | null = null;
+    let targetElement: HTMLElement | null = null;
+
+    // Find group element
+    if (entities.group) {
+      groupElement = this.actuator.findElement(entities.group);
+      if (!groupElement) {
+        console.log(`VoiceActuator: No matching group element found for group "${entities.group}"`);
+        return { groupElement: null, targetElement: null };
+      }
+    } else {
+      // Auto-detect single group
+      groupElement = this.detectSingleGroup();
+      if (!groupElement) {
+        console.log('VoiceActuator: Could not auto-detect unique group');
+        return { targetElement: this.actuator.findElement(entities.target!) };
+      }
+    }
+
+    // Find target within group
+    if (groupElement && entities.target) {
+      if (groupElement instanceof HTMLSelectElement) {
+        // For dropdown, the target is an option, but we return the select as targetElement
+        targetElement = this.findTargetInDropdown(groupElement, entities.target);
+        if (!targetElement) {
+          console.log(`VoiceActuator: Target "${entities.target}" not found in dropdown`);
+          return { groupElement, targetElement: null };
+        }
+        // For dropdowns, we actually want to return the select element as targetElement
+        targetElement = groupElement;
+      } else {
+        // For radio groups, find the specific radio button
+        targetElement = this.findTargetInRadioGroup(groupElement, entities.target);
+        if (!targetElement) {
+          console.log(`VoiceActuator: Target "${entities.target}" not found in radio group`);
+          return { groupElement, targetElement: null };
+        }
+      }
+    }
+
+    return { groupElement, targetElement };
+  }
+
+  private shouldAutoDetectGroup(intent: string, entities: Entities): boolean {
+    return intent === IntentTypes.SELECT_RADIO_OR_DROPDOWN;
+  }
+
+  private detectSingleGroup(): HTMLElement | null {
+    const dropdowns = document.querySelectorAll('select[voice\\.name]');
+    const radioGroups = this.getUniqueRadioGroups();
+    
+    if (dropdowns.length === 1 && radioGroups.length === 0) {
+      return dropdowns[0] as HTMLElement;
+    } else if (dropdowns.length === 0 && radioGroups.length === 1) {
+      // Return first radio button of the group as representative
+      const firstRadio = document.querySelector(`input[type="radio"][name="${radioGroups[0]}"]`);
+      return firstRadio as HTMLElement;
+    }
+    
+    return null;
+  }
+
+  private getUniqueRadioGroups(): string[] {
+    const radioButtons = document.querySelectorAll('input[type="radio"][voice\\.name]');
+    const groups = new Set<string>();
+    
+    radioButtons.forEach(radio => {
+      const name = (radio as HTMLInputElement).name;
+      if (name) groups.add(name);
+    });
+    
+    return Array.from(groups);
+  }
+
+  private findTargetInDropdown(selectElement: HTMLSelectElement, targetName: string): HTMLElement | null {
+    const options = Array.from(selectElement.options);
+    const targetLower = targetName.toLowerCase();
+    
+    for (const option of options) {
+      const optionText = option.textContent?.toLowerCase() || '';
+      const optionValue = option.value.toLowerCase();
+      
+      if (optionText === targetLower || 
+          optionValue === targetLower || 
+          optionText.includes(targetLower) || 
+          this.actuator.calculateMatchScore(optionText, targetLower) > 50) {
+        return option as HTMLElement;
+      }
+    }
+    
+    return null;
+  }
+
+  private findTargetInRadioGroup(groupElement: HTMLElement, targetName: string): HTMLElement | null {
+    const groupName = groupElement.getAttribute('name') || '';
+    const radioButtons = document.querySelectorAll(`input[type="radio"][name="${groupName}"][voice\\.name]`);
+    
+    let bestMatch: HTMLElement | null = null;
+    let bestScore = 0;
+    
+    for (const radio of radioButtons) {
+      const voiceName = radio.getAttribute('voice.name')?.toLowerCase() || '';
+      const score = this.actuator.calculateMatchScore(voiceName, targetName.toLowerCase());
+      
+      if (score > bestScore && score > 50) {
+        bestScore = score;
+        bestMatch = radio as HTMLElement;
+      }
+    }
+    
+    return bestMatch;
+  }
+}
+
+/* VALUE NORMALIZERS */
+
+class EmailNormalizer implements ValueNormalizer {
+  canNormalize(element: HTMLElement, value: string): boolean {
+    return element instanceof HTMLInputElement && element.type === 'email';
+  }
+
+  normalize(element: HTMLElement, value: string): string {
+    return value
+      .replace(/\bat\b/gi, '@')
+      .replace(/\bdot\b/gi, '.')
+      .replace(/\bunderscore\b/gi, '_')
+      .replace(/\bdash\b/gi, '-')
+      .replace(/\bplus\b/gi, '+')
+      .replace(/\s+/g, '')
+      .trim();
+  }
+}
+
+class DateNormalizer implements ValueNormalizer {
+  canNormalize(element: HTMLElement, value: string): boolean {
+    return element instanceof HTMLInputElement && element.type === 'date';
+  }
+
+  normalize(element: HTMLElement, value: string): string {
+    try {
+      const lowerSpoken = value.toLowerCase();
+      
+      if (lowerSpoken === 'today' || lowerSpoken === 'now') {
+        return new Date().toISOString().split('T')[0];
+      }
+      
+      if (lowerSpoken === 'tomorrow') {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+      }
+      
+      if (lowerSpoken === 'yesterday') {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split('T')[0];
+      }
+      
+      const results = chrono.parse(value);
+      if (results.length > 0) {
+        const formattedDate = results[0].start.date().toISOString().split('T')[0];
+        
+        // Validate against min/max if available
+        if (element instanceof HTMLInputElement) {
+          const { min, max } = element;
+          if (min && formattedDate < min) return min;
+          if (max && formattedDate > max) return max;
+        }
+        
+        return formattedDate;
+      }
+      
+      return value;
+    } catch (error) {
+      console.error('Error normalizing date value:', error);
+      return value;
+    }
+  }
+}
+
+class TimeNormalizer implements ValueNormalizer {
+  canNormalize(element: HTMLElement, value: string): boolean {
+    return element instanceof HTMLInputElement && element.type === 'time';
+  }
+
+  normalize(element: HTMLElement, value: string): string {
+    try {
+      const lowerSpoken = value.toLowerCase();
+      
+      if (lowerSpoken === 'now') {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      }
+      
+      const results = chrono.parse(value);
+      if (results.length > 0) {
+        const parsedTime = results[0].start.date();
+        const formattedTime = `${String(parsedTime.getHours()).padStart(2, '0')}:${String(parsedTime.getMinutes()).padStart(2, '0')}`;
+        
+        // Validate against min/max if available
+        if (element instanceof HTMLInputElement) {
+          const { min, max } = element;
+          if (min && formattedTime < min) return min;
+          if (max && formattedTime > max) return max;
+        }
+        
+        return formattedTime;
+      }
+      
+      return value;
+    } catch (error) {
+      console.error('Error normalizing time value:', error);
+      return value;
+    }
+  }
 }

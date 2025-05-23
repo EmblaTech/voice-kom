@@ -1,4 +1,4 @@
-// Updated core-module.ts
+// Updated core-module.ts with Promise handling fix
 import { injectable, inject } from 'inversify';
 import { ICoreModule, INLPModule, IntentResult, IUIComponent, RecordingStatus, TYPES, IVoiceActuator } from '../types';
 import { EventBus, VoiceLibEvents } from '../utils/eventbus';
@@ -59,18 +59,26 @@ export class CoreModule implements ICoreModule {
     });
     
     // Set up nlu event listener
-    this.eventBus.on(VoiceLibEvents.NLU_COMPLETED, (intent: IntentResult) => {
-      console.log('NLU completed:', intent);
+    this.eventBus.on(VoiceLibEvents.NLU_COMPLETED, async (intents: IntentResult[]) => {
+      console.log('NLU completed:', intents);
       
       // Set state to executing when we have an intent to process
       this.stateStore.setRecordingStatus(RecordingStatus.EXECUTING);
       this.uiComponent.updateFromState();
       
-      // Try to perform the action
-      const actionPerformed = this.voiceActuator.performAction(intent);
-      
-      if (!actionPerformed) {
-        console.log('No action was performed for intent:', intent);
+      // Try to perform the action - properly await the Promise
+      try {
+        const actionPerformed = await this.voiceActuator.performAction(intents);
+        console.log('Action performed result:', actionPerformed);
+        
+        if (!actionPerformed) {
+          console.log('No action was performed for intent:', intents);
+          // Emit the ACTION_PAUSED event when no action is performed
+          this.eventBus.emit(VoiceLibEvents.ACTION_PAUSED);
+        }
+      } catch (error) {
+        console.error('Error performing action:', error);
+        this.eventBus.emit(VoiceLibEvents.ERROR_OCCURRED, error);
       }
     });
     
@@ -82,6 +90,7 @@ export class CoreModule implements ICoreModule {
       this.stateStore.setRecordingStatus(RecordingStatus.IDLE);
       this.uiComponent.updateFromState();
     });
+    
     this.eventBus.on(VoiceLibEvents.ACTION_PAUSED, (actionResult) => {
       console.log('Action paused:', actionResult);
       
@@ -89,10 +98,15 @@ export class CoreModule implements ICoreModule {
       this.stateStore.setRecordingStatus(RecordingStatus.IDLE);
       this.uiComponent.updateFromState();
     });
+    
     // Handle errors
     this.eventBus.on(VoiceLibEvents.ERROR_OCCURRED, (error: Error) => {
       console.error('VoiceLib error:', error);
       this.stateStore.setError(error);
+      this.uiComponent.updateFromState();
+      
+      // Also reset to idle state when an error occurs
+      this.stateStore.setRecordingStatus(RecordingStatus.IDLE);
       this.uiComponent.updateFromState();
     });
     

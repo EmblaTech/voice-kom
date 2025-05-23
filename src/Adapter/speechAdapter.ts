@@ -7,9 +7,9 @@ import {
   IUIComponent, 
   IAudioCapturer, 
   ISTTDriver,
-  TYPES, 
-  CommandRegistry,
-  IVoiceActuator
+  TYPES,
+  IVoiceActuator,
+  INLUDriver
 } from '../types';
 import { WebAudioCapturer } from '../nlp/audio-capturer';
 import { WhisperSTTDriver } from '../nlp/sst-driver';
@@ -21,6 +21,9 @@ import { StateStore } from '../utils/stateStore';
 import { CompromiseNLUDriver } from '../nlp/nlu-driver';
 import { VoiceActuator } from '../voiceactuator/voice-actuator';
 import { AdapterConfig } from './model/adaperConfig';
+import { CommandRegistry } from '../nlp/commandRegistry';
+import {LLMNLUDriver} from '../nlp/llm-nlu-driver';
+import { NLUDriverFactory } from '../nlp/nlu-driver-factory';
 
 @injectable()
 class VoiceLib implements IVoiceLib {
@@ -38,11 +41,15 @@ class VoiceLib implements IVoiceLib {
     this.container.bind<StateStore>(TYPES.StateStore).to(StateStore).inSingletonScope();
     this.container.bind<IAudioCapturer>(TYPES.AudioCapturer).to(WebAudioCapturer).inSingletonScope();
     this.container.bind<ISTTDriver>(TYPES.STTDriver).to(WhisperSTTDriver).inSingletonScope();
-    this.container.bind(TYPES.NLUDriver).to(CompromiseNLUDriver).inSingletonScope();
+    this.container.bind<INLUDriver>(CompromiseNLUDriver).toSelf().inSingletonScope();
+    this.container.bind<INLUDriver>(LLMNLUDriver).toSelf().inSingletonScope();
     this.container.bind<INLPModule>(TYPES.NLPModule).to(NLPModule).inSingletonScope();
     this.container.bind<IUIComponent>(TYPES.UIComponent).to(UIComponent).inSingletonScope();
     this.container.bind<VoiceActuator>(TYPES.VoiceActuator).to(VoiceActuator).inSingletonScope();    
     this.container.bind<ICoreModule>(TYPES.CoreModule).to(CoreModule).inSingletonScope();
+    this.container.bind<CommandRegistry>(TYPES.CommandRegistry).to(CommandRegistry).inSingletonScope();
+ this.container.bind<NLUDriverFactory>(TYPES.NLUDriverFactory).to(NLUDriverFactory).inSingletonScope();
+
   }
 
   private initializeDependencies(): void {
@@ -62,6 +69,10 @@ class VoiceLib implements IVoiceLib {
           sttEngine: config.sttEngine,
           sttApiKey: config.sttApiKey,
           speechEngineParams: config.speechEngineParams
+        } : undefined,
+        nlu: config.nluEngine ? {
+          nluEngine: config.nluEngine,
+          nluApiKey: config.nluApiKey,
         } : undefined
       },
       ui: {

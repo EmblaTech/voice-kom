@@ -1,26 +1,30 @@
-// nlp-module.ts
+// updated-nlp-module.ts
 import { injectable, inject } from 'inversify';
 import { INLPModule, INLUDriver, IAudioCapturer, ISTTDriver, CommandRegistry, TYPES, CommandIntent } from '../types';
 import { EventBus, VoiceLibEvents } from '../utils/eventbus';
 import { StateStore } from '../utils/stateStore';
 import { NLPConfig } from './model/nlpConfig';
+import { NLUDriverFactory } from './nlu-driver-factory';
 
 @injectable()
 export class NLPModule implements INLPModule {
   private commandRegistry: CommandRegistry | null = null;
   private language: string = 'en';
+  private nluDriver: INLUDriver | null = null;
+  
   constructor(
     @inject(TYPES.AudioCapturer) private audioCapturer: IAudioCapturer,
     @inject(TYPES.STTDriver) private sttDriver: ISTTDriver,
-    @inject(TYPES.NLUDriver) private nluDriver: INLUDriver,
+    @inject(TYPES.NLUDriverFactory) private nluDriverFactory: NLUDriverFactory,
     @inject(TYPES.EventBus) private eventBus: EventBus,
     @inject(TYPES.StateStore) private stateStore: StateStore,
-
   ) {}
   
   public async init(config: NLPConfig): Promise<void> {
     const language = config.lang || this.language;
+    this.language = language;
     
+    // Initialize STT driver
     this.sttDriver.init(
       language,
       config.sst || {
@@ -28,8 +32,11 @@ export class NLPModule implements INLPModule {
       }
     );
   
+    // Get commands
     this.commandRegistry = this.getCommands();
-    this.nluDriver.init(
+    
+    // Create and initialize the appropriate NLU driver using the factory
+    this.nluDriver = this.nluDriverFactory.createDriver(
       language,
       config.nlu || {
         nluEngine: "default" 
@@ -45,6 +52,10 @@ export class NLPModule implements INLPModule {
   }
   
   public async stopListening(): Promise<void> {
+    if (!this.nluDriver) {
+      throw new Error('NLU Driver not initialized');
+    }
+    
     try {
       // Stop audio capture and get audio blob directly
       const audioBlob = await this.audioCapturer.stopRecording();
@@ -55,8 +66,8 @@ export class NLPModule implements INLPModule {
         const transcription = await this.sttDriver.transcribe(audioBlob);
         this.eventBus.emit(VoiceLibEvents.TRANSCRIPTION_COMPLETED, transcription);
 
-        // Identify intent using the NLU driver
-        const intentResult = this.nluDriver.identifyIntent(transcription);
+        // Identify intent using the selected NLU driver
+        const intentResult = await this.nluDriver.identifyIntent(transcription);
         this.eventBus.emit(VoiceLibEvents.NLU_COMPLETED, intentResult);
 
       } catch (error: unknown) {
@@ -87,4 +98,4 @@ export class NLPModule implements INLPModule {
     };
     return commandRegistry;
   }
-  }
+}

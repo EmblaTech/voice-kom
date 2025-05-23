@@ -12,9 +12,12 @@ export const TYPES = {
   STTDriver: Symbol.for('STTDriver'),
   EventBus: Symbol.for('EventBus'),
   StateStore: Symbol.for('StateStore'),
-  NLUDriver: Symbol.for('NLUDriver'),
+  CompromiseNLUDriver: Symbol.for('CompromiseNLUDriver'),
   CommandRegistry: Symbol.for('CommandRegistry'),
   VoiceActuator: Symbol.for('VoiceActuator'),
+  NLUDriverFactory: Symbol.for('NLUDriverFactory'),
+  LLMNLUDriver: Symbol.for('LLMNLUDriver'),
+   
 };
 
 // Enhanced Recording status enum with WAITING state
@@ -39,8 +42,13 @@ export enum IntentTypes {
   SCROLL_TO_ELEMENT = 'scroll_to_element',
   FILL_INPUT = 'fill_input',
   SPEAK_TEXT = 'speak_text',
-  SUBMIT_FORM = 'submit_form',
-  UNKNOWN = 'UNKNOWN'
+  UNKNOWN = 'UNKNOWN',
+  CHECK_CHECKBOX = 'check_checkbox',
+  UNCHECK_CHECKBOX ='uncheck_checkbox',
+  CHECK_ALL = 'check_all',
+  UNCHECK_ALL = 'uncheck_all',
+  SELECT_RADIO_OR_DROPDOWN = 'select_radio_or_dropdown',
+  OPEN_DROPDOWN = 'open_dropdown'
 }
 
 // STT Driver interface
@@ -91,11 +99,11 @@ export interface IntentResult {
 }
 export type Entities = Record<string, any>;
 
-// NLU Driver interface
+
 export interface INLUDriver {
-  init( lang:string , config: NLUEngineConfig): void;
-  identifyIntent(text: string): IntentResult;
-  getAvailableIntents(): string[];
+  init(lang: string, config: any): void;
+  identifyIntent(text: string): Promise<IntentResult[]> | IntentResult[];
+  getAvailableIntents(): IntentTypes[];
 }
 
 export interface CommandIntent {
@@ -104,12 +112,12 @@ export interface CommandIntent {
   entities: string[];
 }
 
-export interface CommandRegistry {
+export type CommandRegistry = {
   intents: CommandIntent[];
-}
+};
 
 export interface IVoiceActuator {
-  performAction(intent: IntentResult): Promise<boolean>;
+  performAction(intent: IntentResult[]): Promise<boolean>;
 }
 
 //Actuator
