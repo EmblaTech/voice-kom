@@ -69,9 +69,15 @@ export enum IntentTypes {
   SCROLL_TO_ELEMENT = 'scroll_to_element',
   FILL_INPUT = 'fill_input',
   SPEAK_TEXT = 'speak_text',
-  SUBMIT_FORM = 'submit_form',
-  UNKNOWN = 'UNKNOWN'
+  UNKNOWN = 'UNKNOWN',
+  CHECK_CHECKBOX = 'check_checkbox',
+  UNCHECK_CHECKBOX ='uncheck_checkbox',
+  CHECK_ALL = 'check_all',
+  UNCHECK_ALL = 'uncheck_all',
+  SELECT_RADIO_OR_DROPDOWN = 'select_radio_or_dropdown',
+  OPEN_DROPDOWN = 'open_dropdown'
 }
+
 // Audio Capturer interface
 export interface AudioCapturer {
   startRecording(): void;

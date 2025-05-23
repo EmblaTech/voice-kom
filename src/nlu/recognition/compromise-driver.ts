@@ -8,14 +8,16 @@ interface CommandConfig {
     entities: string[];
 }
   
-interface CommandRegistry {
-    [key: string]: CommandConfig;
+// Interface for the command registry
+export interface ICommandRegistry {
+  [key: string]: CommandConfig;
 }
+
 
 export class CompromiseRecognitionDriver implements RecognitionDriver {
     private readonly logger = Logger.getInstance();
     private readonly config: RecognitionConfig;
-    private commandRegistry: CommandRegistry | null = null;
+    private commandRegistry: ICommandRegistry | null = null;
     private availableIntents: IntentTypes[] = [IntentTypes.UNKNOWN];
     private entityMap: Map<string, string[]> = new Map();
   
