@@ -1,6 +1,7 @@
 import { IntentResult, IntentTypes, RecognitionConfig } from "../../types";
 import { Logger } from "../../utils/logger";
 import { RecognitionDriver } from "./driver";
+import { CommandRegistry } from "./commandRegisry";
 import nlp from 'compromise';
 
 interface CommandConfig {
@@ -8,16 +9,14 @@ interface CommandConfig {
     entities: string[];
 }
   
-// Interface for the command registry
-export interface ICommandRegistry {
-  [key: string]: CommandConfig;
+interface CommandRegistryMap {
+    [key: string]: CommandConfig;
 }
-
 
 export class CompromiseRecognitionDriver implements RecognitionDriver {
     private readonly logger = Logger.getInstance();
     private readonly config: RecognitionConfig;
-    private commandRegistry: ICommandRegistry | null = null;
+    private commandRegistry: CommandRegistryMap;
     private availableIntents: IntentTypes[] = [IntentTypes.UNKNOWN];
     private entityMap: Map<string, string[]> = new Map();
   
@@ -30,7 +29,7 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
 
     constructor(config: RecognitionConfig) {
         this.config = config;
-        this.setUpCommandRegistry()
+        this.commandRegistry = CommandRegistry.getRegistry();
         this.setupIntentsAndEntities();
     }
 
@@ -42,27 +41,7 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         return this.availableIntents;
       }
 
-    private setUpCommandRegistry(): void {
-        // Initialize with default command registry if needed
-    this.commandRegistry = {
-        [IntentTypes.CLICK_ELEMENT]: {
-          utterances: ["click (target)", "press (target)", "tap (target)"],
-          entities: ["target"]
-        },
-        [IntentTypes.FILL_INPUT]: {
-          utterances: ["Fill (target) as (value)", "Enter (target) as (value)","Enter (target) with (value)", "Fill (target) with (value)"],
-          entities: ["target", "value"]
-        },
-        [IntentTypes.SCROLL_TO_ELEMENT]: {
-          utterances: ["scroll to (target)", "go to (target) section"],
-          entities: ["target"]
-        }
-      };
-    }
-
     private setupIntentsAndEntities(): void {
-        if (!this.commandRegistry) return;
-        
         // Extract intent names from object keys
         this.availableIntents = Object.keys(this.commandRegistry) as IntentTypes[];
         
@@ -213,7 +192,7 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
        * Try to match text using exact and fuzzy matching techniques
        */
       private findBestMatch(text: string): IntentResult {
-        if (this.config.lang !== 'en' || !this.commandRegistry) {
+        if (this.config.lang !== 'en') {
           return this.createUnknownResult();
         }
         

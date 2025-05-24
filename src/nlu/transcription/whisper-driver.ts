@@ -5,7 +5,10 @@ import { TranscriptionDriver } from "./driver";
 export class WhisperTranscriptionDriver implements TranscriptionDriver {
     private readonly logger = Logger.getInstance();
     private readonly config: TranscriptionConfig;
-    constructor(config: TranscriptionConfig) { 
+    constructor(
+        config: TranscriptionConfig
+    ) { 
+        console.log(config)
         this.config = config
         //TODO: Move out this into config
         this.config.apiUrl ??= 'https://api.openai.com/v1/audio/transcriptions';        
