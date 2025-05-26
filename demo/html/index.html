@@ -3,145 +3,268 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VoiceLib Form Demo</title>
+  <title>Register Invoice</title>
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <h1>Contact Form Demo</h1>
-  
-  <div class="form-container">
-    <form id="contact-form">
-      <!-- Personal Information Section -->
-      <fieldset>
-        <legend>Personal Information</legend>
-        
-        <div class="form-group">
-          <label for="name">Full Name</label>
-          <input type="text" id="name" voice.name="name field" placeholder="Enter your full name">
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <button class="back-btn" voice.name="back button">←</button>
+      <h1>Register Invoice</h1>
+      <div class="header-actions">
+        <button class="btn btn-primary" voice.name="register button">Register</button>
+        <button class="btn btn-secondary" voice.name="reset button">Reset</button>
+      </div>
+    </div>
+
+    <form id="invoice-form">
+      <!-- Registration Type -->
+      <div class="form-section">
+        <label class="section-label">Register as</label>
+        <div class="tab-container">
+          <button type="button" class="tab-btn active" voice.name="invoice tab" data-tab="invoice">Invoice</button>
+          <button type="button" class="tab-btn" voice.name="case tab" data-tab="case">Case</button>
         </div>
-        
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" voice.name="email field" placeholder="Enter your email address">
-        </div>
-        
-        <div class="form-group">
-          <label for="phone">Phone Number</label>
-          <input type="tel" id="phone" voice.name="phone field" placeholder="Enter your phone number">
-        </div>
-        
-        <div class="form-group">
-          <label for="date">Preferred Date</label>
-          <input type="date" id="date" voice.name="date field">
+      </div>
+
+      <div class="form-row">
+        <!-- Left Column -->
+        <div class="form-column">
+          <!-- Creditor Section -->
+          <div class="form-group">
+            <label for="creditor">*Creditor</label>
+            <input type="text" id="creditor" voice.name="creditor field" class="form-input">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="debtor-no">*Debtor No</label>
+              <input type="text" id="debtor-no" voice.name="debtor number field" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="type">Type</label>
+              <select id="type" voice.name="type dropdown" class="form-select">
+                <option value="person">Person</option>
+                <option value="company">Company</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="first-name">First Name</label>
+              <input type="text" id="first-name" voice.name="first name field" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="last-name">*Last Name</label>
+              <input type="text" id="last-name" voice.name="last name field" class="form-input">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nin">NIN</label>
+              <input type="text" id="nin" voice.name="nin field" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="birth-date">Birth Date</label>
+              <input type="date" id="birth-date" voice.name="birth date field" class="form-input">
+            </div>
+          </div>
+
+          <!-- Address Section -->
+          <div class="address-section">
+            <h3>Address</h3>
+            
+            <div class="form-group">
+              <label for="country">*Country</label>
+              <select id="country" voice.name="country dropdown" class="form-select">
+                <option value="norway">Norway</option>
+                <option value="sweden">Sweden</option>
+                <option value="denmark">Denmark</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="post-address-1">Post Address 1</label>
+                <input type="text" id="post-address-1" voice.name="post address 1 field" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="post-address-2">Post Address 2</label>
+                <input type="text" id="post-address-2" voice.name="post address 2 field" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="post-address-3">Post Address 3</label>
+                <input type="text" id="post-address-3" voice.name="post address 3 field" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="postal-code">*Postal Code</label>
+                <input type="text" id="postal-code" voice.name="postal code field" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="postal-area">Postal Area</label>
+                <input type="text" id="postal-area" voice.name="postal area field" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="municipality-code">Municipality Code</label>
+                <input type="text" id="municipality-code" voice.name="municipality code field" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="municipality-name">Municipality Name</label>
+                <input type="text" id="municipality-name" voice.name="municipality name field" class="form-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Contacts Section -->
+          <div class="contacts-section">
+            <h3>Contacts</h3>
+            
+            <div class="form-group">
+              <label for="telephone">Telephone</label>
+              <input type="tel" id="telephone" voice.name="telephone field" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label for="sms">SMS</label>
+              <input type="tel" id="sms" voice.name="sms field" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" voice.name="email field" class="form-input">
+            </div>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="time">Preferred time</label>
-          <input type="time" id="time" voice.name="time field">
-        </div>
-      </fieldset>
-      
-      <!-- Preference Section -->
-      <fieldset>
-        <legend>Preferences</legend>
-        
-        <div class="form-group"voice.name="contact preferencees">
-          <label>Preferred Contact Method</label>
-          <div class="radio-group">
-            <label class="radio-label">
-              <input type="radio" name="contact-preference" value="email" voice.name="email option" checked>
-              Email
-            </label>
-            <label class="radio-label">
-              <input type="radio" name="contact-preference" value="phone" voice.name="phone option">
-              Phone
-            </label>
-            <label class="radio-label">
-              <input type="radio" name="contact-preference" value="text" voice.name="text option">
-              Text Message
-            </label>
+        <!-- Right Column -->
+        <div class="form-column">
+          <!-- Transaction Information -->
+          <div class="transaction-section">
+            <h3>Transaction Information</h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="transaction-type">*Transaction Type</label>
+                <select id="transaction-type" voice.name="transaction type" class="form-select">
+                  <option value="in">IN</option>
+                  <option value="out">OUT</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ref-no">*Ref No</label>
+                <input type="text" id="ref-no" voice.name="reference number field" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="voucher-date">Voucher Date</label>
+                <input type="date" id="voucher-date" voice.name="voucher date field" class="form-input" value="2025-05-23">
+              </div>
+              <div class="form-group">
+                <label for="due-date">Due Date</label>
+                <input type="date" id="due-date" voice.name="due date field" class="form-input" value="2025-06-06">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="amount">*Amount</label>
+                <input type="number" id="amount" voice.name="amount field" class="form-input" step="0.01" value="0.00">
+              </div>
+              <div class="form-group">
+                <label for="trans-kid">Trans KID</label>
+                <input type="text" id="trans-kid" voice.name="trans kid field" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dw-date">DW Date</label>
+                <input type="date" id="dw-date" voice.name="dw date field" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="bo-date">BO Date</label>
+                <input type="date" id="bo-date" voice.name="bo date field" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="trans-text">Trans Text</label>
+              <textarea id="trans-text" voice.name="transaction text field" class="form-textarea" rows="3"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="interest-from-date">Interest from Date</label>
+                <input type="date" id="interest-from-date" voice.name="interest from date field" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="interest-rate">Interest Rate</label>
+                <div class="input-group">
+                  <input type="number" id="interest-rate" voice.name="interest rate field" class="form-input" step="0.01">
+                  <span class="input-suffix">%</span>
+                </div>
+                <small class="form-help">Applicable only for fixed interest rate</small>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-outline" voice.name="add transaction button">
+              + Add Transaction
+            </button>
           </div>
-        </div>
-        
-        <div class="form-group" voice.name="interests">
-          <label>Interests (Check all that apply)</label>
-          <div class="checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" name="interests" value="product-updates" voice.name="product updates checkbox">
-              Product Updates
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="interests" value="newsletter" voice.name="newsletter checkbox">
-              Monthly Newsletter
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="interests" value="events" voice.name="events checkbox">
-              Upcoming Events
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="interests" value="promotions" voice.name="promotions checkbox">
-              Special Promotions
-            </label>
+
+          <!-- Claim Processing -->
+          <div class="claim-section">
+            <h3>Claim Proceeding</h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="start-workflow">Start Workflow at</label>
+                <select id="start-workflow" voice.name="start workflow dropdown" class="form-select">
+                  <option value="">State Finder</option>
+                  <option value="manual">Manual</option>
+                  <option value="automatic">Automatic</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="target-date">*Target Date</label>
+                <input type="date" id="target-date" voice.name="target date field" class="form-input">
+              </div>
+            </div>
           </div>
-        </div>
-      </fieldset>
-      
-      <!-- Message Section -->
-      <fieldset>
-        <legend>Your Message</legend>
-        
-        <div class="form-group">
-          <label for="subject">Subject</label>
-          <select id="subject" voice.name="subject dropdown">
-            <option value="">-- Select a subject --</option>
-            <option value="general">General Inquiry</option>
-            <option value="support">Technical Support</option>
-            <option value="feedback">Feedback</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="message">Message</label>
-          <textarea id="message" voice.name="message box" rows="5" placeholder="Type your message here..."></textarea>
-        </div>
-        
-        <div class="form-group">
-          <label for="file-upload">Attach File (Optional)</label>
-          <input type="file" id="file-upload" voice.name="file upload">
-        </div>
-      </fieldset>
-      
-      <!-- Form Actions -->
-      <div class="form-actions">
-        <input type="checkbox" id="agree-terms" voice.name="terms checkbox">
-        <label for="agree-terms">I agree to the <a href="#" voice.name="terms link" id="terms-link">Terms and Conditions</a></label>
-        
-        <div class="button-group">
-          <button type="reset" voice.name="reset button" class="btn btn-secondary">Reset</button>
-          <button type="submit" id="submit-button" voice.name="submit button" class="btn btn-submit">Submit</button>
+
+          <!-- Summary -->
+          <div class="summary-section">
+            <h3>Summary</h3>
+            <div class="summary-box">
+              <div class="summary-row">
+                <span>Main Amount</span>
+                <span class="summary-value" voice.name="main amount value">0.00</span>
+              </div>
+              <div class="summary-row">
+                <span>Other Amount</span>
+                <span class="summary-value" voice.name="other amount value">0.00</span>
+              </div>
+              <div class="summary-row total">
+                <span>Total</span>
+                <span class="summary-value" voice.name="total amount value">0.00</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </form>
   </div>
-  
-  <div class="help-text">
-    <p>Try voice commands like: <strong>"Fill name as John Smith"</strong>, <strong>"Select email option"</strong>, or <strong>"Click submit button"</strong></p>
-    <p>Need assistance? <a href="#" voice.name="help link" id="help-link">Get Help</a> or view our <a href="#" voice.name="faq link" id="faq-link">FAQ</a></p>
-  </div>
-  
-  <!-- Modal for Terms and Conditions -->
-  <div id="terms-modal" class="modal">
-    <div class="modal-content">
-      <span class="close" voice.name="close modal">&times;</span>
-      <h2>Terms and Conditions</h2>
-      <div class="modal-body">
-        <p>This is a demo of terms and conditions content. In a real application, this would contain the actual terms.</p>
-      </div>
-      <button class="btn" voice.name="accept terms">Accept</button>
-    </div>
-  </div>
-  
   <script src="../../dist/speechplug.js"></script>
   <script src="script.js"></script>
 </body>

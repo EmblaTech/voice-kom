@@ -49,7 +49,8 @@ export class VoiceActuator implements IVoiceActuator {
     this.valueNormalizers = [
       new EmailNormalizer(),
       new DateNormalizer(),
-      new TimeNormalizer()
+      new TimeNormalizer(),
+      new NumericNormalizer()
     ];
   }
 
@@ -552,6 +553,28 @@ class EmailNormalizer implements ValueNormalizer {
       .replace(/\bplus\b/gi, '+')
       .replace(/\s+/g, '')
       .trim();
+  }
+}
+
+class NumericNormalizer implements ValueNormalizer {
+  canNormalize(element: HTMLElement, value: string): boolean {
+    return element instanceof HTMLInputElement && element.type === 'number';
+  }
+
+  normalize(element: HTMLElement, value: string): string {
+    try {
+      // Extract the first floating point number from the string
+      const match = value.match(/-?\d+(?:\.\d+)?/);
+      
+      if (match) {
+        return parseFloat(match[0]).toString();
+      }
+      
+      return value; // Return original if no number found
+    } catch (error) {
+      console.error('Error normalizing numeric value:', error);
+      return value;
+    }
   }
 }
 
