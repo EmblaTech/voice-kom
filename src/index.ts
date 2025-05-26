@@ -91,6 +91,7 @@ export class SpeechPlug {
     this.nluModule = new NLUModule(this.audioCapturer, this.eventBus, this.status);
     this.coreModule = new CoreModule(this.nluModule, this.uiHandler, this.voiceActuator, this.eventBus, this.status);
   }
+  
   // Function to validate the configuration
  private validateSpeechPlugConfig(config: SpeechPlugConfig): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
