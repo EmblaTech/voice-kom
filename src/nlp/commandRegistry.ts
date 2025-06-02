@@ -27,8 +27,13 @@ export class CommandRegistry implements ICommandRegistry {
       entities: ["target", "value"]
     };
     
+    this[IntentTypes.SCROLL] = {
+      utterances: ["scroll (direction)","scroll to (direction)", "go (direction)"],
+      entities: ["direction"]
+    };
+    
     this[IntentTypes.SCROLL_TO_ELEMENT] = {
-      utterances: ["scroll to (target)", "go to (target) section"],
+      utterances: ["scroll to (target)", "go to (target)"],
       entities: ["target"]
     };
 
@@ -87,6 +92,13 @@ export class CommandRegistry implements ICommandRegistry {
         "Open (target) drop down",
       ],
       entities: ["target"]
+    };
+
+    this[IntentTypes.GO_BACK] = {
+      utterances: [
+        "Go Back", 
+      ],
+      entities: []
     };
   }
  

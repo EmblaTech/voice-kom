@@ -39,6 +39,7 @@ export enum ErrorType {
 
 export enum IntentTypes {
   CLICK_ELEMENT = 'click_element',
+  SCROLL= 'scroll',
   SCROLL_TO_ELEMENT = 'scroll_to_element',
   FILL_INPUT = 'fill_input',
   SPEAK_TEXT = 'speak_text',
@@ -48,7 +49,9 @@ export enum IntentTypes {
   CHECK_ALL = 'check_all',
   UNCHECK_ALL = 'uncheck_all',
   SELECT_RADIO_OR_DROPDOWN = 'select_radio_or_dropdown',
-  OPEN_DROPDOWN = 'open_dropdown'
+  OPEN_DROPDOWN = 'open_dropdown',
+  GO_BACK = 'go_back',
+  FILL_FORM = 'fill_form'
 }
 
 // STT Driver interface

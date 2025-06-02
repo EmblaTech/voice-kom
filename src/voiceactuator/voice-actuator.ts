@@ -60,14 +60,18 @@ export class VoiceActuator implements IVoiceActuator {
     // Register actions using generalized handlers
     this.registerAction(IntentTypes.CLICK_ELEMENT, { execute: (entities) => this.executeElementAction(entities, 'click')});
     this.registerAction(IntentTypes.FILL_INPUT, { execute: (entities) => this.executeInputAction(entities)});
-    this.registerAction(IntentTypes.SCROLL_TO_ELEMENT, { execute: (entities) => this.executeElementAction(entities, 'scroll')});
+    this.registerAction(IntentTypes.SCROLL_TO_ELEMENT, { execute: (entities) => this.executeScrollToElementAction(entities)});
+    this.registerAction(IntentTypes.SCROLL, { execute: (entities) => this.executeScrollAction(entities)});
     this.registerAction(IntentTypes.CHECK_CHECKBOX, { execute: (entities) => this.executeCheckboxAction(entities, true)});
     this.registerAction(IntentTypes.UNCHECK_CHECKBOX, { execute: (entities) => this.executeCheckboxAction(entities, false)});
     this.registerAction(IntentTypes.CHECK_ALL, { execute: (entities) => this.executeMultipleCheckboxAction(entities, true)});
     this.registerAction(IntentTypes.UNCHECK_ALL, { execute: (entities) => this.executeMultipleCheckboxAction(entities, false)});
     this.registerAction(IntentTypes.SELECT_RADIO_OR_DROPDOWN, { execute: (entities) => this.executeSelectionAction(entities)});
     this.registerAction(IntentTypes.OPEN_DROPDOWN, { execute: (entities) => this.executeOpenDropdownAction(entities)});
+    this.registerAction(IntentTypes.GO_BACK, { execute: (entities) => this.executeGoBackAction(entities)});
 
+    
+    
   }
   
   private registerAction(intentName: IntentTypes, action: Action): void {
@@ -348,7 +352,7 @@ export class VoiceActuator implements IVoiceActuator {
       element.click();
       // Force open with size attribute
       element.size = element.options.length;
-      setTimeout(() => element.size = 1, 2000);
+      setTimeout(() => element.size = 1, 5000);
       return true;
     }
 
@@ -385,7 +389,122 @@ export class VoiceActuator implements IVoiceActuator {
     console.log(`VoiceActuator: No matching option found for "${targetValue}"`);
     return false;
   }
+  private executeScrollAction(entities: ProcessedEntities): boolean {
+  if (!entities.direction) {
+    console.log('VoiceActuator: Missing direction parameter for scroll action');
+    return false;
+  }
+
+  const scrollAmount = 300; // pixels to scroll
+  const direction = entities.direction.toLowerCase();
+
+  try {
+    switch (direction) {
+      case 'up':
+        window.scrollBy(0, -scrollAmount);
+        break;
+      case 'down':
+        window.scrollBy(0, scrollAmount);
+        break;
+      case 'left':
+        window.scrollBy(-scrollAmount, 0);
+        break;
+      case 'right':
+        window.scrollBy(scrollAmount, 0);
+        break;
+      case 'top':
+        window.scrollTo(0, 0);
+        break;
+      case 'bottom':
+        window.scrollTo(0, document.body.scrollHeight);
+        break;
+      default:
+        console.log(`VoiceActuator: Unknown scroll direction "${direction}"`);
+        return false;
+    }
+
+    console.log(`VoiceActuator: Scrolled ${direction}`);
+    return true;
+  } catch (error) {
+    console.log(`VoiceActuator: Error during scroll action: ${error}`);
+    return false;
+  }
 }
+
+private executeScrollToElementAction(entities: ProcessedEntities): boolean {
+  if (!entities.target || !entities.targetElement) {
+    console.log('VoiceActuator: Missing target parameter for scroll to element action');
+    return false;
+  }
+
+  try {
+    // Check if element is already in view
+    const rect = entities.targetElement.getBoundingClientRect();
+    const isInView = rect.top >= 0 && 
+                     rect.left >= 0 && 
+                     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && 
+                     rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+
+    if (isInView) {
+      // Element is already in view - focus and click it
+      if (entities.targetElement instanceof HTMLElement) {
+        // Focus the element if it's focusable
+        if (entities.targetElement.tabIndex >= 0 || 
+            entities.targetElement instanceof HTMLInputElement ||
+            entities.targetElement instanceof HTMLTextAreaElement ||
+            entities.targetElement instanceof HTMLSelectElement ||
+            entities.targetElement instanceof HTMLButtonElement ||
+            entities.targetElement instanceof HTMLAnchorElement) {
+          entities.targetElement.focus();
+        }
+        
+        // Click the element
+        entities.targetElement.click();
+        console.log(`VoiceActuator: Element "${entities.target}" was in view - focused and clicked`);
+      }
+    } else {
+      // Element not in view - scroll to it
+      entities.targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+
+      // Focus the element if it's focusable
+      if (entities.targetElement instanceof HTMLElement && 
+          (entities.targetElement.tabIndex >= 0 || 
+           entities.targetElement instanceof HTMLInputElement ||
+           entities.targetElement instanceof HTMLTextAreaElement ||
+           entities.targetElement instanceof HTMLSelectElement ||
+           entities.targetElement instanceof HTMLButtonElement ||
+           entities.targetElement instanceof HTMLAnchorElement)) {
+        entities.targetElement.focus();
+      }
+
+      console.log(`VoiceActuator: Scrolled to and focused element "${entities.target}"`);
+    }
+
+    return true;
+  } catch (error) {
+    console.log(`VoiceActuator: Error processing element "${entities.target}": ${error}`);
+    return false;
+  }
+}
+
+private executeGoBackAction(entities: ProcessedEntities): boolean {
+  try {
+    window.history.back();
+    console.log('VoiceActuator: Navigated back to previous page');
+    return true;
+  } catch (error) {
+    console.log(`VoiceActuator: Error going back: ${error}`);
+    return false;
+  }
+}
+
+}
+
+
 
 /* ELEMENT PROCESSORS */
 

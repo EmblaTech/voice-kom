@@ -20,251 +20,241 @@
 
     <form id="invoice-form">
       <!-- Registration Type -->
-      <div class="form-section">
-        <label class="section-label">Register as</label>
+      <div class="register-type">
+        <label class="register-label">Register as</label>
         <div class="tab-container">
           <button type="button" class="tab-btn active" voice.name="invoice tab" data-tab="invoice">Invoice</button>
           <button type="button" class="tab-btn" voice.name="case tab" data-tab="case">Case</button>
         </div>
       </div>
 
-      <div class="form-row">
+      <div class="form-content">
         <!-- Left Column -->
-        <div class="form-column">
-          <!-- Creditor Section -->
+        <div class="left-column">
+          <!-- Creditor and Debtor Info -->
           <div class="form-group">
-            <label for="creditor">*Creditor</label>
-            <input type="text" id="creditor" voice.name="creditor field" class="form-input">
+            <label class="required">Creditor</label>
+            <select class="form-input" name="creditor" voice.name="creditor field">
+              <option value="">-- Select Creditor --</option>
+              <option value="Alpha Supplies AS">Alpha Supplies AS</option>
+              <option value="Nordic IT Services">Nordic IT Services</option>
+              <option value="Fjord Energi AB">Fjord Energi AB</option>
+              <option value="Skandi Bank ASA">Skandi Bank ASA</option>
+              <option value="Arctic Constructions">Arctic Constructions</option>
+            </select>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="debtor-no">*Debtor No</label>
-              <input type="text" id="debtor-no" voice.name="debtor number field" class="form-input">
+              <label class="required">Debtor No</label>
+              <input type="text" class="form-input" voice.name="debtor number field">
             </div>
             <div class="form-group">
-              <label for="type">Type</label>
-              <select id="type" voice.name="type dropdown" class="form-select">
-                <option value="person">Person</option>
-                <option value="company">Company</option>
+              <label>Type</label>
+              <select class="form-select" voice.name="type dropdown">
+                <option>Person</option>
+                <option>Company</option>
               </select>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="first-name">First Name</label>
-              <input type="text" id="first-name" voice.name="first name field" class="form-input">
+              <label>First Name</label>
+              <input type="text" class="form-input" voice.name="first name field">
             </div>
             <div class="form-group">
-              <label for="last-name">*Last Name</label>
-              <input type="text" id="last-name" voice.name="last name field" class="form-input">
+              <label class="required">Last Name</label>
+              <input type="text" class="form-input" voice.name="last name field">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="nin">NIN</label>
-              <input type="text" id="nin" voice.name="nin field" class="form-input">
+              <label>NIN</label>
+              <input type="text" class="form-input" voice.name="nin field">
             </div>
             <div class="form-group">
-              <label for="birth-date">Birth Date</label>
-              <input type="date" id="birth-date" voice.name="birth date field" class="form-input">
+              <label>Birth Date</label>
+              <input type="date" class="form-input" voice.name="birth date field">
             </div>
           </div>
 
           <!-- Address Section -->
-          <div class="address-section">
-            <h3>Address</h3>
-            
+          <div class="section-header">Address</div>
+          
+          <div class="form-group">
+            <label class="required">Country</label>
+            <select class="form-select" voice.name="country dropdown">
+              <option>Norway</option>
+              <option>Sweden</option>
+              <option>Denmark</option>
+            </select>
+          </div>
+
+          <div class="form-row-triple">
             <div class="form-group">
-              <label for="country">*Country</label>
-              <select id="country" voice.name="country dropdown" class="form-select">
-                <option value="norway">Norway</option>
-                <option value="sweden">Sweden</option>
-                <option value="denmark">Denmark</option>
-              </select>
+              <label>Post Address 1</label>
+              <input type="text" class="form-input" voice.name="post address 1 field">
             </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="post-address-1">Post Address 1</label>
-                <input type="text" id="post-address-1" voice.name="post address 1 field" class="form-input">
-              </div>
-              <div class="form-group">
-                <label for="post-address-2">Post Address 2</label>
-                <input type="text" id="post-address-2" voice.name="post address 2 field" class="form-input">
-              </div>
-              <div class="form-group">
-                <label for="post-address-3">Post Address 3</label>
-                <input type="text" id="post-address-3" voice.name="post address 3 field" class="form-input">
-              </div>
+            <div class="form-group">
+              <label>Post Address 2</label>
+              <input type="text" class="form-input" voice.name="post address 2 field">
             </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="postal-code">*Postal Code</label>
-                <input type="text" id="postal-code" voice.name="postal code field" class="form-input">
-              </div>
-              <div class="form-group">
-                <label for="postal-area">Postal Area</label>
-                <input type="text" id="postal-area" voice.name="postal area field" class="form-input">
-              </div>
+            <div class="form-group">
+              <label>Post Address 3</label>
+              <input type="text" class="form-input" voice.name="post address 3 field">
             </div>
+          </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label for="municipality-code">Municipality Code</label>
-                <input type="text" id="municipality-code" voice.name="municipality code field" class="form-input">
-              </div>
-              <div class="form-group">
-                <label for="municipality-name">Municipality Name</label>
-                <input type="text" id="municipality-name" voice.name="municipality name field" class="form-input">
-              </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required">Postal Code</label>
+              <input type="text" class="form-input" voice.name="postal code field">
+            </div>
+            <div class="form-group">
+              <label>Postal Area</label>
+              <input type="text" class="form-input" voice.name="postal area field">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Municipality Code</label>
+              <input type="text" class="form-input" voice.name="municipality code field">
+            </div>
+            <div class="form-group">
+              <label>Municipality Name</label>
+              <input type="text" class="form-input" voice.name="municipality name field">
             </div>
           </div>
 
           <!-- Contacts Section -->
-          <div class="contacts-section">
-            <h3>Contacts</h3>
-            
-            <div class="form-group">
-              <label for="telephone">Telephone</label>
-              <input type="tel" id="telephone" voice.name="telephone field" class="form-input">
-            </div>
+          <div class="section-header" voice.name="contacts">Contacts</div>
+          
+          <div class="form-group">
+            <label>Telephone</label>
+            <input type="tel" class="form-input" voice.name="telephone field">
+          </div>
 
-            <div class="form-group">
-              <label for="sms">SMS</label>
-              <input type="tel" id="sms" voice.name="sms field" class="form-input">
-            </div>
+          <div class="form-group">
+            <label>SMS</label>
+            <input type="tel" class="form-input" voice.name="sms field">
+          </div>
 
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input type="email" id="email" voice.name="email field" class="form-input">
-            </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" class="form-input" voice.name="email field">
           </div>
         </div>
 
         <!-- Right Column -->
-        <div class="form-column">
+        <div class="right-column">
           <!-- Transaction Information -->
-          <div class="transaction-section">
-            <h3>Transaction Information</h3>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="transaction-type">*Transaction Type</label>
-                <select id="transaction-type" voice.name="transaction type" class="form-select">
-                  <option value="in">IN</option>
-                  <option value="out">OUT</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="ref-no">*Ref No</label>
-                <input type="text" id="ref-no" voice.name="reference number field" class="form-input">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="voucher-date">Voucher Date</label>
-                <input type="date" id="voucher-date" voice.name="voucher date field" class="form-input" value="2025-05-23">
-              </div>
-              <div class="form-group">
-                <label for="due-date">Due Date</label>
-                <input type="date" id="due-date" voice.name="due date field" class="form-input" value="2025-06-06">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="amount">*Amount</label>
-                <input type="number" id="amount" voice.name="amount field" class="form-input" step="0.01" value="0.00">
-              </div>
-              <div class="form-group">
-                <label for="trans-kid">Trans KID</label>
-                <input type="text" id="trans-kid" voice.name="trans kid field" class="form-input">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="dw-date">DW Date</label>
-                <input type="date" id="dw-date" voice.name="dw date field" class="form-input">
-              </div>
-              <div class="form-group">
-                <label for="bo-date">BO Date</label>
-                <input type="date" id="bo-date" voice.name="bo date field" class="form-input">
-              </div>
-            </div>
-
+          <div class="section-header" voice.name="transaction information">Transaction Information</div>
+          
+          <div class="form-row-quad">
             <div class="form-group">
-              <label for="trans-text">Trans Text</label>
-              <textarea id="trans-text" voice.name="transaction text field" class="form-textarea" rows="3"></textarea>
+              <label class="required">Transaction Type</label>
+              <select class="form-select" voice.name="transaction type">
+                <option>IN</option>
+                <option>OUT</option>
+              </select>
             </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="interest-from-date">Interest from Date</label>
-                <input type="date" id="interest-from-date" voice.name="interest from date field" class="form-input">
-              </div>
-              <div class="form-group">
-                <label for="interest-rate">Interest Rate</label>
-                <div class="input-group">
-                  <input type="number" id="interest-rate" voice.name="interest rate field" class="form-input" step="0.01">
-                  <span class="input-suffix">%</span>
-                </div>
-                <small class="form-help">Applicable only for fixed interest rate</small>
-              </div>
+            <div class="form-group">
+              <label class="required">Ref No</label>
+              <input type="text" class="form-input" voice.name="reference number field">
             </div>
-
-            <button type="button" class="btn btn-outline" voice.name="add transaction button">
-              + Add Transaction
-            </button>
+            <div class="form-group">
+              <label>Voucher Date</label>
+              <input type="date" class="form-input" voice.name="voucher date field" value="2025-05-23">
+            </div>
+            <div class="form-group">
+              <label>Due Date</label>
+              <input type="date" class="form-input" voice.name="due date field" value="2025-06-06">
+            </div>
           </div>
 
+          <div class="form-row-quad">
+            <div class="form-group">
+              <label class="required">Amount</label>
+              <input type="number" class="form-input" voice.name="amount field" step="0.01" value="0.00">
+            </div>
+            <div class="form-group">
+              <label>Trans KID</label>
+              <input type="text" class="form-input" voice.name="trans kid field">
+            </div>
+            <div class="form-group">
+              <label>DW Date</label>
+              <input type="date" class="form-input" voice.name="dw date field">
+            </div>
+            <div class="form-group">
+              <label>BO Date</label>
+              <input type="date" class="form-input" voice.name="bo date field">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Trans Text</label>
+            <textarea class="form-textarea" voice.name="transaction text"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Interest from Date</label>
+              <input type="date" class="form-input" voice.name="interest from date field">
+            </div>
+            <div class="form-group">
+              <label>Interest Rate</label>
+              <div class="input-group">
+                <input type="number" class="form-input" voice.name="interest rate field" step="0.01">
+                <span class="input-suffix">%</span>
+              </div>
+              <small class="form-help">Applicable only for fixed interest rate</small>
+            </div>
+          </div>
+
+          <button type="button" class="add-transaction-btn" voice.name="add transaction button">+ Add Transaction</button>
+
           <!-- Claim Processing -->
-          <div class="claim-section">
-            <h3>Claim Proceeding</h3>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="start-workflow">Start Workflow at</label>
-                <select id="start-workflow" voice.name="start workflow dropdown" class="form-select">
-                  <option value="">State Finder</option>
-                  <option value="manual">Manual</option>
-                  <option value="automatic">Automatic</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="target-date">*Target Date</label>
-                <input type="date" id="target-date" voice.name="target date field" class="form-input">
-              </div>
+          <div class="section-header" voice.name = 'claim proceeding'>Claim Proceeding</div>
+          
+          <div class="form-row" >
+            <div class="form-group">
+              <label>Start Workflow at</label>
+              <select class="form-select" voice.name="start workflow">
+                <option>State Finder</option>
+                <option>Manual</option>
+                <option>Automatic</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="required">Target Date</label>
+              <input type="date" class="form-input" voice.name="target date field">
             </div>
           </div>
 
           <!-- Summary -->
-          <div class="summary-section">
-            <h3>Summary</h3>
-            <div class="summary-box">
-              <div class="summary-row">
-                <span>Main Amount</span>
-                <span class="summary-value" voice.name="main amount value">0.00</span>
-              </div>
-              <div class="summary-row">
-                <span>Other Amount</span>
-                <span class="summary-value" voice.name="other amount value">0.00</span>
-              </div>
-              <div class="summary-row total">
-                <span>Total</span>
-                <span class="summary-value" voice.name="total amount value">0.00</span>
-              </div>
+          <div class="section-header" voice.name = 'summary'>Summary</div>
+          <div class="summary-box" >
+            <div class="summary-row">
+              <span>Main Amount</span>
+              <span voice.name="main amount value">0.00</span>
+            </div>
+            <div class="summary-row">
+              <span>Other Amount</span>
+              <span voice.name="other amount value">0.00</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total</span>
+              <span voice.name="total amount value">0.00</span>
             </div>
           </div>
         </div>
       </div>
     </form>
   </div>
+
   <script src="../../dist/speechplug.js"></script>
   <script src="script.js"></script>
 </body>
