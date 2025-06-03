@@ -1,0 +1,135 @@
+.voice-recorder-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 280px;
+    margin: 0;
+    background-color: #f0f4f8;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  }
+  
+  .voice-floating-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+  
+  .voice-interface {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    gap: 8px;
+  }
+  
+  .button-container {
+    width: 40px;
+    height: 40px;
+    background-color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+  }
+  
+  .action-button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    background-color: transparent;
+  }
+  
+  .action-button svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .action-button.record-mode {
+    color: #5A67D8;
+  }
+  
+  .action-button.record-mode:hover:not(:disabled) {
+    background-color: rgba(90, 103, 216, 0.1);
+  }
+  
+  .action-button.stop-mode {
+    color: #E53E3E;
+  }
+  
+  .action-button.stop-mode:hover:not(:disabled) {
+    background-color: rgba(229, 62, 62, 0.1);
+  }
+  
+  .action-button.processing-mode {
+    color: #718096;
+    cursor: not-allowed;
+  }
+  
+  .action-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .status-display {
+    font-size: 14px;
+    text-align: left;
+    color: #4A5568;
+    font-weight: 400;
+    flex-grow: 1;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    line-height: 26px;
+    height: auto;
+    transition: all 0.2s ease;
+    white-space: normal;
+    word-break: break-word;
+  }
+  
+  .status-display.error-state {
+    font-size: 11px;
+    color: #c62828;
+    background-color: #ffebee;
+    border-color: #f5c6cb;
+  }
+  
+  .transcription-display {
+    padding: 10px;
+    min-height: 30px;
+    max-height: 120px;
+    overflow-y: auto;
+    background-color: white;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    border-top: 1px solid #e0e0e0;
+    color: #2D3748;
+  }
+    
+  @media (max-width: 480px) {
+    .voice-recorder-container {
+      max-width: 100%;
+      border-radius: 0;
+    }
+    
+    .voice-floating-container {
+      width: calc(100% - 20px);
+      right: 10px;
+      left: 10px;
+      bottom: 10px;
+    }
+  }
+  
+  .voice-recorder-container button:focus {
+    outline: none;
+    box-shadow: none;
+  }
