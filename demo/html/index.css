@@ -18,3 +18,85 @@ body, html {
             top: 178px; /* Adjust as needed */
             left: 20px; /* Adjust as needed */
         }
+        #transactionType {
+            position: absolute;
+            top: 169px; /* Adjust as needed */
+            left: 544px; /* Adjust as needed */
+            width:236px;
+        }
+        #voucherDate {
+            position: absolute;
+            top: 167px; /* Adjust as needed */
+            right: 226px; /* Adjust as needed */
+            width: 212px;
+        }
+        #dueDate {
+            position: absolute;
+            top: 167px; /* Adjust as needed */
+            right: 0px; /* Adjust as needed */
+            width: 212px;
+        }
+        #refNo {
+            position: absolute;
+            top: 167px; /* Adjust as needed */
+            left: 794px; /* Adjust as needed */
+            width: 229px;
+        }
+        #amount {
+            position: absolute;
+            top: 218px; /* Adjust as needed */
+            left: 544px; /* Adjust as needed */
+            width:229px;
+        }
+        #transtext {
+            position: absolute;
+            top: 270px; /* Adjust as needed */
+            left: 544px; /* Adjust as needed */
+            width: 229px;
+        }
+        #addTransaction {
+            position: absolute;
+            top: 343px; /* Adjust as needed */
+            left: 544px; /* Adjust as needed */
+            width: 119px;
+            font-size: 12px;
+            height: 18px;
+            border: 1px dashed #969696;
+            cursor: pointer; 
+        }
+        .notification {
+    display: none;
+    position: fixed;
+    top: 30px;
+    right: 20px;
+    padding: 15px 25px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+input:disabled, select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0;
+}
+
+button:disabled {
+    opacity: 0;
+    cursor: not-allowed;
+    border: 1px dashed #cccccc;
+}

@@ -1,14 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
-  document.addEventListener('click', e => {
-  const x = e.clientX;
-  const y = e.clientY;
-  const right = window.innerWidth - x;
-  const bottom = window.innerHeight - y;
+   const creditorSelect = document.getElementById('creditor');
+    const formElements = [
+        document.getElementById('transactionType'),
+        document.getElementById('voucherDate'),
+        document.getElementById('dueDate'),
+        document.getElementById('refNo'),
+        document.getElementById('amount'),
+        document.getElementById('transtext'),
+        document.getElementById('addTransaction')
+    ];
 
-  console.log(`Left: ${x}px, Top: ${y}px, Right: ${right}px, Bottom: ${bottom}px`);
-});
+    // Initially disable all elements
+    formElements.forEach(element => {
+        element.disabled = true;
+    });
 
+    // Enable/disable elements based on creditor selection
+    creditorSelect.addEventListener('change', function() {
+        const isCreditorSelected = this.value !== '';
+        formElements.forEach(element => {
+            element.disabled = !isCreditorSelected;
+        });
+    });
 
+  
+  
   // Initialize VoiceLib with just the ID string
   SpeechPlug.init({
     containerId: 'voice-lib-container', // Changed from container element to containerId string
@@ -23,4 +39,34 @@ document.addEventListener('DOMContentLoaded', () => {
   .catch(error => {
     console.error('Failed to initialize VoiceLib:', error);
   });
+  document.getElementById('transactionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Show notification
+    const notification = document.getElementById('notification');
+    notification.textContent = 'Transaction added successfully!';
+    notification.style.display = 'block';
+    
+    // Hide notification after 3 seconds
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 3000);
+    
+    // Process your form submission here
 });
+});
+
+function formatCurrency(input) {
+    // Remove non-digit characters
+    let value = input.value.replace(/[^\d.]/g, '');
+    
+    // Ensure only two decimal places
+    let parts = value.split('.');
+    if (parts.length > 1) {
+        parts[1] = parts[1].slice(0, 2);
+        value = parts.join('.');
+    }
+    
+    // Format with two decimal places
+    input.value = value ? parseFloat(value).toFixed(2) : '';
+}
