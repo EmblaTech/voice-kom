@@ -1,5 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
-  
+  document.addEventListener('click', e => {
+  const x = e.clientX;
+  const y = e.clientY;
+  const right = window.innerWidth - x;
+  const bottom = window.innerHeight - y;
+
+  console.log(`Left: ${x}px, Top: ${y}px, Right: ${right}px, Bottom: ${bottom}px`);
+});
+
+
   // Initialize VoiceLib with just the ID string
   SpeechPlug.init({
     containerId: 'voice-lib-container', // Changed from container element to containerId string

@@ -1,259 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register Invoice</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Invoice</title>
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <button class="back-btn" voice.name="back button">←</button>
-      <h1>Register Invoice</h1>
-      <div class="header-actions">
-        <button class="btn btn-primary" voice.name="register button">Register</button>
-        <button class="btn btn-secondary" voice.name="reset button">Reset</button>
-      </div>
-    </div>
+  <select id="creditor" name="creditor" voice.name="creditor" required>
+                        <option value="">-- Select Creditor --</option>
+                        <option value="supplier1">ABC Supply Co.</option>
+                        <option value="supplier2">XYZ Materials Ltd.</option>
+                        <option value="supplier3">Global Trading Inc.</option>
+                        <option value="supplier4">Metro Office Supplies</option>
+                        <option value="supplier5">Tech Solutions Provider</option>
+                        <option value="supplier6">Industrial Equipment Co.</option>
+                        <option value="supplier7">Professional Services LLC</option>
+                        <option value="supplier8">Construction Materials Ltd.</option>
+                        <option value="supplier9">Food & Beverage Suppliers</option>
+                        <option value="supplier10">Transport & Logistics Co.</option>
+                        <option value="supplier11">Energy Solutions Inc.</option>
+                        <option value="supplier12">Marketing & Media Group</option>
+                        <option value="supplier13">Healthcare Equipment Co.</option>
+                        <option value="supplier14">Educational Resources Ltd.</option>
+                        <option value="supplier15">Environmental Services Inc.</option>
+    </select>
+    <select id="transactionType" name="transactionType" voice.name="transaction Type"required>
+                        <option value="">-- Select Creditor --</option>
+                        <option value="supplier1">ABC Supply Co.</option>
+    </select>
+    <input type="date" id="voucherDate" name="voucherDate" voice.name="voucher Date" required>
+    <input type="date" id="dueDate" name="dueDate" voice.name="dueDate" required>
+    <input type="text" id="refNo" name="refNo" voice.name="refNo" required>
+    <input type="number" id="amount" name="amount" voice.name="amount" step="0.01" required>
+    <input type="text" id="transtext" name="transKid" voice.name="transKid" required>
+    <button id="addTransaction" class="submit-btn" type="button">Add Transaction</button>
 
-    <form id="invoice-form">
-      <!-- Registration Type -->
-      <div class="register-type">
-        <label class="register-label">Register as</label>
-        <div class="tab-container">
-          <button type="button" class="tab-btn active" voice.name="invoice tab" data-tab="invoice">Invoice</button>
-          <button type="button" class="tab-btn" voice.name="case tab" data-tab="case">Case</button>
-        </div>
-      </div>
 
-      <div class="form-content">
-        <!-- Left Column -->
-        <div class="left-column">
-          <!-- Creditor and Debtor Info -->
-          <div class="form-group">
-            <label class="required">Creditor</label>
-            <select class="form-input" name="creditor" voice.name="creditor field">
-              <option value="">-- Select Creditor --</option>
-              <option value="Alpha Supplies AS">Alpha Supplies AS</option>
-              <option value="Nordic IT Services">Nordic IT Services</option>
-              <option value="Fjord Energi AB">Fjord Energi AB</option>
-              <option value="Skandi Bank ASA">Skandi Bank ASA</option>
-              <option value="Arctic Constructions">Arctic Constructions</option>
-            </select>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="required">Debtor No</label>
-              <input type="text" class="form-input" voice.name="debtor number field">
-            </div>
-            <div class="form-group">
-              <label>Type</label>
-              <select class="form-select" voice.name="type dropdown">
-                <option>Person</option>
-                <option>Company</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>First Name</label>
-              <input type="text" class="form-input" voice.name="first name field">
-            </div>
-            <div class="form-group">
-              <label class="required">Last Name</label>
-              <input type="text" class="form-input" voice.name="last name field">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>NIN</label>
-              <input type="text" class="form-input" voice.name="nin field">
-            </div>
-            <div class="form-group">
-              <label>Birth Date</label>
-              <input type="date" class="form-input" voice.name="birth date field">
-            </div>
-          </div>
-
-          <!-- Address Section -->
-          <div class="section-header">Address</div>
-          
-          <div class="form-group">
-            <label class="required">Country</label>
-            <select class="form-select" voice.name="country dropdown">
-              <option>Norway</option>
-              <option>Sweden</option>
-              <option>Denmark</option>
-            </select>
-          </div>
-
-          <div class="form-row-triple">
-            <div class="form-group">
-              <label>Post Address 1</label>
-              <input type="text" class="form-input" voice.name="post address 1 field">
-            </div>
-            <div class="form-group">
-              <label>Post Address 2</label>
-              <input type="text" class="form-input" voice.name="post address 2 field">
-            </div>
-            <div class="form-group">
-              <label>Post Address 3</label>
-              <input type="text" class="form-input" voice.name="post address 3 field">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="required">Postal Code</label>
-              <input type="text" class="form-input" voice.name="postal code field">
-            </div>
-            <div class="form-group">
-              <label>Postal Area</label>
-              <input type="text" class="form-input" voice.name="postal area field">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Municipality Code</label>
-              <input type="text" class="form-input" voice.name="municipality code field">
-            </div>
-            <div class="form-group">
-              <label>Municipality Name</label>
-              <input type="text" class="form-input" voice.name="municipality name field">
-            </div>
-          </div>
-
-          <!-- Contacts Section -->
-          <div class="section-header" voice.name="contacts">Contacts</div>
-          
-          <div class="form-group">
-            <label>Telephone</label>
-            <input type="tel" class="form-input" voice.name="telephone field">
-          </div>
-
-          <div class="form-group">
-            <label>SMS</label>
-            <input type="tel" class="form-input" voice.name="sms field">
-          </div>
-
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" class="form-input" voice.name="email field">
-          </div>
-        </div>
-
-        <!-- Right Column -->
-        <div class="right-column">
-          <!-- Transaction Information -->
-          <div class="section-header" voice.name="transaction information">Transaction Information</div>
-          
-          <div class="form-row-quad">
-            <div class="form-group">
-              <label class="required">Transaction Type</label>
-              <select class="form-select" voice.name="transaction type">
-                <option>IN</option>
-                <option>OUT</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="required">Ref No</label>
-              <input type="text" class="form-input" voice.name="reference number field">
-            </div>
-            <div class="form-group">
-              <label>Voucher Date</label>
-              <input type="date" class="form-input" voice.name="voucher date field" value="2025-05-23">
-            </div>
-            <div class="form-group">
-              <label>Due Date</label>
-              <input type="date" class="form-input" voice.name="due date field" value="2025-06-06">
-            </div>
-          </div>
-
-          <div class="form-row-quad">
-            <div class="form-group">
-              <label class="required">Amount</label>
-              <input type="number" class="form-input" voice.name="amount field" step="0.01" value="0.00">
-            </div>
-            <div class="form-group">
-              <label>Trans KID</label>
-              <input type="text" class="form-input" voice.name="trans kid field">
-            </div>
-            <div class="form-group">
-              <label>DW Date</label>
-              <input type="date" class="form-input" voice.name="dw date field">
-            </div>
-            <div class="form-group">
-              <label>BO Date</label>
-              <input type="date" class="form-input" voice.name="bo date field">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Trans Text</label>
-            <textarea class="form-textarea" voice.name="transaction text"></textarea>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Interest from Date</label>
-              <input type="date" class="form-input" voice.name="interest from date field">
-            </div>
-            <div class="form-group">
-              <label>Interest Rate</label>
-              <div class="input-group">
-                <input type="number" class="form-input" voice.name="interest rate field" step="0.01">
-                <span class="input-suffix">%</span>
-              </div>
-              <small class="form-help">Applicable only for fixed interest rate</small>
-            </div>
-          </div>
-
-          <button type="button" class="add-transaction-btn" voice.name="add transaction button">+ Add Transaction</button>
-
-          <!-- Claim Processing -->
-          <div class="section-header" voice.name = 'claim proceeding'>Claim Proceeding</div>
-          
-          <div class="form-row" >
-            <div class="form-group">
-              <label>Start Workflow at</label>
-              <select class="form-select" voice.name="start workflow">
-                <option>State Finder</option>
-                <option>Manual</option>
-                <option>Automatic</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="required">Target Date</label>
-              <input type="date" class="form-input" voice.name="target date field">
-            </div>
-          </div>
-
-          <!-- Summary -->
-          <div class="section-header" voice.name = 'summary'>Summary</div>
-          <div class="summary-box" >
-            <div class="summary-row">
-              <span>Main Amount</span>
-              <span voice.name="main amount value">0.00</span>
-            </div>
-            <div class="summary-row">
-              <span>Other Amount</span>
-              <span voice.name="other amount value">0.00</span>
-            </div>
-            <div class="summary-row total">
-              <span>Total</span>
-              <span voice.name="total amount value">0.00</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
-  </div>
 
   <script src="../../dist/speechplug.js"></script>
   <script src="script.js"></script>

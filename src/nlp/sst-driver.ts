@@ -5,7 +5,7 @@ import { STTConfig } from './model/nlpConfig';
 @injectable()
 export class WhisperSTTDriver implements ISTTDriver {
   private language: string = 'en';
-  private apiKey: string = '';
+  private apiKey: string = 'no';
   private apiEndpoint: string = 'https://api.openai.com/v1/audio/transcriptions';
   private availableLanguages: string[] = [
     'en', 'zh', 'de', 'es', 'ru', 'ko', 'fr', 'ja', 
@@ -52,6 +52,11 @@ export class WhisperSTTDriver implements ISTTDriver {
       formData.append('file', audioBlob, 'audio.webm');
       formData.append('model', 'whisper-1');
       formData.append('language', this.language);
+      // Add prompt to improve name recognition
+      // Add temperature parameter for more precise transcription
+      formData.append('temperature', '0.0');
+      // Request word-level timestamps for better segmentation
+      formData.append('timestamp_granularities', '["word"]');
       
       const response = await fetch(this.apiEndpoint, {
         method: 'POST',
