@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   SpeechPlug.init({   // Initialize SpeechPlug with params
     containerId: 'speech-container',
     lang: 'en',
+    position: 'bottom-left',
     transcription: {
       provider: 'default',
       apiKey: ''

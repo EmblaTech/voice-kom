@@ -12,7 +12,7 @@ import { Validator } from "./utils/validator";
 export class SpeechPlug {
   private readonly logger = Logger.getInstance();
   private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure'];
-  private readonly VALID_UI_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+  private readonly VALID_UI_POSITIONS = ['bottom-left', 'bottom-right'];
   private readonly DEFAULT_CONTAINER_ID = 'speech-plug-container';
   private readonly DEFAULT_LANG = 'en';
   private readonly DEFAULT_TRANSCRIPTION_PROVIDER = TranscriptionProviders.DEFAULT;
@@ -122,7 +122,7 @@ export class SpeechPlug {
 
   private validateProviderConfig(providerConfig: any, type: string, errors: string[]) {
     if (!providerConfig) return;
-    
+
     const providerResult = Validator.isInValues(providerConfig.provider, this.VALID_PROVIDERS, 'Speech Provider');
     if (!providerResult.valid && providerResult.message) {
         errors.push(providerResult.message);
@@ -148,8 +148,9 @@ export class SpeechPlug {
 
       const positionResult = Validator.isInValues(config.position, this.VALID_UI_POSITIONS, 'Container position');
       if (!positionResult.valid && positionResult.message) {
-          errors.push(positionResult.message);
-      }      
+          this.logger.error(`Invalid position configuration: ${positionResult.message}`);
+          config.position = this.DEFAULT_CONTAINER_POSITION;
+      }     
   }
 }
 
