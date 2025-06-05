@@ -50,7 +50,7 @@ export class Validator {
                 message: `${fieldName} must be a string`
             };
         }
-        if (value !== null && value !== undefined && !allowedValues.includes(value)) {
+        if (!allowedValues.includes(value)) {
             return {
                 valid: false,
                 message: `${fieldName} must be a one of: ${allowedValues.join(', ')}`
