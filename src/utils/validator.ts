@@ -44,13 +44,13 @@ export class Validator {
     }
 
     static isInValues(value: any, allowedValues: string[], fieldName: string): { valid: boolean; message?: string } {
-        if(!Validator.isString(value)) {
+        if (!Validator.isString(value)) {
             return {
                 valid: false,
                 message: `${fieldName} must be a string`
             };
         }
-        if (value && !allowedValues.includes(value)) {
+        if (!allowedValues.includes(value)) {
             return {
                 valid: false,
                 message: `${fieldName} must be a one of: ${allowedValues.join(', ')}`

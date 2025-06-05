@@ -6,7 +6,6 @@ import { UIConfig } from '../../src/types';
 export class UIHandler {
   private config: UIConfig | null = null;
   private readonly logger = Logger.getInstance();
-  private readonly CONTAINER_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
   private readonly SPEECH_PLUG_TEMPLATE_PATH = '../../src/ui/speech-container.html';
   private readonly SPEECH_PLUG_STYLE_ELEMENT_ID = 'speech-container-style';
   private readonly SPEECH_PLUG_STYLE_PATH = '../../src/ui/speech-container.css';
@@ -58,23 +57,11 @@ export class UIHandler {
     
     // Apply base container class
     this.container.classList.add('voice-recorder-container');
-    
+
     // Position settings
     if (position) {
-      // Remove any existing position classes first
-      this.CONTAINER_POSITIONS.forEach(pos => {
-        this.container!.classList.remove(`voice-${pos}`);
-      });
-      
       // Apply position class
       this.container.classList.add(`voice-${position}`);
-      
-      // For floating UI
-      if (position !== 'center') {
-        this.container.classList.add('voice-floating-container');
-      } else {
-        this.container.classList.remove('voice-floating-container');
-      }
     }
     
     // Apply dimensions
@@ -93,7 +80,7 @@ export class UIHandler {
       });
     }
   }
-  
+
   private createContainer(id: string): HTMLElement {
     const container = document.createElement('div');
     container.id = id;
@@ -101,7 +88,7 @@ export class UIHandler {
     document.body.appendChild(container);
     return container;
   }
-
+  
   private async injectStyles(): Promise<void> {
     if (document.getElementById(this.SPEECH_PLUG_STYLE_ELEMENT_ID)) return;
   
@@ -159,10 +146,10 @@ export class UIHandler {
 
   private bindEventListeners(): void {
     if (!this.actionButton) return;
-    
+
     this.actionButton.addEventListener('click', () => {
       if (!this.actionButton) return;
-      
+
       const action = this.actionButton.getAttribute('data-action');
       if (action === 'record') {
         this.eventBus.emit(SpeechEvents.RECORD_BUTTON_PRESSED);
@@ -183,7 +170,7 @@ export class UIHandler {
       this.transcriptionDisplay.style.display = 'block';
     }
   }
-  
+
   public setTranscription(transcription: string): void {
     this.transcription = transcription;
     if (this.transcriptionDisplay) {
