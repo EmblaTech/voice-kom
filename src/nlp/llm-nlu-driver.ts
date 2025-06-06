@@ -54,16 +54,22 @@ export class LLMNLUDriver implements INLUDriver {
   }
 
   /**
-   * Generate system prompt for the LLM based on available commands
+   * Generate system prompt for the LLM based on available commands with multilingual support
    */
   private generateSystemPrompt(): string {
     if (!this.commandRegistry) {
       return '';
     }
     
+    // Language-specific instructions
+    const languageInstruction = this.language !== 'en' 
+      ? `The user input will be in ${this.getLanguageName(this.language)}. You should understand the meaning of the input in that language and match it to the appropriate English command intents listed below. Focus on the semantic meaning rather than exact word matching.\n\n`
+      : '';
+    
     // Base system instruction
     let systemPrompt = `You are an intent classification system. Your task is to identify all possible intents from the user's speech input and extract relevant entities for each intent.
-Available intents: ${this.availableIntents.filter(i => i !== IntentTypes.UNKNOWN).join(', ')}.
+
+${languageInstruction}Available intents: ${this.availableIntents.filter(i => i !== IntentTypes.UNKNOWN).join(', ')}.
 
 For each intent, here are few of the possible utterance patterns and required entities:
 `;
@@ -77,8 +83,24 @@ Utterance patterns: ${config.utterances.join(', ')}
 Required entities: ${config.entities.join(', ')}`;
     });
 
+    // Add multilingual processing instructions
+    const multilingualInstructions = this.language !== 'en' 
+      ? `\n\nIMPORTANT MULTILINGUAL PROCESSING:
+- The user input is in ${this.getLanguageName(this.language)}
+- Understand the semantic meaning of the input regardless of the language
+- Match the meaning to the appropriate English intent categories above
+- Extract entities based on the meaning, not literal translation
+- If an entity is a target, a target group or a group, normalized the value to English
+- If the entity is a direction, normalize it to English cardinal directions (e.g., "left", "right", "up", "down")
+- If the entity value is a numeric value or a date or time, normalize it to standard English format
+- Else if the entity is some input value, keep it as is`
+
+      : '';
+
     // Add response format instructions with multiple intent support
-    systemPrompt += `\n\nRespond with a JSON array containing multiple intents in order of likelihood or priority. Each intent should be a JSON object containing:
+    systemPrompt += `${multilingualInstructions}
+
+Respond with a JSON array containing multiple intents in order of likelihood or priority. Each intent should be a JSON object containing:
 1. "intent": The identified intent name (use "unknown" if unclear)
 2. "confidence": A number between 0 and 1 indicating confidence level
 3. "entities": An object with extracted entity values as key-value pairs
@@ -109,7 +131,89 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
   }
 
   /**
-   * Identify multiple intents from input text using LLM
+   * Get human-readable language name from language code
+   */
+  private getLanguageName(langCode: string): string {
+    const languageNames: { [key: string]: string } = {
+      'en': 'English',
+      'es': 'Spanish',
+      'fr': 'French',
+      'de': 'German',
+      'it': 'Italian',
+      'pt': 'Portuguese',
+      'ru': 'Russian',
+      'zh': 'Chinese',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'ar': 'Arabic',
+      'hi': 'Hindi',
+      'nl': 'Dutch',
+      'sv': 'Swedish',
+      'da': 'Danish',
+      'no': 'Norwegian',
+      'fi': 'Finnish',
+      'pl': 'Polish',
+      'cs': 'Czech',
+      'hu': 'Hungarian',
+      'ro': 'Romanian',
+      'bg': 'Bulgarian',
+      'hr': 'Croatian',
+      'sk': 'Slovak',
+      'sl': 'Slovenian',
+      'et': 'Estonian',
+      'lv': 'Latvian',
+      'lt': 'Lithuanian',
+      'mt': 'Maltese',
+      'ga': 'Irish',
+      'cy': 'Welsh',
+      'eu': 'Basque',
+      'ca': 'Catalan',
+      'gl': 'Galician',
+      'tr': 'Turkish',
+      'he': 'Hebrew',
+      'th': 'Thai',
+      'vi': 'Vietnamese',
+      'id': 'Indonesian',
+      'ms': 'Malay',
+      'tl': 'Filipino',
+      'sw': 'Swahili',
+      'am': 'Amharic',
+      'yo': 'Yoruba',
+      'zu': 'Zulu',
+      'xh': 'Xhosa',
+      'af': 'Afrikaans',
+      'sq': 'Albanian',
+      'az': 'Azerbaijani',
+      'be': 'Belarusian',
+      'bn': 'Bengali',
+      'bs': 'Bosnian',
+      'my': 'Burmese',
+      'km': 'Khmer',
+      'ka': 'Georgian',
+      'gu': 'Gujarati',
+      'kk': 'Kazakh',
+      'ky': 'Kyrgyz',
+      'lo': 'Lao',
+      'mk': 'Macedonian',
+      'ml': 'Malayalam',
+      'mn': 'Mongolian',
+      'ne': 'Nepali',
+      'ps': 'Pashto',
+      'fa': 'Persian',
+      'pa': 'Punjabi',
+      'si': 'Sinhala',
+      'ta': 'Tamil',
+      'te': 'Telugu',
+      'uk': 'Ukrainian',
+      'ur': 'Urdu',
+      'uz': 'Uzbek'
+    };
+    
+    return languageNames[langCode] || langCode.toUpperCase();
+  }
+
+  /**
+   * Identify multiple intents from input text using LLM with multilingual support
    */
   async identifyIntent(text: string): Promise<IntentResult[]> {
     if (!this.apiKey) {
@@ -117,8 +221,13 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
     }
     
     try {
-      // Generate system message
+      // Generate system message with multilingual support
       const systemPrompt = this.generateSystemPrompt();
+      
+      // Prepare user message with language context if not English
+      const userMessage = this.language !== 'en' 
+        ? `Input language: ${this.getLanguageName(this.language)}\nUser input: ${text}`
+        : text;
       
       // Call the LLM API
       const response = await fetch(this.apiEndpoint, {
@@ -131,7 +240,7 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
           model: this.model,
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: text }
+            { role: 'user', content: userMessage }
           ],
           temperature: 0.1 // Low temperature for more deterministic results
         })
@@ -231,5 +340,12 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
    */
   setModel(modelName: string): void {
     this.model = modelName;
+  }
+
+  /**
+   * Get current language setting
+   */
+  getCurrentLanguage(): string {
+    return this.language;
   }
 }

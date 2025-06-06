@@ -1,34 +1,79 @@
 document.addEventListener('DOMContentLoaded', () => {
-   const creditorSelect = document.getElementById('creditor');
-    const formElements = [
-        document.getElementById('transactionType'),
-        document.getElementById('voucherDate'),
-        document.getElementById('dueDate'),
-        document.getElementById('refNo'),
-        document.getElementById('amount'),
-        document.getElementById('transtext'),
-        document.getElementById('addTransaction')
-    ];
-
-    // Initially disable all elements
-    formElements.forEach(element => {
-        element.disabled = true;
-    });
-
-    // Enable/disable elements based on creditor selection
-    creditorSelect.addEventListener('change', function() {
-        const isCreditorSelected = this.value !== '';
-        formElements.forEach(element => {
-            element.disabled = !isCreditorSelected;
-        });
-    });
-
+  // Form handling
+  const form = document.getElementById('contact-form');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    // Basic form validation
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const agreeTerms = document.getElementById('agree-terms').checked;
+    
+    if (!name || !email) {
+      alert('Please fill out all required fields.');
+      return;
+    }
+    
+    if (!agreeTerms) {
+      alert('Please agree to the Terms and Conditions.');
+      return;
+    }
+    
+    // If validation passes
+    alert('Form submitted successfully!');
+    form.reset();
+  });
   
+  // Handle reset button
+  form.addEventListener('reset', () => {
+    setTimeout(() => {
+      // Ensure radio buttons default state is restored
+      document.querySelector('input[name="contact-preference"][value="email"]').checked = true;
+    }, 10);
+  });
+  
+  // Modal handling
+  const termsModal = document.getElementById('terms-modal');
+  const termsLink = document.getElementById('terms-link');
+  const closeModal = document.querySelector('.close');
+  const acceptTerms = document.querySelector('.modal-content .btn');
+  
+  termsLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    termsModal.style.display = 'block';
+  });
+  
+  closeModal.addEventListener('click', () => {
+    termsModal.style.display = 'none';
+  });
+  
+  acceptTerms.addEventListener('click', () => {
+    document.getElementById('agree-terms').checked = true;
+    termsModal.style.display = 'none';
+  });
+  
+  // Close modal when clicking outside the modal content
+  window.addEventListener('click', (e) => {
+    if (e.target === termsModal) {
+      termsModal.style.display = 'none';
+    }
+  });
+  
+  // Help and FAQ links
+  document.getElementById('help-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('Help section would open here in a real application.');
+  });
+  
+  document.getElementById('faq-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('FAQ section would open here in a real application.');
+  });
   
   // Initialize VoiceLib with just the ID string
   SpeechPlug.init({
     containerId: 'voice-lib-container', // Changed from container element to containerId string
-    lang: 'en',
+    lang: 'no',
     sttEngine: 'default',
     sttApiKey: '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',
     nluEngine: 'llm',
@@ -39,36 +84,4 @@ document.addEventListener('DOMContentLoaded', () => {
   .catch(error => {
     console.error('Failed to initialize VoiceLib:', error);
   });
-
-
-  document.getElementById('transactionForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Show notification
-    const notification = document.getElementById('notification');
-    notification.textContent = 'Transaction added successfully!';
-    notification.style.display = 'block';
-    
-    // Hide notification after 3 seconds
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 3000);
-    
-    // Process your form submission here
 });
-});
-
-function formatCurrency(input) {
-    // Remove non-digit characters
-    let value = input.value.replace(/[^\d.]/g, '');
-    
-    // Ensure only two decimal places
-    let parts = value.split('.');
-    if (parts.length > 1) {
-        parts[1] = parts[1].slice(0, 2);
-        value = parts.join('.');
-    }
-    
-    // Format with two decimal places
-    input.value = value ? parseFloat(value).toFixed(2) : '';
-}
