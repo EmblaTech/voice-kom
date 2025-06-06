@@ -268,6 +268,11 @@ export class UIComponent implements IUIComponent {
       const action = this.actionButton.getAttribute('data-action');
       if (action === 'record') {
         this.eventBus.emit(VoiceLibEvents.RECORD_BUTTON_PRESSED);
+        // Hide transcription when starting new recording
+            if (this.transcriptionDisplay) {
+                this.transcriptionDisplay.style.display = 'none';
+                this.transcription = null; // Clear previous transcription
+            }
       } else if (action === 'stop') {
         this.eventBus.emit(VoiceLibEvents.STOP_BUTTON_PRESSED);
       }

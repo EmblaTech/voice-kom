@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
   .catch(error => {
     console.error('Failed to initialize VoiceLib:', error);
   });
+
+
   document.getElementById('transactionForm').addEventListener('submit', function(e) {
     e.preventDefault();
     

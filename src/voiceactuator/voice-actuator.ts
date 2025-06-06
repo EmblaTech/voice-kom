@@ -682,8 +682,14 @@ class NumericNormalizer implements ValueNormalizer {
 
   normalize(element: HTMLElement, value: string): string {
     try {
+      // Remove commas and connecting words
+      const cleanValue = value
+        .replace(/,/g, '') // Remove commas
+        .replace(/\band\b/gi, '') // Remove 'and'
+        .replace(/\s+/g, ''); // Remove extra spaces
+
       // Extract the first floating point number from the string
-      const match = value.match(/-?\d+(?:\.\d+)?/);
+      const match = cleanValue.match(/-?\d+(?:\.\d+)?/);
       
       if (match) {
         return parseFloat(match[0]).toString();
