@@ -58,4 +58,23 @@ export class Validator {
         }
         return { valid: true };
     }
+
+    static isValidPixelValue(value: any, DEFAULT_CONTAINER_VALUE: any): boolean {
+        if (value === undefined || value === null) {
+            return false;
+        }
+
+        const stringValue = String(value).trim();
+
+        if (!stringValue.endsWith('px')) {
+            return false;
+        }
+
+        const numericPart = stringValue.slice(0, -2);
+        const numericValue = parseFloat(numericPart);
+
+        DEFAULT_CONTAINER_VALUE = parseFloat(DEFAULT_CONTAINER_VALUE.slice(0, -2));
+        
+        return numericValue >= 0 && numericValue <= DEFAULT_CONTAINER_VALUE;
+    }
 }
