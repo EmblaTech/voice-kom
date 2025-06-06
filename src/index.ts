@@ -22,7 +22,7 @@ export class SpeechPlug {
   private readonly DEFAULT_LOG_LEVEL = LogLevel.INFO;
   private readonly DEFAULT_CONTAINER_POSITION = 'bottom-right';
   private readonly DEFAULT_CONTAINER_WIDTH = '300px';
-  private readonly DEFAULT_CONTAINER_HEIGHT = '100px';
+  private readonly DEFAULT_CONTAINER_HEIGHT = '65px';
   private readonly DEFAULT_AUTO_START = false;
   private readonly DEFAULT_SHOW_PROGRESS = true;
   private readonly DEFAULT_SHOW_TRANSCRIPTION = true;
@@ -139,8 +139,17 @@ export class SpeechPlug {
 
   private validateUIConfig(config: SpeechPlugConfig, errors:string[]){
       if (!Validator.isBoolean(config.autoStart)) errors.push("AutoStart must be a boolean");          
-      if (!Validator.isString(config.width)) errors.push("Container width must be number or string");
-      if (!Validator.isString(config.height)) errors.push("Container height must be number or string");
+
+      if (!Validator.isValidPixelValue(config.width, this.DEFAULT_CONTAINER_WIDTH)) {
+          this.logger.error(`Invalid widget width: ${config.width}. Expected a valid pixel (px) value.`);
+          config.width = this.DEFAULT_CONTAINER_WIDTH;
+      }
+
+      if (!Validator.isValidPixelValue(config.height, this.DEFAULT_CONTAINER_HEIGHT)) {
+          this.logger.error(`Invalid widget height: ${config.height}. Expected a valid pixel (px) value.`);
+          config.height = this.DEFAULT_CONTAINER_HEIGHT;
+      }
+      
       if (!Validator.isString(config.theme)) errors.push("Container theme must be a string");
       if (!Validator.isBoolean(config.showProgress)) errors.push("ShowProgress must be a boolean");
       if (!Validator.isBoolean(config.showTranscription)) errors.push("ShowTranscription must be a boolean");

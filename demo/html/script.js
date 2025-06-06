@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     containerId: 'speech-container',
     lang: 'en',
     position: 'bottom-left',
+    width: '290px',
+    height: '55px',
     transcription: {
       provider: 'default',
       apiKey: ''
