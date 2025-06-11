@@ -1,9 +1,13 @@
 export class Validator {
-    static isString(value: any):boolean {
-        if (value !== undefined && typeof value !== 'string') {
-            return false
-        }
-        return true
+    // static isString(value: any):boolean {
+    //     if (value !== undefined && typeof value !== 'string') {
+    //         return false
+    //     }
+    //     return true
+    // }
+
+    static isString(value: any): boolean {
+        return typeof value === 'string';
     }
 
     static isNum(value: any):boolean {
@@ -59,22 +63,32 @@ export class Validator {
         return { valid: true };
     }
 
-    static isValidPixelValue(value: any, DEFAULT_CONTAINER_VALUE: any): boolean {
-        if (value === undefined || value === null) {
-            return false;
+    static isValidPixelValue(value: any, defaultContainerValue: any): { valid: boolean; message?: string } {
+        if (!Validator.isString(value)) {
+            return {
+                valid: false,
+                message: `${value} must be a string`
+            };
         }
 
         const stringValue = String(value).trim();
-
         if (!stringValue.endsWith('px')) {
-            return false;
+            return {
+                valid: false,
+                message: `${value} is not given as px value`
+            };
         }
 
         const numericPart = stringValue.slice(0, -2);
         const numericValue = parseFloat(numericPart);
+        defaultContainerValue = parseFloat(defaultContainerValue.slice(0, -2));
 
-        DEFAULT_CONTAINER_VALUE = parseFloat(DEFAULT_CONTAINER_VALUE.slice(0, -2));
-        
-        return numericValue >= 0 && numericValue <= DEFAULT_CONTAINER_VALUE;
+        if (!(numericValue >= 0 && numericValue <= defaultContainerValue)) {
+            return {
+                valid: false,
+                message: `${value} is not given in the proper px range (0 to ${defaultContainerValue})`
+            };
+        }
+        return { valid: true };
     }
 }

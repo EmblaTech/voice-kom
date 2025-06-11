@@ -140,13 +140,15 @@ export class SpeechPlug {
   private validateUIConfig(config: SpeechPlugConfig, errors:string[]){
       if (!Validator.isBoolean(config.autoStart)) errors.push("AutoStart must be a boolean");          
 
-      if (!Validator.isValidPixelValue(config.width, this.DEFAULT_CONTAINER_WIDTH)) {
-          this.logger.error(`Invalid widget width: ${config.width}. Expected a valid pixel (px) value.`);
+      const widthResult = Validator.isValidPixelValue(config.width, this.DEFAULT_CONTAINER_WIDTH);
+      if (!widthResult.valid && widthResult.message) {
+          this.logger.error(`Invalid widget width: ${config.width}. ${widthResult.message}`);
           config.width = this.DEFAULT_CONTAINER_WIDTH;
       }
 
-      if (!Validator.isValidPixelValue(config.height, this.DEFAULT_CONTAINER_HEIGHT)) {
-          this.logger.error(`Invalid widget height: ${config.height}. Expected a valid pixel (px) value.`);
+      const heightResult = Validator.isValidPixelValue(config.height, this.DEFAULT_CONTAINER_HEIGHT);
+      if (!heightResult.valid && heightResult.message) {
+          this.logger.error(`Invalid widget height: ${config.height}. ${heightResult.message}`);
           config.height = this.DEFAULT_CONTAINER_HEIGHT;
       }
       
