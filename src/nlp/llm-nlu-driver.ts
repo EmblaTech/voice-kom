@@ -66,43 +66,52 @@ export class LLMNLUDriver implements INLUDriver {
       ? `The user input will be in ${this.getLanguageName(this.language)}. You should understand the meaning of the input in that language and match it to the appropriate English command intents listed below. Focus on the semantic meaning rather than exact word matching.\n\n`
       : '';
     
-    // Base system instruction
-    let systemPrompt = `You are an intent classification system. Your task is to identify all possible intents from the user's speech input and extract relevant entities for each intent.
+    // Base system instruction with enhanced LLM autonomy
+    let systemPrompt = `You are an advanced intent classification system with full autonomy to understand and interpret user commands for web UI interactions. Your task is to intelligently identify all possible intents from the user's speech input and extract relevant entities for each intent.
 
-${languageInstruction}Available intents: ${this.availableIntents.filter(i => i !== IntentTypes.UNKNOWN).join(', ')}.
+${languageInstruction}You have access to the following intent categories: ${this.availableIntents.filter(i => i !== IntentTypes.UNKNOWN).join(', ')}.
 
-For each intent, here are few of the possible utterance patterns and required entities:
+For each intent category, here are the types of entities you should look for:
 `;
 
-    // Add each intent's patterns and entities
+    // Add each intent's entity information only (no utterance patterns)
     Object.entries(this.commandRegistry).forEach(([intentName, config]) => {
       if (intentName === IntentTypes.UNKNOWN) return;
       
       systemPrompt += `\nIntent: ${intentName}
-Utterance patterns: ${config.utterances.join(', ')}
-Required entities: ${config.entities.join(', ')}`;
+Expected entities: ${config.entities.join(', ')}
+Purpose: Use your understanding to determine if the user's input semantically matches this intent type for web UI interaction.`;
     });
 
-    // Add multilingual processing instructions
+    // Enhanced multilingual processing instructions
     const multilingualInstructions = this.language !== 'en' 
       ? `\n\nIMPORTANT MULTILINGUAL PROCESSING:
 - The user input is in ${this.getLanguageName(this.language)}
-- Understand the semantic meaning of the input regardless of the language
-- Match the meaning to the appropriate English intent categories above
-- Extract entities based on the meaning, not literal translation
-- If an entity is a target, a target group or a group, normalized the value to English
-- If the entity is a direction, normalize it to English cardinal directions (e.g., "left", "right", "up", "down")
-- If the entity value is a numeric value or a date or time, normalize it to standard English format
-- Else if the entity is some input value, keep it as is`
-
+- Use your language understanding capabilities to interpret the semantic meaning
+- Match the meaning to the most appropriate English intent categories
+- Extract entities based on semantic understanding, not literal translation
+- Normalize target/group entities to clear English descriptions
+- Normalize directional entities to English cardinal directions (e.g., "left", "right", "up", "down")
+- Normalize numeric, date, and time entities to standard English format
+- Preserve input values as-is when they represent user data`
       : '';
 
-    // Add response format instructions with multiple intent support
+    // Enhanced response format instructions with full LLM decision making
     systemPrompt += `${multilingualInstructions}
 
-Respond with a JSON array containing multiple intents in order of likelihood or priority. Each intent should be a JSON object containing:
-1. "intent": The identified intent name (use "unknown" if unclear)
-2. "confidence": A number between 0 and 1 indicating confidence level
+INSTRUCTIONS FOR INTENT CLASSIFICATION:
+You have full autonomy to interpret user commands. Use your understanding of:
+- Natural language semantics and context
+- Web UI interaction patterns
+- User intent behind different phrasings
+- Command variations and synonyms
+- Multi-step or compound commands
+
+Don't rely on exact phrase matching - use your intelligence to understand what the user wants to accomplish on a web interface.
+
+Respond with a JSON array containing multiple intents in order of likelihood or relevance. Each intent should be a JSON object containing:
+1. "intent": The identified intent name (use "unknown" only if genuinely unclear)
+2. "confidence": A number between 0 and 1 indicating your confidence level
 3. "entities": An object with extracted entity values as key-value pairs
 
 Example response for "click the submit button and then go back":
@@ -123,7 +132,12 @@ Example response for "click the submit button and then go back":
   }
 ]
 
-If only one intent is detected, still return an array with that single intent.
+Use your full language understanding capabilities to interpret user intent, even for:
+- Colloquial expressions
+- Implied actions
+- Context-dependent commands
+- Creative or unusual phrasings
+- Commands with missing explicit targets
 
 IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code blocks, or backticks. Do not wrap the JSON in \`\`\` or any other formatting.`;
 
@@ -213,7 +227,7 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
   }
 
   /**
-   * Identify multiple intents from input text using LLM with multilingual support
+   * Identify multiple intents from input text using LLM with enhanced autonomy
    */
   async identifyIntent(text: string): Promise<IntentResult[]> {
     if (!this.apiKey) {
@@ -221,15 +235,15 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
     }
     
     try {
-      // Generate system message with multilingual support
+      // Generate system message with enhanced LLM autonomy
       const systemPrompt = this.generateSystemPrompt();
       
       // Prepare user message with language context if not English
       const userMessage = this.language !== 'en' 
-        ? `Input language: ${this.getLanguageName(this.language)}\nUser input: ${text}`
+        ? `Input language: ${this.getLanguageName(this.language)}\nUser command: ${text}`
         : text;
       
-      // Call the LLM API
+      // Call the LLM API with higher temperature for more creative interpretation
       const response = await fetch(this.apiEndpoint, {
         method: 'POST',
         headers: {
@@ -242,7 +256,7 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userMessage }
           ],
-          temperature: 0.1 // Low temperature for more deterministic results
+          temperature: 0.3 // Slightly higher temperature for better interpretation while maintaining consistency
         })
       });
       
