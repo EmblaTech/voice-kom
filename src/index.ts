@@ -22,7 +22,7 @@ export class SpeechPlug {
   private readonly DEFAULT_LOG_LEVEL = LogLevel.INFO;
   private readonly DEFAULT_CONTAINER_POSITION = 'bottom-right';
   private readonly DEFAULT_CONTAINER_WIDTH = '300px';
-  private readonly DEFAULT_CONTAINER_HEIGHT = '100px';
+  private readonly DEFAULT_CONTAINER_HEIGHT = '75px';
   private readonly DEFAULT_AUTO_START = false;
   private readonly DEFAULT_SHOW_PROGRESS = true;
   private readonly DEFAULT_SHOW_TRANSCRIPTION = true;
@@ -94,11 +94,11 @@ export class SpeechPlug {
   // Function to validate the configuration
  private validateSpeechPlugConfig(config: SpeechPlugConfig): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    if (!Validator.isString(config.containerId)) {
+    if (!Validator.isStringOrUndefined(config.containerId)) {
       errors.push('ContainerId must be a string');
     }  
 
-    if (!Validator.isString(config.lang)) {
+    if (!Validator.isStringOrUndefined(config.lang)) {
       errors.push('Language must be a string');
     }
 
@@ -127,9 +127,9 @@ export class SpeechPlug {
     if (!providerResult.valid && providerResult.message) {
         errors.push(providerResult.message);
     }
-    if (!Validator.isString(providerConfig.apiUrl)) errors.push(`${type}.apiUrl must be a string`);
-    if (!Validator.isString(providerConfig.apiKey)) errors.push(`${type}.apiKey must be a string`);
-    if (!Validator.isString(providerConfig.model)) errors.push(`${type}.model must be a string`);
+    if (!Validator.isStringOrUndefined(providerConfig.apiUrl)) errors.push(`${type}.apiUrl must be a string`);
+    if (!Validator.isStringOrUndefined(providerConfig.apiKey)) errors.push(`${type}.apiKey must be a string`);
+    if (!Validator.isStringOrUndefined(providerConfig.model)) errors.push(`${type}.model must be a string`);
 
     const confidenceResult = Validator.isInRange(providerConfig.confidence, 0, 1, 'Provider confidence')
     if (!confidenceResult.valid && confidenceResult.message) {
@@ -139,9 +139,20 @@ export class SpeechPlug {
 
   private validateUIConfig(config: SpeechPlugConfig, errors:string[]){
       if (!Validator.isBoolean(config.autoStart)) errors.push("AutoStart must be a boolean");          
-      if (!Validator.isString(config.width)) errors.push("Container width must be number or string");
-      if (!Validator.isString(config.height)) errors.push("Container height must be number or string");
-      if (!Validator.isString(config.theme)) errors.push("Container theme must be a string");
+
+      const widthResult = Validator.isValidPixelValue(config.width, this.DEFAULT_CONTAINER_WIDTH);
+      if (!widthResult.valid) {
+          this.logger.error(`Invalid widget width. ${widthResult.message}`);
+          config.width = this.DEFAULT_CONTAINER_WIDTH;
+      }
+
+      const heightResult = Validator.isValidPixelValue(config.height, this.DEFAULT_CONTAINER_HEIGHT);
+      if (!heightResult.valid) {
+          this.logger.error(`Invalid widget height. ${heightResult.message}`);
+          config.height = this.DEFAULT_CONTAINER_HEIGHT;
+      }
+      
+      if (!Validator.isStringOrUndefined(config.theme)) errors.push("Container theme must be a string");
       if (!Validator.isBoolean(config.showProgress)) errors.push("ShowProgress must be a boolean");
       if (!Validator.isBoolean(config.showTranscription)) errors.push("ShowTranscription must be a boolean");
       if (!Validator.isObject(config.styles)) errors.push("Container styles must be an object");

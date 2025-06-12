@@ -70,7 +70,7 @@ export class UIHandler {
     }
     
     if (height) {
-      this.container.style.maxHeight = height;
+      this.container.style.height = height;
     }
     
     // Apply any custom inline styles

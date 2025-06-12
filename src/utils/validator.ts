@@ -1,5 +1,9 @@
 export class Validator {
-    static isString(value: any):boolean {
+    static isString(value: any): boolean {
+        return typeof value === 'string';
+    }
+
+    static isStringOrUndefined(value: any):boolean {
         if (value !== undefined && typeof value !== 'string') {
             return false
         }
@@ -44,7 +48,7 @@ export class Validator {
     }
 
     static isInValues(value: any, allowedValues: string[], fieldName: string): { valid: boolean; message?: string } {
-        if (!Validator.isString(value)) {
+        if (!Validator.isStringOrUndefined(value)) {
             return {
                 valid: false,
                 message: `${fieldName} must be a string`
@@ -54,6 +58,35 @@ export class Validator {
             return {
                 valid: false,
                 message: `${fieldName} must be a one of: ${allowedValues.join(', ')}`
+            };
+        }
+        return { valid: true };
+    }
+
+    static isValidPixelValue(value: any, defaultContainerValue: any): { valid: boolean; message?: string } {
+        if (!Validator.isString(value)) {
+            return {
+                valid: false,
+                message: `${value} must be a string`
+            };
+        }
+
+        const stringValue = String(value).trim();
+        if (!stringValue.toLowerCase().endsWith('px')) {
+            return {
+                valid: false,
+                message: `${value} must be a px value`
+            };
+        }
+
+        const numericPart = stringValue.slice(0, -2);
+        const numericValue = parseFloat(numericPart);
+        defaultContainerValue = parseFloat(defaultContainerValue.slice(0, -2));
+
+        if (!(numericValue >= 0 && numericValue <= defaultContainerValue)) {
+            return {
+                valid: false,
+                message: `${value} must be in the proper px range (0 to ${defaultContainerValue})`
             };
         }
         return { valid: true };

@@ -1,6 +1,7 @@
 .voice-recorder-container {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    max-width: 280px;
+    max-width: 300px;
+    max-height: 75px;
     margin: 0;
     background-color: #f0f4f8;
     border-radius: 8px;
