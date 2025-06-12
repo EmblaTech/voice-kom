@@ -1,5 +1,9 @@
 export class Validator {
-    static isString(value: any):boolean {
+    static isString(value: any): boolean {
+        return typeof value === 'string';
+    }
+
+    static isStringOrUndefined(value: any):boolean {
         if (value !== undefined && typeof value !== 'string') {
             return false
         }
@@ -44,7 +48,7 @@ export class Validator {
     }
 
     static isInValues(value: any, allowedValues: string[], fieldName: string): { valid: boolean; message?: string } {
-        if (!Validator.isString(value)) {
+        if (!Validator.isStringOrUndefined(value)) {
             return {
                 valid: false,
                 message: `${fieldName} must be a string`
@@ -68,10 +72,10 @@ export class Validator {
         }
 
         const stringValue = String(value).trim();
-        if (!stringValue.endsWith('px')) {
+        if (!stringValue.toLowerCase().endsWith('px')) {
             return {
                 valid: false,
-                message: `${value} is not given as px value`
+                message: `${value} must be a px value`
             };
         }
 
@@ -82,7 +86,7 @@ export class Validator {
         if (!(numericValue >= 0 && numericValue <= defaultContainerValue)) {
             return {
                 valid: false,
-                message: `${value} is not given in the proper px range (0 to ${defaultContainerValue})`
+                message: `${value} must be in the proper px range (0 to ${defaultContainerValue})`
             };
         }
         return { valid: true };
