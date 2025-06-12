@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     height: '58px',
     styles: {
       backgroundColor:  ' #b4e70d',
-      fontFamily: 'arial'
+      fontFamily: 'arial',
+      border: '2px solid black'
     },
     transcription: {
       provider: 'default',
