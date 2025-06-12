@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Embla</title>
+    <link rel="stylesheet" href="video.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <img src="embla-logo-2.png" alt="Embla Logo" class="embla-logo">
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-link" voice.name="home">Home</a></li>
+                <li><a href="#" class="nav-link" voice.name="Features">Features <span class="dropdown-arrow">▼</span></a></li>
+                <li><a href="#" class="nav-link" voice.name="Blog">Blog</a></li>
+                <li><a href="#" class="nav-link" voice.name="Shop">Shop</a></li>
+                <li><a href="about.html" class="nav-link" voice.name="About">About</a></li>
+                <li><a href="#" class="nav-link active" voice.name="Contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="contact-header">
+                <h1>Contact Us</h1>
+                <p>Any question or remarks? Just ask from Speech plug!</p>
+            </div>
+
+            <form class="contact-form">
+                <div class="form-section" voice.name="Personal Information">
+                    <h2>Personal Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fullname">Full name</label>
+                            <input type="text" id="fullname" name="fullname" placeholder="Enter your full name" voice.name="full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email address</label>
+                            <input type="email" id="email" name="email" placeholder="Enter your email address" voice.name="email address">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">Phone number</label>
+                            <input type="tel" id="phone" name="phone" placeholder="Enter your phone number"  voice.name="phone number"> 
+                        </div>
+                        <div class="form-group">
+                            <label for="date">Preferred date</label>
+                            <input type="date" id="date" name="date" placeholder="Choose date"  voice.name="Prefered date">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="time">Preferred time</label>
+                            <input type="time" id="time" name="time" placeholder="Choose time"  voice.name="prefered time">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section"  voice.name="preferences">
+                    <h2>Preferences</h2>
+                    
+                    <div class="preferences-row">
+                        <div class="preferences-group">
+                            <h3>Interests <span class="subtitle">(Check all that apply)</span></h3>
+                            <div class="checkbox-group"  voice.name="interests">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="interests" value="product-updates" voice.name="product updates">
+                                    <span class="checkmark"></span>
+                                    Product Updates
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="interests" value="newsletter" voice.name="monthly newsletter"> 
+                                    <span class="checkmark"></span>
+                                    Monthly Newsletter
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="interests" value="events" voice.name="upcoming events">
+                                    <span class="checkmark"></span>
+                                    Upcoming Events
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="interests" value="promotions" voice.name="special promotions">
+                                    <span class="checkmark"></span>
+                                    Special Promotions
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="preferences-group">
+                            <h3>Preferred Contact Method</h3>
+                            <div class="radio-group" voice.name="contact method">
+                                <label class="radio-label">
+                                    <input type="radio" name="contact-method" value="email" voice.name="email option">
+                                    <span class="radio-button"></span>
+                                    Email
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="contact-method" value="phone" voice.name="phone option">
+                                    <span class="radio-button"></span>
+                                    Phone
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="contact-method" value="text" voice.name="text message option">
+                                    <span class="radio-button"></span>
+                                    Text Message
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section" voice.name="Your Message">
+                    <h2>Your Message</h2>
+                    
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <select id="subject" name="subject" voice.name="subject">
+                            <option value="">Select subject</option>
+                            <option value="general"  voice.name="general inquiry" >General Inquiry</option>
+                            <option value="support"  voice.name="support" >Technical Support</option>
+                            <option value="sales" voice.name="sales question" >Sales Question</option>
+                            <option value="feedback" voice.name="feedback" >Feedback</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" placeholder="Type your message here" rows="6"  voice.name="message"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="attachment">Attach File (Optional)</label>
+                        <button type="button" class="attach-btn"  voice.name="attach file">Attach File</button>
+                    </div>
+                </div>
+
+                <div class="bottom-form-section">
+                    <label class="checkbox-label terms-checkbox">
+                        <input type="checkbox" name="terms"  voice.name="terms and conditions" required>
+                        <span class="checkmark"></span>
+                        I agree to the <a href="#" class="terms-link">Terms and Conditions</a>
+                    </label>
+                    <div class="button-row">
+                        <button type="reset" class="btn-reset"  voice.name="reset button">Reset</button>
+                        <button type="submit" class="btn-submit" voice.name="submit button">Submit</button>
+                    </div>
+                </div>
+            </form>
+            <div class="voice-help">
+                    <p>Try voice commands like: <strong>"Fill name as John Smith"</strong>, <strong>"Select email option"</strong>, or <strong>"Click submit button"</strong></p>
+                    <p>Need assistance? <a href="#" class="help-link">Get Help</a> or view our <a href="#" class="help-link">FAQ</a></p>
+                </div>
+        </div>
+    </main>
+<script src="../../../dist/speechplug.js"></script>
+<script src="speech.js"></script>
+</body>
+</html>
