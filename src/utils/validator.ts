@@ -1,13 +1,9 @@
 export class Validator {
-    // static isString(value: any):boolean {
-    //     if (value !== undefined && typeof value !== 'string') {
-    //         return false
-    //     }
-    //     return true
-    // }
-
-    static isString(value: any): boolean {
-        return typeof value === 'string';
+    static isString(value: any):boolean {
+        if (value !== undefined && typeof value !== 'string') {
+            return false
+        }
+        return true
     }
 
     static isNum(value: any):boolean {
