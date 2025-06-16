@@ -75,9 +75,7 @@ export class UIHandler {
     
     // Apply any custom inline styles
     if (customStyles) {
-      Object.keys(customStyles).forEach((key) => {
-        //this.container.style[key as any] = customStyles[key];
-      });
+      Object.assign(this.container.style, customStyles);
     }
   }
 
