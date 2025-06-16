@@ -636,14 +636,17 @@ class GroupedTargetProcessor implements ElementProcessor {
   }
 
   private findTargetInRadioGroup(groupElement: HTMLElement, targetName: string): HTMLElement | null {
-    const groupName = groupElement.getAttribute('name') || '';
-    const radioButtons = document.querySelectorAll(`input[type="radio"][name="${groupName}"][voice\\.name]`);
-    
+    console.log(`VoiceActuator: Checking radio button"`);
+
+    const groupName = groupElement.getAttribute('name') || ''; 
+    const radioButtons = document.querySelectorAll(`input[type="radio"][name="${groupName}"][value]`);
+    console.log(`VoiceActuator: Found ${radioButtons.length} radio buttons in group "${groupName}"`);
     let bestMatch: HTMLElement | null = null;
     let bestScore = 0;
     
     for (const radio of radioButtons) {
-      const voiceName = radio.getAttribute('voice.name')?.toLowerCase() || '';
+      const voiceName = radio.getAttribute('value')?.toLowerCase() || '';
+      console.log(`VoiceActuator: Checking radio button with voice name "${voiceName}"`);
       const score = this.actuator.calculateMatchScore(voiceName, targetName.toLowerCase());
       
       if (score > bestScore && score > 50) {

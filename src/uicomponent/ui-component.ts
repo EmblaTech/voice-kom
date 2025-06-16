@@ -287,13 +287,13 @@ export class UIComponent implements IUIComponent {
     styleElement.id = styleId;
     styleElement.textContent = `
       .voice-recorder-container {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         max-width: 280px;
         margin: 0;
-        background-color: #f0f4f8;
+        background-color:rgb(255, 255, 255);
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.09);
       }
       
       .voice-floating-container {
@@ -318,7 +318,7 @@ export class UIComponent implements IUIComponent {
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
         flex-shrink: 0;
       }
       
@@ -400,7 +400,7 @@ export class UIComponent implements IUIComponent {
         line-height: 1.4;
         white-space: pre-wrap;
         border-top: 1px solid #e0e0e0;
-        color: #2D3748;
+        color:rgb(117, 122, 131);
       }
       
       // .recording-indicator {

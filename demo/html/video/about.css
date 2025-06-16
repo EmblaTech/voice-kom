@@ -1,4 +1,5 @@
 :root {
+    /* Border Colors */
     --border-color: #C9E6FF;
     --border-color-dark: #C9E6FF;
     --border-color-hover: #ffffff;
@@ -7,13 +8,21 @@
     --border-color-bg-hover: #e9ecef;
     --border-color-bg-active: #dee2e6;
 
-    /* Font Color Variables */
-    --font-color-primary: #333333;
+    /* Font Colors */
+    --font-color-primary: #000000;
     --font-color-secondary: #666666;
     --font-color-placeholder: #a0a8b0;
     --font-color-white: #ffffff;
     --font-color-link: #54a0ff;
     --font-color-link-hover: #2f7fff;
+
+    /* Font Sizes */
+    --font-size-xs: 0.8rem;
+    --font-size-sm: 0.9rem;
+    --font-size-base: 1rem;
+    --font-size-md: 1.1rem;
+    --font-size-lg: 1.4rem;
+    --font-size-xl: 2.5rem;
 }
 
 /* Reset */
@@ -135,6 +144,31 @@ nav {
 
 .contact-box a:hover {
     color: var(--accent-hover);
+}
+
+/* Voice Help */
+.voice-help {
+    text-align: center;
+    padding-top: 1.5rem;
+    color: var(--font-color-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.voice-help p {
+    margin-bottom: 0.5rem;
+}
+
+.voice-help strong {
+    color: var(--font-color-primary);
+}
+
+.help-link {
+    color: var(--font-color-link);
+    text-decoration: underline;
+}
+
+.help-link:hover {
+    color: var(--font-color-link-hover);
 }
 
 /* Responsive */

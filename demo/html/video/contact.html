@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - Embla</title>
-    <link rel="stylesheet" href="video.css">
+    <link rel="stylesheet" href="contact.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 
 </head>
@@ -53,14 +53,14 @@
                         </div>
                         <div class="form-group">
                             <label for="date">Preferred date</label>
-                            <input type="date" id="date" name="date" placeholder="Choose date"  voice.name="Prefered date">
+                            <input type="date" id="date" name="date" data-placeholder="Choose date" required class="date-input" voice.name="Prefered date">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="time">Preferred time</label>
-                            <input type="time" id="time" name="time" placeholder="Choose time"  voice.name="prefered time">
+                            <input type="time" id="time"  class="time-input" name="time" required data-placeholder="Select a time"  voice.name="prefered time">
                         </div>
                     </div>
                 </div>
@@ -70,7 +70,9 @@
                     
                     <div class="preferences-row">
                         <div class="preferences-group">
-                            <h3>Interests <span class="subtitle">(Check all that apply)</span></h3>
+                            <label class="section-label">
+                                Interests <span class="subtitle">(Check all that apply)</span>
+                            </label>
                             <div class="checkbox-group"  voice.name="interests">
                                 <label class="checkbox-label">
                                     <input type="checkbox" name="interests" value="product-updates" voice.name="product updates">
@@ -96,8 +98,10 @@
                         </div>
 
                         <div class="preferences-group">
-                            <h3>Preferred Contact Method</h3>
-                            <div class="radio-group" voice.name="contact method">
+                            <label class="section-label">
+                                Preferred Contact Method
+                            </label>
+                            <div class="radio-group" voice.name="contact method" name="contact-method">
                                 <label class="radio-label">
                                     <input type="radio" name="contact-method" value="email" voice.name="email option">
                                     <span class="radio-button"></span>
@@ -158,7 +162,7 @@
             <div class="voice-help">
                     <p>Try voice commands like: <strong>"Fill name as John Smith"</strong>, <strong>"Select email option"</strong>, or <strong>"Click submit button"</strong></p>
                     <p>Need assistance? <a href="#" class="help-link">Get Help</a> or view our <a href="#" class="help-link">FAQ</a></p>
-                </div>
+            </div>
         </div>
     </main>
 <script src="../../../dist/speechplug.js"></script>

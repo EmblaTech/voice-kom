@@ -1,5 +1,5 @@
-/* Color Variables */
 :root {
+    /* Border Colors */
     --border-color: #C9E6FF;
     --border-color-dark: #C9E6FF;
     --border-color-hover: #ffffff;
@@ -8,13 +8,32 @@
     --border-color-bg-hover: #e9ecef;
     --border-color-bg-active: #dee2e6;
 
-    /* Font Color Variables */
-    --font-color-primary: #333333;
+    /* Font Colors */
+    --font-color-primary: #000000;
     --font-color-secondary: #666666;
     --font-color-placeholder: #a0a8b0;
     --font-color-white: #ffffff;
     --font-color-link: #54a0ff;
     --font-color-link-hover: #2f7fff;
+
+    /* Font Sizes */
+    --font-size-xs: 0.8rem;
+    --font-size-sm: 0.9rem;
+    --font-size-base: 1rem;
+    --font-size-md: 1.1rem;
+    --font-size-lg: 1.4rem;
+    --font-size-xl: 2.5rem;
+}
+
+/* Apply Poppins to form elements */
+input, textarea, select, button {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-size: var(--font-size-sm);}
+
+/* Apply Poppins to placeholder text */
+::placeholder {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-size: var(--font-size-sm);
 }
 
 /* Reset */
@@ -58,6 +77,13 @@ nav {
     width: 110px;
 }
 
+.section-label {
+    color: var(--font-color-primary);
+    margin-bottom: 1rem;
+    display: block;
+    font-size: var(--font-size-md);
+}
+
 .logo-squares {
     display: flex;
     gap: 2px;
@@ -88,9 +114,103 @@ nav {
 }
 
 .dropdown-arrow {
-    font-size: 0.8rem;
+    font-size: var(--font-size-xs);
     margin-left: 0.3rem;
 }
+
+
+/* Style the input to make space for the icon and act as a container */
+.date-input {
+  position: relative; 
+  background-image: url("Calendar.png");
+  background-repeat: no-repeat;
+  background-position: left 15px center;
+  background-size: 17px 17px;
+  text-indent: 15px; 
+  color: var(--font-color-primary);
+}
+
+/* Style the "fake" placeholder text */
+.date-input::before {
+  content: attr(data-placeholder); /* Use the text from our data-placeholder attribute */
+  position: absolute;
+  left: 30px; /* Position it next to your icon (15px + 17px + a little space) */
+  top: 50%;
+  transform: translateY(-50%);
+  color:var(--font-color-placeholder); /* A typical placeholder color */
+  pointer-events: none; /* Make sure it doesn't block clicks */
+}
+
+/* Hide the placeholder when a date is selected OR the input is in focus */
+.date-input:valid::before,
+.date-input:focus::before {
+  display: none;
+}
+
+/* Hide the default "dd/mm/yyyy" text when the input is empty */
+.date-input:invalid {
+  color: transparent;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+
+/* Style the input to make space for the icon and act as a container */
+.time-input {
+  position: relative; 
+  /* The main change is the icon image */
+  background-image: url("Clock.png"); /* You'll need a clock icon image */
+  background-repeat: no-repeat;
+  background-position: left 15px center;
+  background-size: 17px 17px;
+  text-indent: 15px; 
+  color: var(--font-color-primary);
+}
+
+/* Style the "fake" placeholder text */
+.time-input::before {
+  content: attr(data-placeholder); /* Use the text from our data-placeholder attribute */
+  position: absolute;
+  left: 30px; /* Position it next to your icon (15px icon padding + 17px icon width = 32px, so 30px is good) */
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--font-color-placeholder); /* A typical placeholder color */
+  pointer-events: none; /* Make sure it doesn't block clicks */
+}
+
+/* Hide the placeholder when a time is selected OR the input is in focus */
+.time-input:valid::before,
+.time-input:focus::before {
+  display: none;
+}
+
+/* Hide the default "hh:mm --" text when the input is empty */
+.time-input:invalid {
+  color: transparent;
+}
+
+/* 
+  Style the native picker-indicator to be an invisible, clickable overlay.
+  This works for type="time" just as it does for type="date".
+*/
+.time-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
 
 /* Main Content */
 .container {
@@ -106,14 +226,13 @@ nav {
 }
 
 .contact-header h1 {
-    font-size: 2.5rem;
+    font-size: var(--font-size-xl);
     font-weight: 700;
     color: var(--font-color-primary);
-    /* margin-bottom: 0.5rem; */
 }
 
 .contact-header p {
-    font-size: 1.1rem;
+    font-size: var(--font-size-md);
     color: var(--font-color-secondary);
 }
 
@@ -128,6 +247,7 @@ nav {
     padding-bottom: 2rem;
     margin-bottom: 2rem;
     border-bottom: 2px solid var(--border-color-light);
+
 }
 
 .bottom-form-section {
@@ -135,7 +255,7 @@ nav {
 }
 
 .form-section h2 {
-    font-size: 1.4rem;
+    font-size: var(--font-size-lg);
     font-weight: 700;
     color: var(--font-color-primary);
     margin-bottom: 1.5rem;
@@ -159,13 +279,14 @@ nav {
     display: flex;
     flex-direction: column;
     margin-bottom: 1rem;
-
+    
 }
 
 .form-group label {
     font-weight: 500;
     color: var(--font-color-primary);
     margin-bottom: 0.5rem;
+    font-size: var(--font-size-md);
 }
 
 .form-group input,
@@ -174,7 +295,7 @@ nav {
     padding: 0.8rem;
     border: 2.3px solid var(--border-color);
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: var(--font-size-sm);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     background-color: white;
 }
@@ -200,14 +321,14 @@ nav {
 }
 
 .preferences-group h3 {
-    font-size: 1.1rem;
+    font-size: var(--font-size-md);
     font-weight: 600;
     color: var(--font-color-primary);
     margin-bottom: 1rem;
 }
 
 .subtitle {
-    font-size: 0.9rem;
+    font-size: var(--font-size-sm);
     font-weight: 400;
     color: var(--font-color-secondary);
 }
@@ -224,13 +345,15 @@ nav {
     display: flex;
     align-items: center;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: var(--font-size-sm);
     color: var(--font-color-primary);
 }
 
 .checkbox-label input,
 .radio-label input {
     display: none;
+    font-size: var(--font-size-sm);
+
 }
 
 .checkmark,
@@ -286,7 +409,7 @@ nav {
     color: var(--font-color-secondary);
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 1rem;
+    font-size: var(--font-size-sm);
     max-width: 130px;
 }
 
@@ -322,7 +445,7 @@ nav {
     padding: 0.8rem 2rem;
     border: none;
     border-radius: 25px;
-    font-size: 1rem;
+    font-size: var(--font-size-md);
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -354,6 +477,7 @@ nav {
     text-align: center;
     padding-top: 1.5rem;
     color: var(--font-color-secondary);
+    font-size: var(--font-size-xs);
 }
 
 .voice-help p {
@@ -384,7 +508,7 @@ nav {
     }
 
     .contact-header h1 {
-        font-size: 1rem;
+        font-size: var(--font-size-xl);
     }
 
     .form-row,
@@ -422,6 +546,6 @@ nav {
     }
 
     .voice-help {
-        font-size: 0.9rem;
+        font-size: var(--font-size-sm);
     }
 }
