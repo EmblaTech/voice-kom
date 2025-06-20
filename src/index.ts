@@ -71,7 +71,8 @@ export class SpeechPlug {
         theme: config.theme,
         showProgress: config.showProgress ?? this.DEFAULT_SHOW_PROGRESS,
         showTranscription: config.showTranscription ?? this.DEFAULT_SHOW_TRANSCRIPTION,
-        styles: config.styles
+        styles: config.ui?.styles,
+        url: config.ui?.url
       },
       actuatorConfig: { 
         retries: config.retries,
@@ -155,7 +156,7 @@ export class SpeechPlug {
       if (!Validator.isStringOrUndefined(config.theme)) errors.push("Container theme must be a string");
       if (!Validator.isBoolean(config.showProgress)) errors.push("ShowProgress must be a boolean");
       if (!Validator.isBoolean(config.showTranscription)) errors.push("ShowTranscription must be a boolean");
-      if (!Validator.isObject(config.styles)) errors.push("Container styles must be an object");
+      if (!Validator.isObject(config.ui?.styles)) errors.push("Container styles must be an object");
 
       const positionResult = Validator.isInValues(config.position, this.VALID_UI_POSITIONS, 'Container position');
       if (!positionResult.valid && positionResult.message) {

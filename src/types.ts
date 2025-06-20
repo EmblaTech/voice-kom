@@ -16,12 +16,17 @@ export interface SpeechPlugConfig {
   theme?: string;
   showProgress?: boolean;
   showTranscription?: boolean;
-  styles?: Record<string, string>;
   
   //Other configs
   retries?: number; 
   timeout?: number;
   loglevel?: string; //TODO: Implement display log above configured log level
+  ui?: UI;
+}
+
+export interface UI {
+  url?: string;
+  styles?: Record<string, string>;
 }
 
 interface SpeechEngineConfig {
@@ -57,6 +62,7 @@ export interface UIConfig {
   showProgress?: boolean;
   showTranscription?: boolean;
   styles?: Record<string, string>;
+  url?: string;
 }
 
 export interface ActuatorConfig {
