@@ -72,7 +72,7 @@ export class SpeechPlug {
         showProgress: config.showProgress ?? this.DEFAULT_SHOW_PROGRESS,
         showTranscription: config.showTranscription ?? this.DEFAULT_SHOW_TRANSCRIPTION,
         styles: config.ui?.styles,
-        url: config.ui?.url
+        styleUrl: config.ui?.url
       },
       actuatorConfig: { 
         retries: config.retries,

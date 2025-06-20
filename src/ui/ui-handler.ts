@@ -41,7 +41,7 @@ export class UIHandler {
         this.container = this.createDefaultUI(this.config.containerId);
       }
     }
-    this.injectStyles(this.container, config.url);
+    this.injectStyles(this.container, config.styleUrl, config.styles);
     this.createUIElements();
     this.updateFromState();
   }
@@ -82,15 +82,15 @@ export class UIHandler {
     return container;
   }
   
-  private async injectStyles(container: any, customStylesFilePath: any): Promise<void> {
+  private async injectStyles(container: any, stylesPath: any, stylesObj: any): Promise<void> {
     if (document.getElementById(this.SPEECH_PLUG_STYLE_ELEMENT_ID)) return;
   
-    // Create style element
-    const styleElement = document.createElement('style');
-    styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
-  
     try {
-    // Fetch CSS content from external file
+      // Create style element
+      const styleElement = document.createElement('style');
+      styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
+
+      // Fetch CSS content from external file
       const response = await fetch(this.SPEECH_PLUG_STYLE_PATH);
     
       if (!response.ok) {
@@ -108,41 +108,27 @@ export class UIHandler {
       throw Error('Failed to load default styles CSS');
     }
 
-    if (!customStylesFilePath) {
-      if (this.config!.styles) {
-        Object.assign(container.style, this.config?.styles);
-      }
-    } else {
+    let finalStyles = stylesObj || {};
+    if (stylesPath) {
       try {
-        const customStylesResponse = await fetch(customStylesFilePath);
-
+        const customStylesResponse = await fetch(stylesPath);
         if (customStylesResponse.ok) {
           const customStylesCssContent = await customStylesResponse.text();
           const stylesInCamelNotation = this.parseCssToObject(customStylesCssContent);
-          let mergedStyles = null;
-          if (this.config?.styles) {
-            mergedStyles = this.mergeStyles(stylesInCamelNotation, this.config?.styles);
-            this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
-          } else {
-            mergedStyles = stylesInCamelNotation;
-          }
-          Object.assign(container.style, mergedStyles);
-
+          finalStyles = stylesObj ? this.mergeStyles(stylesInCamelNotation, stylesObj) : stylesInCamelNotation;
+          this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
         } else {
-          this.logger.error(`Failed to load custom-styles CSS: ${customStylesResponse.status} ${customStylesResponse.statusText}.`);
-          if (this.config!.styles) {
-            Object.assign(container.style, this.config?.styles);
-          } else {
-            this.logger.error(`Failed to load custom-styles CSS. Default styles have been applied.`);
-          }
+          this.logger.error(`Failed to load custom-styles CSS: ${customStylesResponse.status} ${customStylesResponse.statusText}.`);             
         }
       } catch (error) {
         this.logger.error('Error loading custom-styles CSS:', error);
         throw Error('Failed to load custom-styles CSS');
       }
     }
+    
+    Object.assign(container.style, finalStyles);
   }
-  
+
   // Parsing CSS and converting attributes to camelCase notation
   parseCssToObject(cssString: any) {
     const stylesInCamelNotation: Record<string, string> = {};
