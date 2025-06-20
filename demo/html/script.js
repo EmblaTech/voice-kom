@@ -5,11 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     position: 'bottom-right',
     width: '188px',
     height: '58px',
-    styles: {
-      backgroundColor:  ' #b4e70d',
-      fontFamily: 'arial',
-      border: '2px solid black'
-    },
     transcription: {
       provider: 'default',
       apiKey: ''
@@ -18,8 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
       provider: 'default',
     },
     ui: {
+      url : 'custom-style.css',  
       styles: {
-        'backgroundColor': '#ffffff',
+        backgroundColor:  ' #b4e70d',
+        border: '3px solid  rgb(0, 0, 0)'
       },
     }
   }).then(() => {
