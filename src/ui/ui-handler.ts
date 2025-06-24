@@ -84,19 +84,16 @@ export class UIHandler {
     return container;
   }
   
-  private async injectStyles(container: any, stylesPath: any, stylesObj: any): Promise<void> {
+  private async injectStyles(container: any, stylesPath: string | undefined, stylesObj: any): Promise<void> {
     if (document.getElementById(this.SPEECH_PLUG_STYLE_ELEMENT_ID)) return;
   
     try {
-      // Create style element
       const styleElement = document.createElement('style');
       styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
-
       // Fetch CSS content from external file
       const cssContent = await this.fetchTextResource(this.SPEECH_PLUG_STYLE_PATH);
       styleElement.textContent = cssContent;
       document.head.appendChild(styleElement);
-
     } catch (error) {
       this.logger.error('Error loading default styles CSS:', error);
       // Fallback to embedded styles if loading fails
@@ -111,7 +108,6 @@ export class UIHandler {
         const customStyles = this.toCamelCaseObject(cssProperties);
         finalStyles = stylesObj ? this.mergeStyles(customStyles, stylesObj) : customStyles;
         this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
-
       } catch (error) {
         this.logger.error('Error loading custom-styles CSS:', error);
         throw Error('Failed to load custom-styles CSS');
@@ -132,37 +128,30 @@ export class UIHandler {
   // Parsing CSS and Clean CSS string and extract properties
   private parseCssToProperties(cssString: string): Record<string, string> {
     const cssProperties: Record<string, string> = {};
-
     const cleanedCss = cssString.replace(/\/\*[\s\S]*?\*\//g, '').trim();
     const rules = cleanedCss.split('}').filter(rule => rule.trim());
 
     rules.forEach(rule => {
       const parts = rule.split('{');
       if (parts.length !== 2) return;
-
       const declarations = parts[1].trim();
       const declarationPairs = declarations.split(';').filter(declaration => declaration.trim());
-
       declarationPairs.forEach(declaration => {
         const [property, value] = declaration.split(':').map(part => part.trim());
-
         if (property && value) {
           cssProperties[property] = value;
         }
       });
     });
-
     return cssProperties;
   }
 
   private toCamelCaseObject(cssProperties: Record<string, string>): Record<string, string> {
     const camelCaseProperties: Record<string, string> = {};
-
     Object.entries(cssProperties).forEach(([kebabProperty, value]) => {
       const camelCaseProperty = this.toCamelCase(kebabProperty);
       camelCaseProperties[camelCaseProperty] = value;
     });
-
     return camelCaseProperties;
   }
 
@@ -173,13 +162,11 @@ export class UIHandler {
   // Merge styles of custom styles and script.js styles (avoiding duplicates)
   mergeStyles(customStyles: any, inputStyles: any) {
     const mergedStyles = { ...customStyles };
-
     Object.keys(inputStyles).forEach(property => {
       if (!mergedStyles.hasOwnProperty(property)) {
         mergedStyles[property] = inputStyles[property];
       }
     });
-
     return mergedStyles;
   }
 
