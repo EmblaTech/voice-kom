@@ -86,7 +86,7 @@ export class UIHandler {
   
   private async injectStyles(container: any, stylesPath: string | undefined, stylesObj: any): Promise<void> {
     if (document.getElementById(this.SPEECH_PLUG_STYLE_ELEMENT_ID)) return;
-  
+
     try {
       const styleElement = document.createElement('style');
       styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
@@ -94,35 +94,35 @@ export class UIHandler {
       const cssContent = await this.fetchTextResource(this.SPEECH_PLUG_STYLE_PATH);
       styleElement.textContent = cssContent;
       document.head.appendChild(styleElement);
-    } catch (error) {
-      this.logger.error('Error loading default styles CSS:', error);
-      // Fallback to embedded styles if loading fails
-      throw Error('Failed to load default styles CSS');
-    }
 
-    let finalStyles = stylesObj || {};
-    if (stylesPath) {
-      try {
+      let finalStyles = stylesObj || {};
+      if (stylesPath) {
         const customStylesCssContent = await this.fetchTextResource(stylesPath);
         const cssProperties = this.parseCssToProperties(customStylesCssContent);
         const customStyles = this.toCamelCaseObject(cssProperties);
         finalStyles = stylesObj ? this.mergeStyles(customStyles, stylesObj) : customStyles;
         this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
-      } catch (error) {
-        this.logger.error('Error loading custom-styles CSS:', error);
-        throw Error('Failed to load custom-styles CSS');
       }
-    }
 
-    Object.assign(container.style, finalStyles);
+      Object.assign(container.style, finalStyles);
+    } catch (error) {
+      this.logger.error('Error injectStyles(): ', error);
+      // Fallback to embedded styles if loading fails
+      throw Error(`Error injectStyles(): ${error}`);
+    }
   }
 
   private async fetchTextResource(url: any): Promise<any> {
-    const response = await fetch(url);
-    if (!response.ok) {
-      this.logger.error(`Failed to fetch resource at ${url}: ${response.status} ${response.statusText}`);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        this.logger.error(`Failed to fetch resource at ${url}: ${response.status} ${response.statusText}`);
+      }
+      return response.text();
+    } catch (error) {
+      this.logger.error(`Error fetching resource at ${url}: ${error}`);
+      throw Error(`Error fetching resource at ${url}: ${error}`);
     }
-    return response.text();
   }
 
   // Parsing CSS and Clean CSS string and extract properties
