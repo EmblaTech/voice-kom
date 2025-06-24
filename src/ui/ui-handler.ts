@@ -41,18 +41,17 @@ export class UIHandler {
         this.container = this.createDefaultUI(this.config.containerId);
       }
     }
-    this.injectStyles();
-    this.createUIElements();
+
     this.updateFromState();
   }
 
   private createDefaultUI(containerId: string): HTMLElement { 
     this.container = this.createContainer(containerId); 
-    this.setUI(this.config!.position!, this.config!.width!, this.config!.height!, this.config!.styles! );
+    this.setUI(this.config!.position!, this.config!.width!, this.config!.height!);
     return this.container;
   }
 
-  private setUI(position: string, width: string, height: string, customStyles: {}): void {
+  private setUI(position: string, width: string, height: string): void {
     if (!this.container) return;
     
     // Apply base container class
@@ -72,11 +71,9 @@ export class UIHandler {
     if (height) {
       this.container.style.height = height;
     }
-    
-    // Apply any custom inline styles
-    if (customStyles) {
-      Object.assign(this.container.style, customStyles);
-    }
+
+    this.injectStyles(this.container, this.config?.styleUrl, this.config?.styles);
+    this.createUIElements();
   }
 
   private createContainer(id: string): HTMLElement {
@@ -87,31 +84,90 @@ export class UIHandler {
     return container;
   }
   
-  private async injectStyles(): Promise<void> {
+  private async injectStyles(container: any, stylesPath: string | undefined, stylesObj: any): Promise<void> {
     if (document.getElementById(this.SPEECH_PLUG_STYLE_ELEMENT_ID)) return;
-  
-    // Create style element
-    const styleElement = document.createElement('style');
-    styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
-  
+
     try {
-    // Fetch CSS content from external file
-      const response = await fetch(this.SPEECH_PLUG_STYLE_PATH);
-    
-      if (!response.ok) {
-        this.logger.error(`Failed to load CSS: ${response.status} ${response.statusText}`);
-      }
-    
-      // Get the CSS content and inject it
-      const cssContent = await response.text();
+      const styleElement = document.createElement('style');
+      styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
+      // Fetch CSS content from external file
+      const cssContent = await this.fetchTextResource(this.SPEECH_PLUG_STYLE_PATH);
       styleElement.textContent = cssContent;
       document.head.appendChild(styleElement);
-      
+
+      let finalStyles = stylesObj || {};
+      if (stylesPath) {
+        const customStylesCssContent = await this.fetchTextResource(stylesPath);
+        const cssProperties = this.parseCssToProperties(customStylesCssContent);
+        const customStyles = this.toCamelCaseObject(cssProperties);
+        finalStyles = stylesObj ? this.mergeStyles(customStyles, stylesObj) : customStyles;
+        this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
+      }
+
+      Object.assign(container.style, finalStyles);
     } catch (error) {
-      this.logger.error('Error loading CSS:', error);
+      this.logger.error('Error injectStyles(): ', error);
       // Fallback to embedded styles if loading fails
-      throw Error('Failed to load CSS');
+      throw Error(`Error injectStyles(): ${error}`);
     }
+  }
+
+  private async fetchTextResource(url: any): Promise<any> {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        this.logger.error(`Failed to fetch resource at ${url}: ${response.status} ${response.statusText}`);
+      }
+      return response.text();
+    } catch (error) {
+      this.logger.error(`Error fetching resource at ${url}: ${error}`);
+      throw Error(`Error fetching resource at ${url}: ${error}`);
+    }
+  }
+
+  // Parsing CSS and Clean CSS string and extract properties
+  private parseCssToProperties(cssString: string): Record<string, string> {
+    const cssProperties: Record<string, string> = {};
+    const cleanedCss = cssString.replace(/\/\*[\s\S]*?\*\//g, '').trim();
+    const rules = cleanedCss.split('}').filter(rule => rule.trim());
+
+    rules.forEach(rule => {
+      const parts = rule.split('{');
+      if (parts.length !== 2) return;
+      const declarations = parts[1].trim();
+      const declarationPairs = declarations.split(';').filter(declaration => declaration.trim());
+      declarationPairs.forEach(declaration => {
+        const [property, value] = declaration.split(':').map(part => part.trim());
+        if (property && value) {
+          cssProperties[property] = value;
+        }
+      });
+    });
+    return cssProperties;
+  }
+
+  private toCamelCaseObject(cssProperties: Record<string, string>): Record<string, string> {
+    const camelCaseProperties: Record<string, string> = {};
+    Object.entries(cssProperties).forEach(([kebabProperty, value]) => {
+      const camelCaseProperty = this.toCamelCase(kebabProperty);
+      camelCaseProperties[camelCaseProperty] = value;
+    });
+    return camelCaseProperties;
+  }
+
+  toCamelCase(kebabCase: any) {
+    return kebabCase.replace(/-([a-z])/g, (match: any, letter: any) => letter.toUpperCase());
+  }
+
+  // Merge styles of custom styles and script.js styles (avoiding duplicates)
+  mergeStyles(customStyles: any, inputStyles: any) {
+    const mergedStyles = { ...customStyles };
+    Object.keys(inputStyles).forEach(property => {
+      if (!mergedStyles.hasOwnProperty(property)) {
+        mergedStyles[property] = inputStyles[property];
+      }
+    });
+    return mergedStyles;
   }
 
   private createUIElements(): void {
