@@ -15,6 +15,12 @@ export enum ErrorType {
   UNKNOWN = 'unknown_error'
 }
 
+export enum ButtonMode {
+  RECORD = 'record',
+  STOP = 'stop',
+  PROCESSING = 'processing'
+}
+
 export class Status {
   private currentStatus: StatusType;
   private message?: string;

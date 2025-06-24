@@ -1,7 +1,19 @@
 import { Logger } from '../utils/logger';
 import { EventBus, SpeechEvents } from '../common/eventbus';
-import { ErrorType, Status, StatusType } from '../common/status';
+import { ButtonMode, ErrorType, Status, StatusType } from '../common/status';
 import { UIConfig } from '../../src/types';
+
+enum UserErrorMessage {
+  MICROPHONE_ACCESS = 'Please allow microphone access',
+  TRANSCRIPTION = 'We ran into a small problem',
+  NETWORK = 'Network connection issue',
+}
+
+enum StatusDisplayText {
+  Idle       = 'SpeechPlug',
+  Recording  = 'Recording...',
+  Processing = 'Processing...',
+}
 
 export class UIHandler {
   private config: UIConfig | null = null;
@@ -31,27 +43,25 @@ export class UIHandler {
     this.config = config;
     
     if(!this.config.containerId) { //Determine if we need to create a default container or use an existing one
-      this.container = this.createDefaultUI(this.config.containerId!);
-    }
-    else {
+      this.container = await this.createDefaultUI(this.config.containerId!);
+    } else {
       let existingContainer = document.getElementById(this.config.containerId);
       if (existingContainer) {
         this.container = existingContainer;
       } else {
-        this.container = this.createDefaultUI(this.config.containerId);
+        this.container = await this.createDefaultUI(this.config.containerId);
       }
     }
-
     this.updateFromState();
   }
 
-  private createDefaultUI(containerId: string): HTMLElement { 
+  private async createDefaultUI(containerId: string): Promise<HTMLElement> { 
     this.container = this.createContainer(containerId); 
-    this.setUI(this.config!.position!, this.config!.width!, this.config!.height!);
+    await this.setUI(this.config!.position!, this.config!.width!, this.config!.height!);
     return this.container;
   }
 
-  private setUI(position: string, width: string, height: string): void {
+  private async setUI(position: string, width: string, height: string): Promise<void> {
     if (!this.container) return;
     
     // Apply base container class
@@ -72,8 +82,8 @@ export class UIHandler {
       this.container.style.height = height;
     }
 
-    this.injectStyles(this.container, this.config?.styleUrl, this.config?.styles);
-    this.createUIElements();
+    await this.injectStyles(this.container, this.config?.styleUrl, this.config?.styles);
+    await this.createUIElements();
   }
 
   private createContainer(id: string): HTMLElement {
@@ -112,7 +122,7 @@ export class UIHandler {
     }
   }
 
-  private async fetchTextResource(url: any): Promise<any> {
+  private async fetchTextResource(url: string): Promise<any> {
     try {
       const response = await fetch(url);
       if (!response.ok) {
@@ -170,32 +180,24 @@ export class UIHandler {
     return mergedStyles;
   }
 
-  private createUIElements(): void {
+  private async createUIElements(): Promise<void> {
     if (!this.container) return;
     this.container.innerHTML = '';  
 
-    fetch(this.SPEECH_PLUG_TEMPLATE_PATH)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Failed to load HTML template: ${response.status} ${response.statusText}`);
-      }
-      return response.text();
-    })
-    .then(htmlContent => {
-      this.container!.innerHTML = htmlContent;
-      this.actionButton = this.container!.querySelector('.action-button');
-      this.statusDisplay = this.container!.querySelector('.status-display');
-      this.transcriptionDisplay = this.container!.querySelector('.transcription-display');
-
+    try {
+      const htmlContent = await this.fetchTextResource(this.SPEECH_PLUG_TEMPLATE_PATH);
+      this.container.innerHTML = htmlContent;
+      this.actionButton = this.container.querySelector('.action-button');
+      this.statusDisplay = this.container.querySelector('.status-display');
+      this.transcriptionDisplay = this.container.querySelector('.transcription-display');
       // Initialize any event listeners or additional configuration here
       if (this.actionButton) {
         this.bindEventListeners();
       }
-    })
-    .catch(error => {
+    } catch (error) {
       this.logger.error('Error loading UI template:', error);
-      throw Error('Failed to load HTML template');
-    });
+      throw new Error('Failed to load HTML template');
+    }
   }
 
   private bindEventListeners(): void {
@@ -205,9 +207,9 @@ export class UIHandler {
       if (!this.actionButton) return;
 
       const action = this.actionButton.getAttribute('data-action');
-      if (action === 'record') {
+      if (action === ButtonMode.RECORD) {
         this.eventBus.emit(SpeechEvents.RECORD_BUTTON_PRESSED);
-      } else if (action === 'stop') {
+      } else if (action === ButtonMode.STOP) {
         this.eventBus.emit(SpeechEvents.STOP_BUTTON_PRESSED);
       }
     });
@@ -260,7 +262,7 @@ export class UIHandler {
     // Log the actual error to console for debugging
     console.error('Voice processing error:', error);
   }
-  
+
   private getUserFriendlyErrorMessage(error: unknown): string {
     // Default user-friendly message
     let message = 'We ran into a small problem';
@@ -272,13 +274,13 @@ export class UIHandler {
         
         switch (errorType) {
           case ErrorType.MICROPHONE_ACCESS:
-            message = 'Please allow microphone access';
+            message = UserErrorMessage.MICROPHONE_ACCESS;
             break;
           case ErrorType.TRANSCRIPTION:
-            message = 'We ran into a small problem';
+            message = UserErrorMessage.TRANSCRIPTION;
             break;
           case ErrorType.NETWORK:
-            message = 'Network connection issue';
+            message = UserErrorMessage.NETWORK;
             break;
           // Add more specific error types as needed
         }
@@ -287,7 +289,7 @@ export class UIHandler {
     
     return message;
   }
-  
+
   private updateStatusDisplay(status: StatusType): void {
     if (!this.statusDisplay) return;
     
@@ -296,13 +298,13 @@ export class UIHandler {
     
     switch (status) {
       case StatusType.IDLE:
-        this.statusDisplay.textContent = 'SpeechPlug';
+        this.statusDisplay.textContent = StatusDisplayText.Idle;
         break;
       case StatusType.RECORDING:
-        this.statusDisplay.textContent = 'Recording...';
+        this.statusDisplay.textContent = StatusDisplayText.Recording;
         break;
       case StatusType.PROCESSING:
-        this.statusDisplay.textContent = 'Processing...';
+        this.statusDisplay.textContent = StatusDisplayText.Processing;
         break;
       case StatusType.ERROR:
         // Don't update text here - let the error handler set the message
@@ -342,39 +344,39 @@ export class UIHandler {
     
     switch (status) {
       case StatusType.IDLE:
-        this.setButtonAppearance('record');
+        this.setButtonAppearance(ButtonMode.RECORD);
         break;
       case StatusType.RECORDING:
-        this.setButtonAppearance('stop');
+        this.setButtonAppearance(ButtonMode.STOP);
         break;
       case StatusType.PROCESSING:
-        this.setButtonAppearance('processing');
+        this.setButtonAppearance(ButtonMode.PROCESSING);
         this.actionButton.disabled = true;
         break;
       case StatusType.ERROR:
-        this.setButtonAppearance('record');
+        this.setButtonAppearance(ButtonMode.RECORD);
         break;
     }
   }
   
-  private setButtonAppearance(mode: 'record' | 'stop' | 'processing'): void {
+  private setButtonAppearance(mode: ButtonMode): void {
     if (!this.actionButton) return;
     
     // Reset classes first
     this.actionButton.className = 'action-button';
     
     switch (mode) {
-      case 'record':
+      case ButtonMode.RECORD:
         this.actionButton.classList.add('record-mode');
-        this.actionButton.setAttribute('data-action', 'record');
+        this.actionButton.setAttribute('data-action', ButtonMode.RECORD);
         this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15c2.21 0 4-1.79 4-4V5c0-2.21-1.79-4-4-4S8 2.79 8 5v6c0 2.21 1.79 4 4 4zm0-2c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2zm4 2v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1H4v1c0 3.53 2.61 6.43 6 6.92V23h4v-2.08c3.39-.49 6-3.39 6-6.92v-1h-2z" fill="currentColor"/></svg>';
         break;
-      case 'stop':
+      case ButtonMode.STOP:
         this.actionButton.classList.add('stop-mode');
-        this.actionButton.setAttribute('data-action', 'stop');
+        this.actionButton.setAttribute('data-action', ButtonMode.STOP);
         this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M6 6h12v12H6z" fill="currentColor"/></svg>';
         break;
-      case 'processing':
+      case ButtonMode.PROCESSING:
         this.actionButton.classList.add('processing-mode');
         this.actionButton.removeAttribute('data-action');
         this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.42 3.58-8 8-8z" fill="currentColor"><animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 12 12" to="360 12 12" repeatCount="indefinite"/></path></svg>';
