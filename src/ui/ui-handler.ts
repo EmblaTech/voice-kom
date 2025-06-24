@@ -41,8 +41,7 @@ export class UIHandler {
         this.container = this.createDefaultUI(this.config.containerId);
       }
     }
-    this.injectStyles(this.container, config.styleUrl, config.styles);
-    this.createUIElements();
+
     this.updateFromState();
   }
 
@@ -72,6 +71,9 @@ export class UIHandler {
     if (height) {
       this.container.style.height = height;
     }
+
+    this.injectStyles(this.container, this.config?.styleUrl, this.config?.styles);
+    this.createUIElements();
   }
 
   private createContainer(id: string): HTMLElement {
@@ -91,14 +93,7 @@ export class UIHandler {
       styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
 
       // Fetch CSS content from external file
-      const response = await fetch(this.SPEECH_PLUG_STYLE_PATH);
-    
-      if (!response.ok) {
-        this.logger.error(`Failed to load default styles CSS: ${response.status} ${response.statusText}`);
-      }
-    
-      // Get the CSS content and inject it
-      const cssContent = await response.text();
+      const cssContent = await this.fetchTextResource(this.SPEECH_PLUG_STYLE_PATH);
       styleElement.textContent = cssContent;
       document.head.appendChild(styleElement);
 
@@ -111,63 +106,77 @@ export class UIHandler {
     let finalStyles = stylesObj || {};
     if (stylesPath) {
       try {
-        const customStylesResponse = await fetch(stylesPath);
-        if (customStylesResponse.ok) {
-          const customStylesCssContent = await customStylesResponse.text();
-          const stylesInCamelNotation = this.parseCssToObject(customStylesCssContent);
-          finalStyles = stylesObj ? this.mergeStyles(stylesInCamelNotation, stylesObj) : stylesInCamelNotation;
-          this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
-        } else {
-          this.logger.error(`Failed to load custom-styles CSS: ${customStylesResponse.status} ${customStylesResponse.statusText}.`);             
-        }
+        const customStylesCssContent = await this.fetchTextResource(stylesPath);
+        const cssProperties = this.parseCssToProperties(customStylesCssContent);
+        const customStyles = this.toCamelCaseObject(cssProperties);
+        finalStyles = stylesObj ? this.mergeStyles(customStyles, stylesObj) : customStyles;
+        this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
+
       } catch (error) {
         this.logger.error('Error loading custom-styles CSS:', error);
         throw Error('Failed to load custom-styles CSS');
       }
     }
-    
+
     Object.assign(container.style, finalStyles);
   }
 
-  // Parsing CSS and converting attributes to camelCase notation
-  parseCssToObject(cssString: any) {
-    const stylesInCamelNotation: Record<string, string> = {};
+  private async fetchTextResource(url: any): Promise<any> {
+    const response = await fetch(url);
+    if (!response.ok) {
+      this.logger.error(`Failed to fetch resource at ${url}: ${response.status} ${response.statusText}`);
+    }
+    return response.text();
+  }
 
-    const formattedCss = cssString.replace(/\/\*[\s\S]*?\*\//g, '').trim();
-    const rules = formattedCss.split('}').filter((rule: any) => rule.trim());
+  // Parsing CSS and Clean CSS string and extract properties
+  private parseCssToProperties(cssString: string): Record<string, string> {
+    const cssProperties: Record<string, string> = {};
 
-    rules.forEach((rule: any) => {
+    const cleanedCss = cssString.replace(/\/\*[\s\S]*?\*\//g, '').trim();
+    const rules = cleanedCss.split('}').filter(rule => rule.trim());
+
+    rules.forEach(rule => {
       const parts = rule.split('{');
       if (parts.length !== 2) return;
 
       const declarations = parts[1].trim();
-      const declarationPairs = declarations.split(';').filter((decl: any) => decl.trim());
+      const declarationPairs = declarations.split(';').filter(declaration => declaration.trim());
 
-      declarationPairs.forEach((declaration: any) => {
-        const [kebabProperty, value] = declaration.split(':').map((part: any) => part.trim());
+      declarationPairs.forEach(declaration => {
+        const [property, value] = declaration.split(':').map(part => part.trim());
 
-        if (kebabProperty && value) {
-          const camelCaseProperty = this.convertToCamelCase(kebabProperty);
-          stylesInCamelNotation[camelCaseProperty] = value;
+        if (property && value) {
+          cssProperties[property] = value;
         }
       });
-
     });
 
-    return stylesInCamelNotation;
+    return cssProperties;
   }
 
-  convertToCamelCase(kebabCase: any) {
+  private toCamelCaseObject(cssProperties: Record<string, string>): Record<string, string> {
+    const camelCaseProperties: Record<string, string> = {};
+
+    Object.entries(cssProperties).forEach(([kebabProperty, value]) => {
+      const camelCaseProperty = this.toCamelCase(kebabProperty);
+      camelCaseProperties[camelCaseProperty] = value;
+    });
+
+    return camelCaseProperties;
+  }
+
+  toCamelCase(kebabCase: any) {
     return kebabCase.replace(/-([a-z])/g, (match: any, letter: any) => letter.toUpperCase());
   }
 
   // Merge styles of custom styles and script.js styles (avoiding duplicates)
-  mergeStyles(stylesInCamelNotation: any, myStyles: any) {
-    const mergedStyles = { ...stylesInCamelNotation };
+  mergeStyles(customStyles: any, inputStyles: any) {
+    const mergedStyles = { ...customStyles };
 
-    Object.keys(myStyles).forEach(property => {
+    Object.keys(inputStyles).forEach(property => {
       if (!mergedStyles.hasOwnProperty(property)) {
-        mergedStyles[property] = myStyles[property];
+        mergedStyles[property] = inputStyles[property];
       }
     });
 
