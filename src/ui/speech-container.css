@@ -1,4 +1,4 @@
-.voice-recorder-container {
+  .voice-recorder-container {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 300px;
     max-height: 75px;
@@ -6,21 +6,22 @@
     background-color: #f0f4f8;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-  }
-  
-  .voice-bottom-left {
-    position: fixed;
-    bottom: 20px;
-    left: 25px;
-    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   }
 
+  .voice-bottom-left,
   .voice-bottom-right {
     position: fixed;
     bottom: 20px;
-    right: 25px;
     z-index: 1000;
+  }
+
+  .voice-bottom-left {
+    left: 25px;
+  }
+
+  .voice-bottom-right {
+    right: 25px;
   }
 
   .voice-interface {
