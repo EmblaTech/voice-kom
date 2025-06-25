@@ -3,18 +3,6 @@ import { EventBus, SpeechEvents } from '../common/eventbus';
 import { ButtonMode, ErrorType, Status, StatusType } from '../common/status';
 import { UIConfig } from '../../src/types';
 
-enum UserErrorMessage {
-  MICROPHONE_ACCESS = 'Please allow microphone access',
-  TRANSCRIPTION = 'We ran into a small problem',
-  NETWORK = 'Network connection issue',
-}
-
-enum StatusDisplayText {
-  Idle       = 'SpeechPlug',
-  Recording  = 'Recording...',
-  Processing = 'Processing...',
-}
-
 export class UIHandler {
   private config: UIConfig | null = null;
   private readonly logger = Logger.getInstance();
@@ -28,7 +16,24 @@ export class UIHandler {
   private transcriptionDisplay: HTMLDivElement | null = null;
   private recordingIndicator: HTMLSpanElement | null = null;
   private transcription: string | null = null;
-  
+  private readonly BUTTON_ERROR_RESET_DELAY_MS = 3000;
+
+  private readonly STATUS_LABELS: any = {
+    [StatusType.IDLE]: 'SpeechPlug',
+    [StatusType.RECORDING]: 'Recording...',
+    [StatusType.PROCESSING]: 'Processing...',
+    [StatusType.ERROR]: '', // Error message handled separately
+    [StatusType.WAITING]: 'Waiting...',
+    [StatusType.EXECUTING]: 'Executing...'
+  };
+
+  private readonly BUTTON_MODES: any = {
+    [StatusType.IDLE]: ButtonMode.RECORD,
+    [StatusType.RECORDING]: ButtonMode.STOP,
+    [StatusType.PROCESSING]: ButtonMode.PROCESSING,
+    [StatusType.ERROR]: ButtonMode.RECORD,
+  };
+
   constructor(
     private readonly eventBus: EventBus,
     private readonly status: Status
@@ -66,24 +71,17 @@ export class UIHandler {
     
     // Apply base container class
     this.container.classList.add('voice-recorder-container');
-
-    // Position settings
-    if (position) {
-      // Apply position class
-      this.container.classList.add(`voice-${position}`);
-    }
-    
-    // Apply dimensions
+    if (position) {     
+      this.container.classList.add(`voice-${position}`);  // Apply position class
+    } 
     if (width) {
       this.container.style.width = width;
-    }
-    
+    } 
     if (height) {
       this.container.style.height = height;
     }
-
-    await this.injectStyles(this.container, this.config?.styleUrl, this.config?.styles);
     await this.createUIElements();
+    await this.injectStyles(this.container, this.config?.styleUrl, this.config?.styles);   
   }
 
   private createContainer(id: string): HTMLElement {
@@ -100,20 +98,13 @@ export class UIHandler {
     try {
       const styleElement = document.createElement('style');
       styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
-      // Fetch CSS content from external file
-      const cssContent = await this.fetchTextResource(this.SPEECH_PLUG_STYLE_PATH);
+      // Fetch CSS content from default file
+      const cssContent = await this.fetchContent(this.SPEECH_PLUG_STYLE_PATH);
       styleElement.textContent = cssContent;
       document.head.appendChild(styleElement);
 
       let finalStyles = stylesObj || {};
-      if (stylesPath) {
-        const customStylesCssContent = await this.fetchTextResource(stylesPath);
-        const cssProperties = this.parseCssToProperties(customStylesCssContent);
-        const customStyles = this.toCamelCaseObject(cssProperties);
-        finalStyles = stylesObj ? this.mergeStyles(customStyles, stylesObj) : customStyles;
-        this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
-      }
-
+      finalStyles = await this.mergeFinalStyles(stylesPath, stylesObj);         
       Object.assign(container.style, finalStyles);
     } catch (error) {
       this.logger.error('Error injectStyles(): ', error);
@@ -122,7 +113,19 @@ export class UIHandler {
     }
   }
 
-  private async fetchTextResource(url: string): Promise<any> {
+  async mergeFinalStyles(stylesPath: string | undefined, stylesObj: any) {
+    if (stylesPath) {
+      // Fetch CSS content from custom file
+      const cssContent = await this.fetchContent(stylesPath);
+      const cssProperties = this.parse(cssContent);
+      const customStyles = this.cssObjToCamelCaseObj(cssProperties);
+      this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
+      return (stylesObj ? this.mergeStyles(customStyles, stylesObj) : customStyles);
+    }
+    return stylesObj || {};
+  }
+
+  private async fetchContent(url: string): Promise<any> {
     try {
       const response = await fetch(url);
       if (!response.ok) {
@@ -136,27 +139,27 @@ export class UIHandler {
   }
 
   // Parsing CSS and Clean CSS string and extract properties
-  private parseCssToProperties(cssString: string): Record<string, string> {
+  private parse(cssContent: string): Record<string, string> {
     const cssProperties: Record<string, string> = {};
-    const cleanedCss = cssString.replace(/\/\*[\s\S]*?\*\//g, '').trim();
-    const rules = cleanedCss.split('}').filter(rule => rule.trim());
+    const cleanedCss = cssContent.replace(/\/\*[\s\S]*?\*\//g, '').trim();
+    const cssBlocks = cleanedCss.split('}').filter(block => block.trim());
 
-    rules.forEach(rule => {
-      const parts = rule.split('{');
+    cssBlocks.forEach(cssBlock => {
+      const parts = cssBlock.split('{');
       if (parts.length !== 2) return;
-      const declarations = parts[1].trim();
-      const declarationPairs = declarations.split(';').filter(declaration => declaration.trim());
-      declarationPairs.forEach(declaration => {
-        const [property, value] = declaration.split(':').map(part => part.trim());
-        if (property && value) {
-          cssProperties[property] = value;
+      const cssAttributes = parts[1].trim();
+      const cssPropertiesArray = cssAttributes.split(';').filter(cssProperty => cssProperty.trim());
+      cssPropertiesArray.forEach(declaration => {
+        const [cssProperty, value] = declaration.split(':').map(part => part.trim());
+        if (cssProperty && value) {
+          cssProperties[cssProperty] = value;
         }
       });
     });
     return cssProperties;
   }
 
-  private toCamelCaseObject(cssProperties: Record<string, string>): Record<string, string> {
+  private cssObjToCamelCaseObj(cssProperties: Record<string, string>): Record<string, string> {
     const camelCaseProperties: Record<string, string> = {};
     Object.entries(cssProperties).forEach(([kebabProperty, value]) => {
       const camelCaseProperty = this.toCamelCase(kebabProperty);
@@ -170,11 +173,11 @@ export class UIHandler {
   }
 
   // Merge styles of custom styles and script.js styles (avoiding duplicates)
-  mergeStyles(customStyles: any, inputStyles: any) {
-    const mergedStyles = { ...customStyles };
-    Object.keys(inputStyles).forEach(property => {
+  mergeStyles(priorityStyles: any, fallbackStyles: any) {
+    const mergedStyles = { ...priorityStyles };
+    Object.keys(fallbackStyles).forEach(property => {
       if (!mergedStyles.hasOwnProperty(property)) {
-        mergedStyles[property] = inputStyles[property];
+        mergedStyles[property] = fallbackStyles[property];
       }
     });
     return mergedStyles;
@@ -185,7 +188,7 @@ export class UIHandler {
     this.container.innerHTML = '';  
 
     try {
-      const htmlContent = await this.fetchTextResource(this.SPEECH_PLUG_TEMPLATE_PATH);
+      const htmlContent = await this.fetchContent(this.SPEECH_PLUG_TEMPLATE_PATH);
       this.container.innerHTML = htmlContent;
       this.actionButton = this.container.querySelector('.action-button');
       this.statusDisplay = this.container.querySelector('.status-display');
@@ -217,154 +220,75 @@ export class UIHandler {
   
   public updateFromState(): void {
     if (!this.container) return;
-    
-    const status = this.status.get();
-    this.updateStatusDisplay(status.value);
-    this.updateButton(status.value);    
-    if (this.transcriptionDisplay && this.transcription) {
-      this.transcriptionDisplay.textContent = this.transcription;
-      this.transcriptionDisplay.style.display = 'block';
-    }
+    const status = this.status.get().value;
+    this.updateStatusDisplay(status);
+    this.updateActionButton(status);
+    this.updateTranscriptionDisplay();
   }
 
   public setTranscription(transcription: string): void {
     this.transcription = transcription;
-    if (this.transcriptionDisplay) {
-      this.transcriptionDisplay.textContent = transcription;
-      // Show transcription area when we have content
-      if (transcription && transcription.trim().length > 0) {
-        this.transcriptionDisplay.style.display = 'block';
-      }
-    }
+    this.updateTranscriptionDisplay();
   }
-  
+
   private onTranscriptionCompleted(transcription: string): void {
     this.setTranscription(transcription);
   }
-  
+
   private onError(error: unknown): void {
-    // Display a user-friendly message instead of the actual error
     const userMessage = this.getUserFriendlyErrorMessage(error);
-    
-    if (this.statusDisplay) {
-      this.statusDisplay.textContent = userMessage;
-      this.statusDisplay.classList.add('error-state');
-      
-      // Auto-clear the error state after 3 seconds
-      setTimeout(() => {
-        if (this.statusDisplay) {
-          this.statusDisplay.classList.remove('error-state');
-          this.statusDisplay.textContent = 'SpeechPlug';
-        }
-      }, 3000);
-    }
-    
-    // Log the actual error to console for debugging
-    console.error('Voice processing error:', error);
+    this.displayError(userMessage);
+    this.logger.error('Voice processing error: ', error);
   }
 
   private getUserFriendlyErrorMessage(error: unknown): string {
-    // Default user-friendly message
-    let message = 'We ran into a small problem';
-    
-    // Check if it's a known error type that we want to give more specific feedback for
-    if (error && typeof error === 'object') {
-      if ('type' in error) {
-        const errorType = (error as { type: ErrorType }).type;
-        
-        switch (errorType) {
-          case ErrorType.MICROPHONE_ACCESS:
-            message = UserErrorMessage.MICROPHONE_ACCESS;
-            break;
-          case ErrorType.TRANSCRIPTION:
-            message = UserErrorMessage.TRANSCRIPTION;
-            break;
-          case ErrorType.NETWORK:
-            message = UserErrorMessage.NETWORK;
-            break;
-          // Add more specific error types as needed
-        }
+    if (error && typeof error === 'object' && 'type' in error) {
+      switch ((error as { type: ErrorType }).type) {
+        case ErrorType.MICROPHONE_ACCESS:
+          return 'Please allow microphone access';
+        case ErrorType.NETWORK:
+          return 'Network connection issue';
+        // Add more specific error types as needed
       }
     }
-    
-    return message;
+    return 'We ran into a small problem';
   }
 
   private updateStatusDisplay(status: StatusType): void {
     if (!this.statusDisplay) return;
-    
-    // Reset status display styling
     this.statusDisplay.classList.remove('error-state');
-    
-    switch (status) {
-      case StatusType.IDLE:
-        this.statusDisplay.textContent = StatusDisplayText.Idle;
-        break;
-      case StatusType.RECORDING:
-        this.statusDisplay.textContent = StatusDisplayText.Recording;
-        break;
-      case StatusType.PROCESSING:
-        this.statusDisplay.textContent = StatusDisplayText.Processing;
-        break;
-      case StatusType.ERROR:
-        // Don't update text here - let the error handler set the message
-        this.statusDisplay.classList.add('error-state');
-        break;
+    if (status !== StatusType.ERROR) {
+      this.statusDisplay.textContent = this.STATUS_LABELS[status];
+    } else {
+      this.statusDisplay.classList.add('error-state');
     }
-    
-    // Handle recording indicator
     this.updateRecordingIndicator(status === StatusType.RECORDING);
-    
-    // Hide transcription when returning to idle if it's empty
-    if (status === StatusType.IDLE && this.transcriptionDisplay) {
-      if (!this.transcription || this.transcription.trim() === '') {
-        this.transcriptionDisplay.style.display = 'none';
-      }
-    }
+    if (status === StatusType.IDLE) this.hideEmptyTranscription();
   }
-  
+
   private updateRecordingIndicator(isRecording: boolean): void {
+    if (!this.statusDisplay) return;
     if (isRecording) {
-      if (!this.recordingIndicator && this.statusDisplay) {
+      if (!this.recordingIndicator) {
         this.recordingIndicator = document.createElement('span');
         this.recordingIndicator.className = 'recording-indicator';
         this.statusDisplay.prepend(this.recordingIndicator);
       }
-    } else if (this.recordingIndicator && this.recordingIndicator.parentNode) {
+    } else if (this.recordingIndicator?.parentNode) {
       this.recordingIndicator.parentNode.removeChild(this.recordingIndicator);
       this.recordingIndicator = null;
     }
   }
-  
-  private updateButton(status: StatusType): void {
+
+  private updateActionButton(status: StatusType): void {
     if (!this.actionButton) return;
-    
-    // Common button reset
-    this.actionButton.disabled = false;
-    
-    switch (status) {
-      case StatusType.IDLE:
-        this.setButtonAppearance(ButtonMode.RECORD);
-        break;
-      case StatusType.RECORDING:
-        this.setButtonAppearance(ButtonMode.STOP);
-        break;
-      case StatusType.PROCESSING:
-        this.setButtonAppearance(ButtonMode.PROCESSING);
-        this.actionButton.disabled = true;
-        break;
-      case StatusType.ERROR:
-        this.setButtonAppearance(ButtonMode.RECORD);
-        break;
-    }
+    this.actionButton.disabled = status === StatusType.PROCESSING;
+    this.setButtonAppearance(this.BUTTON_MODES[status]);
   }
-  
+
   private setButtonAppearance(mode: ButtonMode): void {
     if (!this.actionButton) return;
-    
-    // Reset classes first
     this.actionButton.className = 'action-button';
-    
     switch (mode) {
       case ButtonMode.RECORD:
         this.actionButton.classList.add('record-mode');
@@ -382,5 +306,30 @@ export class UIHandler {
         this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.42 3.58-8 8-8z" fill="currentColor"><animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 12 12" to="360 12 12" repeatCount="indefinite"/></path></svg>';
         break;
     }
+  }
+
+  private updateTranscriptionDisplay(): void {
+    if (!this.transcriptionDisplay) return;
+    this.transcriptionDisplay.textContent = this.transcription || '';
+    this.transcriptionDisplay.style.display =
+      this.transcription && this.transcription.trim().length > 0 ? 'block' : 'none';
+  }
+
+  private hideEmptyTranscription(): void {
+    if (this.transcriptionDisplay && (!this.transcription || this.transcription.trim() === '')) {
+      this.transcriptionDisplay.style.display = 'none';
+    }
+  }
+
+  private displayError(message: string): void {
+    if (!this.statusDisplay) return;
+    this.statusDisplay.textContent = message;
+    this.statusDisplay.classList.add('error-state');
+    setTimeout(() => {
+      if (this.statusDisplay) {
+        this.statusDisplay.classList.remove('error-state');
+        this.statusDisplay.textContent = this.STATUS_LABELS[StatusType.IDLE];
+      }
+    }, this.BUTTON_ERROR_RESET_DELAY_MS);
   }
 }
