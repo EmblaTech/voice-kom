@@ -21,7 +21,7 @@ export class CoreModule {
     
     // Set initial state
     this.status.set(StatusType.IDLE);
-    this.uiHandler.updateFromState();
+    this.uiHandler.updateUIStatus();
   }
 
   private bindEvents(): void {
@@ -42,7 +42,7 @@ export class CoreModule {
       // Update state when recording starts
       this.status.set(StatusType.RECORDING);
       // Update UI
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
     
     // Handle recording stopped event
@@ -50,7 +50,7 @@ export class CoreModule {
       // Update state to processing when recording stops
       this.status.set(StatusType.PROCESSING);
       // Update UI
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
     
     // Set up transcription event listener
@@ -66,7 +66,7 @@ export class CoreModule {
       
       // Set state to executing when we have an intent to process
       this.status.set(StatusType.EXECUTING);
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
       
       // Try to perform the action
       const actionPerformed = this.voiceActuator.performAction(intent);
@@ -82,20 +82,20 @@ export class CoreModule {
       
       // Update state to idle after action is completed
       this.status.set(StatusType.IDLE);
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
     this.eventBus.on(SpeechEvents.ACTION_PAUSED, (actionResult) => {
       console.log('Action paused:', actionResult);
       
       // Update state to idle after action is completed
       this.status.set(StatusType.IDLE);
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
     // Handle errors
     this.eventBus.on(SpeechEvents.ERROR_OCCURRED, (error: Error) => {
       console.error('VoiceLib error:', error);
       this.status.set(StatusType.ERROR, error.message);
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
   }
   

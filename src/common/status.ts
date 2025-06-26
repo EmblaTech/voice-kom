@@ -21,6 +21,13 @@ export enum ButtonMode {
   PROCESSING = 'processing'
 }
 
+export interface StatusMeta {
+  code: StatusType;        
+  text: string;           
+  buttonMode: ButtonMode; 
+  icon: string;           
+}
+
 export class Status {
   private currentStatus: StatusType;
   private message?: string;

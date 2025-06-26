@@ -1,6 +1,6 @@
 import { Logger } from '../utils/logger';
 import { EventBus, SpeechEvents } from '../common/eventbus';
-import { ButtonMode, ErrorType, Status, StatusType } from '../common/status';
+import { ButtonMode, ErrorType, Status, StatusType, StatusMeta } from '../common/status';
 import { UIConfig } from '../../src/types';
 
 export class UIHandler {
@@ -18,20 +18,47 @@ export class UIHandler {
   private transcription: string | null = null;
   private readonly BUTTON_ERROR_RESET_DELAY_MS = 3000;
 
-  private readonly STATUS_LABELS: any = {
-    [StatusType.IDLE]: 'SpeechPlug',
-    [StatusType.RECORDING]: 'Recording...',
-    [StatusType.PROCESSING]: 'Processing...',
-    [StatusType.ERROR]: '', // Error message handled separately
-    [StatusType.WAITING]: 'Waiting...',
-    [StatusType.EXECUTING]: 'Executing...'
-  };
+  private readonly ACTION_BUTTON_CLASS = '.action-button';
+  private readonly STATUS_DISPLAY_CLASS = '.status-display';
+  private readonly TRANSCRIPTION_DISPLAY_CLASS = '.transcription-display';
 
-  private readonly BUTTON_MODES: any = {
-    [StatusType.IDLE]: ButtonMode.RECORD,
-    [StatusType.RECORDING]: ButtonMode.STOP,
-    [StatusType.PROCESSING]: ButtonMode.PROCESSING,
-    [StatusType.ERROR]: ButtonMode.RECORD,
+  private readonly STATUS_CONFIG: Record<StatusType, StatusMeta> = {
+    [StatusType.IDLE]: {
+      code:       StatusType.IDLE,
+      text:       'SpeechPlug',
+      buttonMode: ButtonMode.RECORD,
+      icon:       'mic'
+    },
+    [StatusType.RECORDING]: {
+      code:       StatusType.RECORDING,
+      text:       'Recording...',
+      buttonMode: ButtonMode.STOP,
+      icon:       'mic_off'
+    },
+    [StatusType.PROCESSING]: {
+      code:       StatusType.PROCESSING,
+      text:       'Processing...',
+      buttonMode: ButtonMode.PROCESSING,
+      icon:       'hourglass'
+    },
+    [StatusType.ERROR]: {
+      code:       StatusType.ERROR,
+      text:       '',
+      buttonMode: ButtonMode.RECORD,
+      icon:       'error'
+    },
+    [StatusType.WAITING]: {
+      code:       StatusType.WAITING,
+      text:       'Waiting...',
+      buttonMode: ButtonMode.RECORD,
+      icon:       'schedule'
+    },
+    [StatusType.EXECUTING]: {
+      code:       StatusType.EXECUTING,
+      text:       'Executing...',
+      buttonMode: ButtonMode.RECORD,
+      icon:       'play_arrow'
+    }
   };
 
   constructor(
@@ -57,7 +84,7 @@ export class UIHandler {
         this.container = await this.createDefaultUI(this.config.containerId);
       }
     }
-    this.updateFromState();
+    this.updateUIStatus();
   }
 
   private async createDefaultUI(containerId: string): Promise<HTMLElement> { 
@@ -92,7 +119,7 @@ export class UIHandler {
     return container;
   }
   
-  private async injectStyles(container: any, stylesPath: string | undefined, stylesObj: any): Promise<void> {
+  private async injectStyles(container: any, fileStyles: string | undefined, inlineStyles: any): Promise<void> {
     if (document.getElementById(this.SPEECH_PLUG_STYLE_ELEMENT_ID)) return;
 
     try {
@@ -103,8 +130,8 @@ export class UIHandler {
       styleElement.textContent = cssContent;
       document.head.appendChild(styleElement);
 
-      let finalStyles = stylesObj || {};
-      finalStyles = await this.mergeFinalStyles(stylesPath, stylesObj);         
+      let finalStyles = inlineStyles || {};
+      finalStyles = await this.finalizeStyles(fileStyles, inlineStyles);         
       Object.assign(container.style, finalStyles);
     } catch (error) {
       this.logger.error('Error injectStyles(): ', error);
@@ -113,16 +140,16 @@ export class UIHandler {
     }
   }
 
-  async mergeFinalStyles(stylesPath: string | undefined, stylesObj: any) {
-    if (stylesPath) {
+  async finalizeStyles(fileStyles: string | undefined, inlineStyles: any) {
+    if (fileStyles) {
       // Fetch CSS content from custom file
-      const cssContent = await this.fetchContent(stylesPath);
+      const cssContent = await this.fetchContent(fileStyles);
       const cssProperties = this.parse(cssContent);
-      const customStyles = this.cssObjToCamelCaseObj(cssProperties);
+      const customStyles = this.toCamelCase(cssProperties);
       this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
-      return (stylesObj ? this.mergeStyles(customStyles, stylesObj) : customStyles);
+      return (inlineStyles ? this.mergeStyles(customStyles, inlineStyles) : customStyles);
     }
-    return stylesObj || {};
+    return inlineStyles || {};
   }
 
   private async fetchContent(url: string): Promise<any> {
@@ -159,25 +186,21 @@ export class UIHandler {
     return cssProperties;
   }
 
-  private cssObjToCamelCaseObj(cssProperties: Record<string, string>): Record<string, string> {
+  private toCamelCase(cssProperties: Record<string, string>): Record<string, string> {
     const camelCaseProperties: Record<string, string> = {};
     Object.entries(cssProperties).forEach(([kebabProperty, value]) => {
-      const camelCaseProperty = this.toCamelCase(kebabProperty);
+      const camelCaseProperty = kebabProperty.replace(/-([a-z])/g, (match: any, letter: any) => letter.toUpperCase());
       camelCaseProperties[camelCaseProperty] = value;
     });
     return camelCaseProperties;
   }
 
-  toCamelCase(kebabCase: any) {
-    return kebabCase.replace(/-([a-z])/g, (match: any, letter: any) => letter.toUpperCase());
-  }
-
   // Merge styles of custom styles and script.js styles (avoiding duplicates)
-  mergeStyles(priorityStyles: any, fallbackStyles: any) {
-    const mergedStyles = { ...priorityStyles };
-    Object.keys(fallbackStyles).forEach(property => {
+  mergeStyles(primaryStyles: any, secondaryStyles: any) {
+    const mergedStyles = { ...primaryStyles };
+    Object.keys(secondaryStyles).forEach(property => {
       if (!mergedStyles.hasOwnProperty(property)) {
-        mergedStyles[property] = fallbackStyles[property];
+        mergedStyles[property] = secondaryStyles[property];
       }
     });
     return mergedStyles;
@@ -190,9 +213,9 @@ export class UIHandler {
     try {
       const htmlContent = await this.fetchContent(this.SPEECH_PLUG_TEMPLATE_PATH);
       this.container.innerHTML = htmlContent;
-      this.actionButton = this.container.querySelector('.action-button');
-      this.statusDisplay = this.container.querySelector('.status-display');
-      this.transcriptionDisplay = this.container.querySelector('.transcription-display');
+      this.actionButton = this.container.querySelector(this.ACTION_BUTTON_CLASS);
+      this.statusDisplay = this.container.querySelector(this.STATUS_DISPLAY_CLASS);
+      this.transcriptionDisplay = this.container.querySelector(this.TRANSCRIPTION_DISPLAY_CLASS);
       // Initialize any event listeners or additional configuration here
       if (this.actionButton) {
         this.bindEventListeners();
@@ -218,17 +241,17 @@ export class UIHandler {
     });
   }
   
-  public updateFromState(): void {
+  public updateUIStatus(): void {
     if (!this.container) return;
     const status = this.status.get().value;
-    this.updateStatusDisplay(status);
-    this.updateActionButton(status);
-    this.updateTranscriptionDisplay();
+    this.showStatus(status);
+    this.setActionButton(status);
+    this.showTranscripton();
   }
 
   public setTranscription(transcription: string): void {
     this.transcription = transcription;
-    this.updateTranscriptionDisplay();
+    this.showTranscripton();
   }
 
   private onTranscriptionCompleted(transcription: string): void {
@@ -236,12 +259,12 @@ export class UIHandler {
   }
 
   private onError(error: unknown): void {
-    const userMessage = this.getUserFriendlyErrorMessage(error);
-    this.displayError(userMessage);
+    const userMessage = this.getMessage(error);
+    this.showError(userMessage);
     this.logger.error('Voice processing error: ', error);
   }
 
-  private getUserFriendlyErrorMessage(error: unknown): string {
+  private getMessage(error: unknown): string {
     if (error && typeof error === 'object' && 'type' in error) {
       switch ((error as { type: ErrorType }).type) {
         case ErrorType.MICROPHONE_ACCESS:
@@ -254,16 +277,16 @@ export class UIHandler {
     return 'We ran into a small problem';
   }
 
-  private updateStatusDisplay(status: StatusType): void {
+  private showStatus(status: StatusType): void {
     if (!this.statusDisplay) return;
     this.statusDisplay.classList.remove('error-state');
     if (status !== StatusType.ERROR) {
-      this.statusDisplay.textContent = this.STATUS_LABELS[status];
+      this.statusDisplay.textContent = this.STATUS_CONFIG[status].text;
     } else {
       this.statusDisplay.classList.add('error-state');
     }
     this.updateRecordingIndicator(status === StatusType.RECORDING);
-    if (status === StatusType.IDLE) this.hideEmptyTranscription();
+    if (status === StatusType.IDLE) this.hideTransaction();
   }
 
   private updateRecordingIndicator(isRecording: boolean): void {
@@ -280,10 +303,10 @@ export class UIHandler {
     }
   }
 
-  private updateActionButton(status: StatusType): void {
+  private setActionButton(status: StatusType): void {
     if (!this.actionButton) return;
     this.actionButton.disabled = status === StatusType.PROCESSING;
-    this.setButtonAppearance(this.BUTTON_MODES[status]);
+    this.setButtonAppearance(this.STATUS_CONFIG[status].buttonMode);
   }
 
   private setButtonAppearance(mode: ButtonMode): void {
@@ -308,27 +331,27 @@ export class UIHandler {
     }
   }
 
-  private updateTranscriptionDisplay(): void {
+  private showTranscripton(): void {
     if (!this.transcriptionDisplay) return;
     this.transcriptionDisplay.textContent = this.transcription || '';
     this.transcriptionDisplay.style.display =
       this.transcription && this.transcription.trim().length > 0 ? 'block' : 'none';
   }
 
-  private hideEmptyTranscription(): void {
+  private hideTransaction(): void {
     if (this.transcriptionDisplay && (!this.transcription || this.transcription.trim() === '')) {
       this.transcriptionDisplay.style.display = 'none';
     }
   }
 
-  private displayError(message: string): void {
+  private showError(message: string): void {
     if (!this.statusDisplay) return;
     this.statusDisplay.textContent = message;
     this.statusDisplay.classList.add('error-state');
     setTimeout(() => {
       if (this.statusDisplay) {
         this.statusDisplay.classList.remove('error-state');
-        this.statusDisplay.textContent = this.STATUS_LABELS[StatusType.IDLE];
+        this.statusDisplay.textContent = this.STATUS_CONFIG[StatusType.IDLE].text;
       }
     }, this.BUTTON_ERROR_RESET_DELAY_MS);
   }
