@@ -6,21 +6,29 @@ import { UIConfig } from '../../src/types';
 export class UIHandler {
   private config: UIConfig | null = null;
   private readonly logger = Logger.getInstance();
-  private readonly SPEECH_PLUG_TEMPLATE_PATH = '../../src/ui/speech-container.html';
-  private readonly SPEECH_PLUG_STYLE_ELEMENT_ID = 'speech-container-style';
-  private readonly SPEECH_PLUG_STYLE_PATH = '../../src/ui/speech-container.css';
+  
+  // Paths and Identifiers
+  private readonly TEMPLATE_PATH = '../../src/ui/speech-container.html';
+  private readonly STYLE_ELEMENT_ID = 'speech-container-style';
+  private readonly STYLE_PATH = '../../src/ui/speech-container.css';
 
+  // UI Elements
   private container: HTMLElement | null = null;
   private actionButton: HTMLButtonElement | null = null;
   private statusDisplay: HTMLDivElement | null = null;
   private transcriptionDisplay: HTMLDivElement | null = null;
   private recordingIndicator: HTMLSpanElement | null = null;
-  private transcription: string | null = null;
-  private readonly BUTTON_ERROR_RESET_DELAY_MS = 3000;
 
-  private readonly ACTION_BUTTON_CLASS = '.action-button';
-  private readonly STATUS_DISPLAY_CLASS = '.status-display';
-  private readonly TRANSCRIPTION_DISPLAY_CLASS = '.transcription-display';
+  // State
+  private transcription: string | null = null;
+
+  // Constants
+  private readonly ERROR_RESET_DELAY_MS = 3000;
+
+  // CSS Class Selectors
+  private readonly ACTION_BUTTON_SELECTOR = '.action-button';
+  private readonly STATUS_DISPLAY_SELECTOR = '.status-display';
+  private readonly TRANSCRIPTION_DISPLAY_SELECTOR = '.transcription-display';
 
   private readonly STATUS_CONFIG: Record<StatusType, StatusMeta> = {
     [StatusType.IDLE]: {
@@ -74,16 +82,10 @@ export class UIHandler {
     // Merge provided config with defaults
     this.config = config;
     
-    if(!this.config.containerId) { //Determine if we need to create a default container or use an existing one
-      this.container = await this.createDefaultUI(this.config.containerId!);
-    } else {
-      let existingContainer = document.getElementById(this.config.containerId);
-      if (existingContainer) {
-        this.container = existingContainer;
-      } else {
-        this.container = await this.createDefaultUI(this.config.containerId);
-      }
-    }
+    const containerId = this.config.containerId;
+    this.container = containerId ? document.getElementById(containerId) : null;
+    
+    this.container ??= await this.createDefaultUI(containerId!);
     this.updateUIStatus();
   }
 
@@ -120,13 +122,13 @@ export class UIHandler {
   }
   
   private async injectStyles(container: any, fileStyles: string | undefined, inlineStyles: any): Promise<void> {
-    if (document.getElementById(this.SPEECH_PLUG_STYLE_ELEMENT_ID)) return;
+    if (document.getElementById(this.STYLE_ELEMENT_ID)) return;
 
     try {
       const styleElement = document.createElement('style');
-      styleElement.id = this.SPEECH_PLUG_STYLE_ELEMENT_ID;
+      styleElement.id = this.STYLE_ELEMENT_ID;
       // Fetch CSS content from default file
-      const cssContent = await this.fetchContent(this.SPEECH_PLUG_STYLE_PATH);
+      const cssContent = await this.fetchContent(this.STYLE_PATH);
       styleElement.textContent = cssContent;
       document.head.appendChild(styleElement);
 
@@ -211,11 +213,11 @@ export class UIHandler {
     this.container.innerHTML = '';  
 
     try {
-      const htmlContent = await this.fetchContent(this.SPEECH_PLUG_TEMPLATE_PATH);
+      const htmlContent = await this.fetchContent(this.TEMPLATE_PATH);
       this.container.innerHTML = htmlContent;
-      this.actionButton = this.container.querySelector(this.ACTION_BUTTON_CLASS);
-      this.statusDisplay = this.container.querySelector(this.STATUS_DISPLAY_CLASS);
-      this.transcriptionDisplay = this.container.querySelector(this.TRANSCRIPTION_DISPLAY_CLASS);
+      this.actionButton = this.container.querySelector(this.ACTION_BUTTON_SELECTOR);
+      this.statusDisplay = this.container.querySelector(this.STATUS_DISPLAY_SELECTOR);
+      this.transcriptionDisplay = this.container.querySelector(this.TRANSCRIPTION_DISPLAY_SELECTOR);
       // Initialize any event listeners or additional configuration here
       if (this.actionButton) {
         this.bindEventListeners();
@@ -353,6 +355,6 @@ export class UIHandler {
         this.statusDisplay.classList.remove('error-state');
         this.statusDisplay.textContent = this.STATUS_CONFIG[StatusType.IDLE].text;
       }
-    }, this.BUTTON_ERROR_RESET_DELAY_MS);
+    }, this.ERROR_RESET_DELAY_MS);
   }
 }
