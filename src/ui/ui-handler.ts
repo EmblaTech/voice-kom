@@ -24,6 +24,11 @@ export class UIHandler {
 
   // Constants
   private readonly ERROR_RESET_DELAY_MS = 3000;
+  private readonly SVG_ICONS = {
+    RECORD: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15c2.21 0 4-1.79 4-4V5c0-2.21-1.79-4-4-4S8 2.79 8 5v6c0 2.21 1.79 4 4 4zm0-2c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2zm4 2v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1H4v1c0 3.53 2.61 6.43 6 6.92V23h4v-2.08c3.39-.49 6-3.39 6-6.92v-1h-2z" fill="currentColor"/></svg>',
+    STOP: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M6 6h12v12H6z" fill="currentColor"/></svg>',
+    PROCESSING: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.42 3.58-8 8-8z" fill="currentColor"><animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 12 12" to="360 12 12" repeatCount="indefinite"/></path></svg>'
+  };
 
   // CSS Class Selectors
   private readonly ACTION_BUTTON_SELECTOR = '.action-button';
@@ -32,40 +37,56 @@ export class UIHandler {
 
   private readonly STATUS_CONFIG: Record<StatusType, StatusMeta> = {
     [StatusType.IDLE]: {
-      code:       StatusType.IDLE,
-      text:       'SpeechPlug',
+      code: StatusType.IDLE,
+      text: 'SpeechPlug',
       buttonMode: ButtonMode.RECORD,
-      icon:       'mic'
+      icon: 'mic',
+      cssClass: 'record-mode',
+      dataAction: ButtonMode.RECORD,   
+      innerHTML: this.SVG_ICONS.RECORD
     },
     [StatusType.RECORDING]: {
-      code:       StatusType.RECORDING,
-      text:       'Recording...',
+      code: StatusType.RECORDING,
+      text: 'Recording...',
       buttonMode: ButtonMode.STOP,
-      icon:       'mic_off'
+      icon: 'mic_off',
+      cssClass: 'stop-mode',
+      dataAction: ButtonMode.STOP,     
+      innerHTML: this.SVG_ICONS.STOP
     },
     [StatusType.PROCESSING]: {
-      code:       StatusType.PROCESSING,
-      text:       'Processing...',
+      code: StatusType.PROCESSING,
+      text: 'Processing...',
       buttonMode: ButtonMode.PROCESSING,
-      icon:       'hourglass'
+      icon: 'hourglass',
+      cssClass: 'processing-mode',    
+      innerHTML: this.SVG_ICONS.PROCESSING
     },
     [StatusType.ERROR]: {
-      code:       StatusType.ERROR,
-      text:       '',
+      code: StatusType.ERROR,
+      text: '',
       buttonMode: ButtonMode.RECORD,
-      icon:       'error'
+      icon: 'error',
+      cssClass: 'record-mode',
+      dataAction: ButtonMode.RECORD,    
+      innerHTML: this.SVG_ICONS.RECORD
     },
     [StatusType.WAITING]: {
-      code:       StatusType.WAITING,
-      text:       'Waiting...',
+      code: StatusType.WAITING,
+      text: 'Waiting...',
       buttonMode: ButtonMode.RECORD,
-      icon:       'schedule'
+      icon: 'schedule',
+      cssClass: 'record-mode',
+      dataAction: ButtonMode.RECORD,   
+      innerHTML: this.SVG_ICONS.RECORD
     },
     [StatusType.EXECUTING]: {
-      code:       StatusType.EXECUTING,
-      text:       'Executing...',
-      buttonMode: ButtonMode.RECORD,
-      icon:       'play_arrow'
+      code: StatusType.EXECUTING,
+      text: 'Executing...',
+      buttonMode: ButtonMode.PROCESSING,
+      icon: 'play_arrow',
+      cssClass: 'processing-mode',    
+      innerHTML: this.SVG_ICONS.RECORD
     }
   };
 
@@ -248,12 +269,12 @@ export class UIHandler {
     const status = this.status.get().value;
     this.showStatus(status);
     this.setActionButton(status);
-    this.showTranscripton();
+    this.syncTranscriptionDisplay();
   }
 
   public setTranscription(transcription: string): void {
     this.transcription = transcription;
-    this.showTranscripton();
+    this.syncTranscriptionDisplay();
   }
 
   private onTranscriptionCompleted(transcription: string): void {
@@ -288,7 +309,7 @@ export class UIHandler {
       this.statusDisplay.classList.add('error-state');
     }
     this.updateRecordingIndicator(status === StatusType.RECORDING);
-    if (status === StatusType.IDLE) this.hideTransaction();
+    if (status === StatusType.IDLE) this.syncTranscriptionDisplay();
   }
 
   private updateRecordingIndicator(isRecording: boolean): void {
@@ -308,42 +329,28 @@ export class UIHandler {
   private setActionButton(status: StatusType): void {
     if (!this.actionButton) return;
     this.actionButton.disabled = status === StatusType.PROCESSING;
-    this.setButtonAppearance(this.STATUS_CONFIG[status].buttonMode);
+    this.setButtonAppearance(status);
   }
 
-  private setButtonAppearance(mode: ButtonMode): void {
+  private setButtonAppearance(status: StatusType): void {
     if (!this.actionButton) return;
+    const statusMeta = this.STATUS_CONFIG[status];
     this.actionButton.className = 'action-button';
-    switch (mode) {
-      case ButtonMode.RECORD:
-        this.actionButton.classList.add('record-mode');
-        this.actionButton.setAttribute('data-action', ButtonMode.RECORD);
-        this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15c2.21 0 4-1.79 4-4V5c0-2.21-1.79-4-4-4S8 2.79 8 5v6c0 2.21 1.79 4 4 4zm0-2c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2zm4 2v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1H4v1c0 3.53 2.61 6.43 6 6.92V23h4v-2.08c3.39-.49 6-3.39 6-6.92v-1h-2z" fill="currentColor"/></svg>';
-        break;
-      case ButtonMode.STOP:
-        this.actionButton.classList.add('stop-mode');
-        this.actionButton.setAttribute('data-action', ButtonMode.STOP);
-        this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M6 6h12v12H6z" fill="currentColor"/></svg>';
-        break;
-      case ButtonMode.PROCESSING:
-        this.actionButton.classList.add('processing-mode');
-        this.actionButton.removeAttribute('data-action');
-        this.actionButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.42 3.58-8 8-8z" fill="currentColor"><animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 12 12" to="360 12 12" repeatCount="indefinite"/></path></svg>';
-        break;
+    this.actionButton.classList.add(statusMeta.cssClass);
+    this.actionButton.innerHTML = statusMeta.innerHTML;
+    if (statusMeta.dataAction) {
+      this.actionButton.setAttribute('data-action', statusMeta.dataAction);
+    } else {
+      this.actionButton.removeAttribute('data-action');
     }
   }
 
-  private showTranscripton(): void {
+  private syncTranscriptionDisplay(): void {
     if (!this.transcriptionDisplay) return;
-    this.transcriptionDisplay.textContent = this.transcription || '';
-    this.transcriptionDisplay.style.display =
-      this.transcription && this.transcription.trim().length > 0 ? 'block' : 'none';
-  }
-
-  private hideTransaction(): void {
-    if (this.transcriptionDisplay && (!this.transcription || this.transcription.trim() === '')) {
-      this.transcriptionDisplay.style.display = 'none';
-    }
+    const trimmed = this.transcription?.trim() ?? '';
+    const hasContent = trimmed.length > 0;
+    this.transcriptionDisplay.textContent = hasContent ? trimmed : '';
+    this.transcriptionDisplay.style.display = hasContent ? 'block' : 'none';
   }
 
   private showError(message: string): void {

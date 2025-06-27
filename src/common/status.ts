@@ -25,7 +25,10 @@ export interface StatusMeta {
   code: StatusType;        
   text: string;           
   buttonMode: ButtonMode; 
-  icon: string;           
+  icon: string;
+  cssClass: string;
+  dataAction?: string;
+  innerHTML: string;
 }
 
 export class Status {
