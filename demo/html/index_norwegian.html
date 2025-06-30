@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceLib Skjema Demo</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <h1>Kontaktskjema Demo</h1>
+  
+  <div class="form-container">
+    <form id="contact-form">
+      <!-- Personlig informasjon -->
+      <fieldset>
+        <legend>Personlig Informasjon</legend>
+        
+        <div class="form-group">
+          <label for="name">Fullt Navn</label>
+          <input type="text" id="name" voice.name="name field" placeholder="Skriv inn fullt navn">
+        </div>
+        
+        <div class="form-group">
+          <label for="email">E-postadresse</label>
+          <input type="email" id="email" voice.name="email field" placeholder="Skriv inn e-postadresse">
+        </div>
+        
+        <div class="form-group">
+          <label for="phone">Telefonnummer</label>
+          <input type="tel" id="phone" voice.name="phone field" placeholder="Skriv inn telefonnummer">
+        </div>
+        
+        <div class="form-group">
+          <label for="date">Foretrukket Dato</label>
+          <input type="date" id="date" voice.name="Preferred date">
+        </div>
+
+        <div class="form-group">
+          <label for="time">Foretrukket Tid</label>
+          <input type="time" id="time" voice.name="Preferred time">
+        </div>
+      </fieldset>
+      
+      <!-- Preferanser -->
+      <fieldset>
+        <legend>Preferanser</legend>
+        
+        <div class="form-group" >
+          <label>Foretrukket Kontaktmetode</label>
+          <div class="radio-group" voice.name="prefered contact method" name="contact-preference">
+            <label class="radio-label">
+              <input type="radio" name="contact-preference" value="email" voice.name="email option" checked>
+              E-post
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="contact-preference" value="phone" voice.name="phone option">
+              Telefon
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="contact-preference" value="text" voice.name="text message">
+              Tekstmelding
+            </label>
+          </div>
+        </div>
+        
+        <div class="form-group" voice.name="interests">
+          <label>Interesser (Huk av for alle som gjelder)</label>
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" name="interests" value="product-updates" voice.name="product updates checkbox">
+              Produktoppdateringer
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="interests" value="newsletter" voice.name="newsletter checkbox">
+              Månedlig Nyhetsbrev
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="interests" value="events" voice.name="events checkbox">
+              Kommende Arrangementer
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="interests" value="promotions" voice.name="promotions checkbox">
+              Spesialtilbud
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      
+      <!-- Meldingsseksjon -->
+      <fieldset>
+        <legend>Din Melding</legend>
+        
+        <div class="form-group">
+          <label for="subject">Emne</label>
+          <select id="subject" voice.name="subject dropdown">
+            <option value="">-- Velg et emne --</option>
+            <option value="general" voice.name="general">Generell Forespørsel</option>
+            <option value="support" voice.name="support">Teknisk Support</option>
+            <option value="feedback" voice.name="feedback">Tilbakemelding</option>
+            <option value="other" voice.name="other

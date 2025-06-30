@@ -95,7 +95,7 @@ This is the most important rule. How you format entities depends on their type:
 2.  **Value Entities (e.g., 'value', 'direction'):**
     For entities that represent data values:
     - If the value is for typing/entering text: Return exactly as the user said it (preserve original language/form)
-    - If the value represents direction, time, or date: Normalize to English for system processing
+    - If the value represents direction, time, or date: Normalize to English for system processing since I use english word parsing
     Examples:
     - Text to type: "mejor precio" (keep original)
     - Direction: "up", "down", "left", "right", "next", "previous" (normalize to English)
