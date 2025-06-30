@@ -18,7 +18,7 @@ import { UIComponent } from '../uicomponent/ui-component';
 import { CoreModule } from '../core/core-module';
 import { EventBus } from '../utils/eventbus';
 import { StateStore } from '../utils/stateStore';
-import { CompromiseNLUDriver } from '../nlp/nlu-driver';
+// import { CompromiseNLUDriver } from '../nlp/nlu-driver';
 import { VoiceActuator } from '../voiceactuator/voice-actuator';
 import { AdapterConfig } from './model/adaperConfig';
 import { CommandRegistry } from '../nlp/commandRegistry';
@@ -41,7 +41,7 @@ class VoiceLib implements IVoiceLib {
     this.container.bind<StateStore>(TYPES.StateStore).to(StateStore).inSingletonScope();
     this.container.bind<IAudioCapturer>(TYPES.AudioCapturer).to(WebAudioCapturer).inSingletonScope();
     this.container.bind<ISTTDriver>(TYPES.STTDriver).to(WhisperSTTDriver).inSingletonScope();
-    this.container.bind<INLUDriver>(CompromiseNLUDriver).toSelf().inSingletonScope();
+    // this.container.bind<INLUDriver>(CompromiseNLUDriver).toSelf().inSingletonScope();
     this.container.bind<INLUDriver>(LLMNLUDriver).toSelf().inSingletonScope();
     this.container.bind<INLPModule>(TYPES.NLPModule).to(NLPModule).inSingletonScope();
     this.container.bind<IUIComponent>(TYPES.UIComponent).to(UIComponent).inSingletonScope();

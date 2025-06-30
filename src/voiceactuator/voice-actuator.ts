@@ -1,13 +1,15 @@
 import { injectable, inject } from 'inversify';
-import { TYPES, IntentResult, Entities, Action, IntentTypes, IVoiceActuator } from '../types';
+import { TYPES, IntentResult, Entities, Action, IntentTypes, IVoiceActuator,isVoiceEntity, VoiceEntity, EntityValue } from '../types';
 import { EventBus, VoiceLibEvents } from '../utils/eventbus';
 import * as chrono from 'chrono-node';
 
 // Interface for processed entities with resolved DOM elements
-interface ProcessedEntities extends Entities {
-  targetElement?: HTMLElement | null;
+export interface ProcessedEntities {
+  rawentities: Entities;
+  targetElement?: HTMLElement | undefined;
   targetElements?: HTMLElement[];
-  groupElement?: HTMLElement | null;
+  groupElement?: HTMLElement | undefined;
+  targetName?: string | undefined; // Normalized value for input actions
 }
 
 // Interface for element processing strategies
@@ -40,7 +42,7 @@ export class VoiceActuator implements IVoiceActuator {
     // Register element processors in order of priority
     this.elementProcessors = [
       new GroupedTargetProcessor(this),
-      new MultipleTargetProcessor(),
+      new MultipleTargetProcessor(this),
       new SingleTargetProcessor(this)
     ];
   }
@@ -79,7 +81,9 @@ export class VoiceActuator implements IVoiceActuator {
   }
 
   private processEntities(intent: string, entities: Entities): ProcessedEntities {
-    let processedEntities: ProcessedEntities = { ...entities };
+    let processedEntities: ProcessedEntities =  {
+        rawentities: { ...entities } // Create a shallow copy to avoid mutating the original input
+      };
     
     // Apply element processors
     for (const processor of this.elementProcessors) {
@@ -93,8 +97,8 @@ export class VoiceActuator implements IVoiceActuator {
     // Apply value normalization if needed
     if (entities.value && processedEntities.targetElement && intent === IntentTypes.FILL_INPUT) {
       for (const normalizer of this.valueNormalizers) {
-        if (normalizer.canNormalize(processedEntities.targetElement, entities.value)) {
-          processedEntities.value = normalizer.normalize(processedEntities.targetElement, entities.value);
+        if (normalizer.canNormalize(processedEntities.targetElement, entities.value as string)) {
+          processedEntities.rawentities.value = normalizer.normalize(processedEntities.targetElement, entities.value as string);
           break;
         }
       }
@@ -150,36 +154,51 @@ export class VoiceActuator implements IVoiceActuator {
   }
 
   // Utility methods exposed for processors
-  public findElement(targetName: string, context?: HTMLElement): HTMLElement | null {
-    const selector = context ? 
-      context.querySelectorAll('[voice\\.name]') : 
-      document.querySelectorAll('[voice\\.name]');
-    
-    console.log(`VoiceActuator: Found ${selector.length} elements with voice.name attributes`);
-    
-    if (selector.length === 0) return null;
-    
-    const scoredElements = Array.from(selector)
-      .filter(element => element instanceof HTMLElement)
-      .map(element => ({
-        element: element as HTMLElement,
-        score: this.calculateMatchScore(
-          element.getAttribute('voice.name')?.toLowerCase() || '', 
-          targetName.toLowerCase()
-        ),
-        voiceName: element.getAttribute('voice.name') || ''
-      }))
-      .filter(item => item.score > 0)
-      .sort((a, b) => b.score - a.score);
-    
-    if (scoredElements.length > 0) {
-      const bestMatch = scoredElements[0];
-      console.log(`VoiceActuator: Selected best match "${bestMatch.voiceName}" with score ${bestMatch.score}`);
-      return bestMatch.element;
-    }
-    
-    return null;
+public findElement(
+  targetName: string,
+  context?: HTMLElement
+): { element: HTMLElement; score: number } | null {
+  const selector = context
+    ? context.querySelectorAll('[voice\\.name]')
+    : document.querySelectorAll('[voice\\.name]');
+
+  console.log(`VoiceActuator: Found ${selector.length} elements with voice.name attributes`);
+
+  if (selector.length === 0) return null;
+
+  const scoredElements = Array.from(selector)
+    .filter(element => element instanceof HTMLElement)
+    .map(element => ({
+      element: element as HTMLElement,
+      score: this.calculateMatchScore(
+        element.getAttribute('voice.name')?.toLowerCase() || '',
+        targetName.toLowerCase()
+      ),
+      voiceName: element.getAttribute('voice.name') || ''
+    }))
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (scoredElements.length > 0) {
+    const bestMatch = scoredElements[0];
+    console.log(`VoiceActuator: Selected best match "${bestMatch.voiceName}" with score ${bestMatch.score}`);
+    return { element: bestMatch.element, score: bestMatch.score };
   }
+
+  return null;
+}
+
+public findFinalTarget(entity: VoiceEntity, context?: HTMLElement): HTMLElement | undefined {
+    const candidates = [entity.english, entity.user_language];
+    const bestResult = candidates
+        .map(candidate => this.findElement(candidate, context))
+        .filter(result => result !== null)
+        .reduce((best, current) => 
+          current && current.score > best.score ? current : best
+        );
+    console.log(`VoiceActuator: Best match for "${entity.english}" is "${bestResult?.element.getAttribute('voice.name')}" with score ${bestResult?.score}`);
+    return bestResult?.element || undefined;
+}
 
   public findElementsInGroup(groupName: string): HTMLElement[] {
     return Array.from(document.querySelectorAll(`[name="${groupName}"]`));
@@ -237,7 +256,7 @@ export class VoiceActuator implements IVoiceActuator {
   /* GENERALIZED ACTION EXECUTORS */
 
   private executeElementAction(entities: ProcessedEntities, actionType: string): boolean {
-    if (!entities.target || !entities.targetElement) {
+    if (!entities.rawentities.target || !entities.targetElement) {
       console.log(`VoiceActuator: No valid target for ${actionType} action`);
       return false;
     }
@@ -256,17 +275,17 @@ export class VoiceActuator implements IVoiceActuator {
   }
 
   private executeInputAction(entities: ProcessedEntities): boolean {
-    if (!entities.target || !entities.value || !entities.targetElement) {
+    if (!entities.rawentities.value || !entities.targetElement) {
       console.log('VoiceActuator: Missing required parameters for input action');
       return false;
     }
   
     if (entities.targetElement instanceof HTMLInputElement || 
         entities.targetElement instanceof HTMLTextAreaElement) {
-      entities.targetElement.value = entities.value;
+      entities.targetElement.value = entities.rawentities.value as string;
       entities.targetElement.dispatchEvent(new Event('input', { bubbles: true }));
       entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
-      console.log(`VoiceActuator: Filled input "${entities.target}" with value "${entities.value}"`);
+      console.log(`VoiceActuator: Filled input "${entities.rawentities.target}" with value "${entities.rawentities.value as string}"`);
       return true;
     }
     
@@ -275,7 +294,7 @@ export class VoiceActuator implements IVoiceActuator {
   }
 
   private executeCheckboxAction(entities: ProcessedEntities, check: boolean): boolean {
-    if (!entities.target || !entities.targetElement) {
+    if (!entities.rawentities.target || !entities.targetElement) {
       console.log(`VoiceActuator: No valid target for checkbox action`);
       return false;
     }
@@ -285,7 +304,7 @@ export class VoiceActuator implements IVoiceActuator {
         entities.targetElement.checked = check;
         entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      console.log(`VoiceActuator: ${check ? 'Checked' : 'Unchecked'} checkbox "${entities.target}"`);
+      console.log(`VoiceActuator: ${check ? 'Checked' : 'Unchecked'} checkbox "${entities.rawentities.target}"`);
       return true;
     }
     
@@ -314,14 +333,18 @@ export class VoiceActuator implements IVoiceActuator {
   }
 
   private executeSelectionAction(entities: ProcessedEntities): boolean {
-    if (!entities.target || !entities.targetElement) {
-      console.log('VoiceActuator: No valid target for selection action');
+    if (!entities.targetElement) {
+      console.log(`entities.targetElement: ${entities.targetElement}`);
+      console.log(`VoiceActuator: No valid target for selection action`);
+      return false;
+    }else if (!entities.targetName) {
+      console.log(`VoiceActuator: No valid option for selection action`);
       return false;
     }
 
     // Handle dropdown
-    if (entities.groupElement instanceof HTMLSelectElement) {
-      return this.selectInDropdown(entities.groupElement, entities.target);
+    if (entities.groupElement instanceof HTMLSelectElement ) {
+      return this.selectInDropdown(entities.groupElement, entities.targetName);
     }
     
     // Handle radio button
@@ -330,7 +353,7 @@ export class VoiceActuator implements IVoiceActuator {
         entities.targetElement.checked = true;
         entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      console.log(`VoiceActuator: Selected radio button "${entities.target}"`);
+      console.log(`VoiceActuator: Selected radio button "${entities.targetName}"`);
       return true;
     }
 
@@ -339,7 +362,7 @@ export class VoiceActuator implements IVoiceActuator {
   }
 
   private executeOpenDropdownAction(entities: ProcessedEntities): boolean {
-    if (!entities.target || !entities.targetElement) {
+    if (!entities.rawentities.target || !entities.targetElement) {
       console.log('VoiceActuator: No valid target for open dropdown action');
       return false;
     }
@@ -361,14 +384,14 @@ export class VoiceActuator implements IVoiceActuator {
     
     (trigger as HTMLElement).focus();
     trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    
-    console.log(`VoiceActuator: Opened dropdown "${entities.target}"`);
+
+    console.log(`VoiceActuator: Opened dropdown "${entities.rawentities.target}"`);
     return true;
   }
 
-  private selectInDropdown(selectElement: HTMLSelectElement, targetValue: string): boolean {
+  private selectInDropdown(selectElement: HTMLSelectElement, targetName: string): boolean {
     const options = Array.from(selectElement.options);
-    const targetLower = targetValue.toLowerCase();
+    const targetLower = targetName.toLowerCase();
     
     for (const option of options) {
       const optionText = option.textContent?.toLowerCase() || '';
@@ -386,17 +409,19 @@ export class VoiceActuator implements IVoiceActuator {
       }
     }
     
-    console.log(`VoiceActuator: No matching option found for "${targetValue}"`);
+    console.log(`VoiceActuator: No matching option found for "${targetName}"`);
     return false;
   }
   private executeScrollAction(entities: ProcessedEntities): boolean {
-  if (!entities.direction) {
+  if (!entities.rawentities.direction) {
     console.log('VoiceActuator: Missing direction parameter for scroll action');
     return false;
   }
 
   const scrollAmount = 300; // pixels to scroll
-  const direction = entities.direction.toLowerCase();
+  const direction = (isVoiceEntity(entities.rawentities.direction) 
+    ? entities.rawentities.direction.english
+    : entities.rawentities.direction).toLowerCase();
 
   try {
     switch (direction) {
@@ -432,7 +457,7 @@ export class VoiceActuator implements IVoiceActuator {
 }
 
 private executeScrollToElementAction(entities: ProcessedEntities): boolean {
-  if (!entities.target || !entities.targetElement) {
+  if (!entities.rawentities.target || !entities.targetElement) {
     console.log('VoiceActuator: Missing target parameter for scroll to element action');
     return false;
   }
@@ -460,7 +485,7 @@ private executeScrollToElementAction(entities: ProcessedEntities): boolean {
         
         // Click the element
         entities.targetElement.click();
-        console.log(`VoiceActuator: Element "${entities.target}" was in view - focused and clicked`);
+        console.log(`VoiceActuator: Element "${entities.rawentities.target}" was in view - focused and clicked`);
       }
     } else {
       // Element not in view - scroll to it
@@ -481,12 +506,12 @@ private executeScrollToElementAction(entities: ProcessedEntities): boolean {
         entities.targetElement.focus();
       }
 
-      console.log(`VoiceActuator: Scrolled to and focused element "${entities.target}"`);
+      console.log(`VoiceActuator: Scrolled to and focused element "${entities.rawentities.target}"`);
     }
 
     return true;
   } catch (error) {
-    console.log(`VoiceActuator: Error processing element "${entities.target}": ${error}`);
+    console.log(`VoiceActuator: Error processing element "${entities.rawentities.target}": ${error}`);
     return false;
   }
 }
@@ -516,20 +541,34 @@ class SingleTargetProcessor implements ElementProcessor {
   }
 
   process(entities: Entities): Partial<ProcessedEntities> {
-    const targetElement = this.actuator.findElement(entities.target!);
+    const targetElement = isVoiceEntity(entities.target!) ? this.actuator.findFinalTarget(entities.target!) : undefined;
     return { targetElement };
   }
 }
 
 class MultipleTargetProcessor implements ElementProcessor {
+  constructor(private actuator: VoiceActuator) {}
+
   canProcess(intent: string, entities: Entities): boolean {
     return !!entities.targetGroup;
   }
 
   process(entities: Entities): Partial<ProcessedEntities> {
+    const groupElement = isVoiceEntity(entities.targetGroup!) ? this.actuator.findFinalTarget(entities.targetGroup!) : undefined;
+    if (!groupElement) {
+      console.log(`Processor: Could not find a group element matching "${entities.targetGroup}".`);
+      return { targetElements: [] };
+    }
     const targetElements = Array.from(
-      document.querySelectorAll(`[name="${entities.targetGroup}"]`)
-    ).filter((element): element is HTMLElement => element instanceof HTMLElement);
+      groupElement.querySelectorAll('[voice\\.name]')
+        ).filter(
+          (element): element is HTMLElement => element instanceof HTMLElement
+        );
+
+    if (targetElements.length === 0) {
+        console.warn(`Processor: Found the group "${entities.targetGroup}", but it contains no elements with a 'voice.name' attribute.`);
+    }
+
     return { targetElements };
   }
 }
@@ -542,54 +581,57 @@ class GroupedTargetProcessor implements ElementProcessor {
   }
 
   process(entities: Entities): Partial<ProcessedEntities> {
-    let groupElement: HTMLElement | null = null;
-    let targetElement: HTMLElement | null = null;
+    let groupElement: HTMLElement | undefined = undefined;
+    let targetElement: HTMLElement | undefined = undefined;
+    let targetName: string | undefined = undefined;
 
-    // Find group element
+    // if mentioned group exists
     if (entities.group) {
-      groupElement = this.actuator.findElement(entities.group);
+      groupElement = isVoiceEntity(entities.group) ? this.actuator.findFinalTarget(entities.group) : undefined;     
       if (!groupElement) {
         console.log(`VoiceActuator: No matching group element found for group "${entities.group}"`);
-        return { groupElement: null, targetElement: null };
+        return { groupElement: undefined, targetElement: undefined };
       }
+
     } else {
-      // Auto-detect single group
+      //no but if just a single group exists
       groupElement = this.detectSingleGroup();
       if (!groupElement) {
         console.log('VoiceActuator: Could not auto-detect unique group');
-        return { targetElement: this.actuator.findElement(entities.target!) };
+        return { targetElement: isVoiceEntity(entities.target!) ? this.actuator.findFinalTarget(entities.target!) : undefined };
       }
     }
 
     // Find target within group
     if (groupElement && entities.target) {
-      if (groupElement instanceof HTMLSelectElement) {
+        const targetString = isVoiceEntity(entities.target!) ? entities.target.user_language : '';
+
         // For dropdown, the target is an option, but we return the select as targetElement
-        targetElement = this.findTargetInDropdown(groupElement, entities.target);
-        if (!targetElement) {
-          console.log(`VoiceActuator: Target "${entities.target}" not found in dropdown`);
-          return { groupElement, targetElement: null };
+        const foundItem = isVoiceEntity(entities.target!) ? this.actuator.findFinalTarget(entities.target, groupElement) : undefined;
+        if (!foundItem) {
+          console.log(`VoiceActuator: Target "${targetString}" not found in dropdown`);
+          return { groupElement, targetElement: undefined };
         }
-        // For dropdowns, we actually want to return the select element as targetElement
-        targetElement = groupElement;
-      } else {
-        // For radio groups, find the specific radio button
-        targetElement = this.findTargetInRadioGroup(groupElement, entities.target);
-        if (!targetElement) {
-          console.log(`VoiceActuator: Target "${entities.target}" not found in radio group`);
-          return { groupElement, targetElement: null };
-        }
+        
+        if (groupElement instanceof HTMLSelectElement) {
+          targetElement = groupElement;
+          targetName = foundItem.getAttribute('voice.name') || foundItem.textContent || '';
+          console.log(`VoiceActuator: Found option for "${targetString}" in dropdown.`);
+        } else {
+          targetName = foundItem.getAttribute('voice.name') || foundItem.textContent || '';
+          targetElement = foundItem;
+          console.log(`VoiceActuator: Found radio button for "${targetString}".`);
       }
     }
-
-    return { groupElement, targetElement };
+    return { groupElement, targetElement, targetName };
   }
+
 
   private shouldAutoDetectGroup(intent: string, entities: Entities): boolean {
     return intent === IntentTypes.SELECT_RADIO_OR_DROPDOWN;
   }
 
-  private detectSingleGroup(): HTMLElement | null {
+  private detectSingleGroup(): HTMLElement | undefined {
     const dropdowns = document.querySelectorAll('select[voice\\.name]');
     const radioGroups = this.getUniqueRadioGroups();
     
@@ -601,7 +643,7 @@ class GroupedTargetProcessor implements ElementProcessor {
       return firstRadio as HTMLElement;
     }
     
-    return null;
+    return undefined;
   }
 
   private getUniqueRadioGroups(): string[] {
@@ -616,47 +658,47 @@ class GroupedTargetProcessor implements ElementProcessor {
     return Array.from(groups);
   }
 
-  private findTargetInDropdown(selectElement: HTMLSelectElement, targetName: string): HTMLElement | null {
-    const options = Array.from(selectElement.options);
-    const targetLower = targetName.toLowerCase();
+  // private findTargetInDropdown(selectElement: HTMLSelectElement, targetName: EntityValue): HTMLElement | null {
+  //   const options = Array.from(selectElement.options);
+  //   const targetLower = targetName.toLowerCase();
     
-    for (const option of options) {
-      const optionText = option.textContent?.toLowerCase() || '';
-      const optionValue = option.value.toLowerCase();
+  //   for (const option of options) {
+  //     const optionText = option.textContent?.toLowerCase() || '';
+  //     const optionValue = option.value.toLowerCase();
       
-      if (optionText === targetLower || 
-          optionValue === targetLower || 
-          optionText.includes(targetLower) || 
-          this.actuator.calculateMatchScore(optionText, targetLower) > 50) {
-        return option as HTMLElement;
-      }
-    }
+  //     if (optionText === targetLower || 
+  //         optionValue === targetLower || 
+  //         optionText.includes(targetLower) || 
+  //         this.actuator.calculateMatchScore(optionText, targetLower) > 50) {
+  //       return option as HTMLElement;
+  //     }
+  //   }
     
-    return null;
-  }
+  //   return null;
+  // }
 
-  private findTargetInRadioGroup(groupElement: HTMLElement, targetName: string): HTMLElement | null {
-    console.log(`VoiceActuator: Checking radio button"`);
+  // private findTargetInRadioGroup(groupElement: HTMLElement, targetName: EntityValue): HTMLElement | null {
+  //   console.log(`VoiceActuator: Checking radio button"`);
 
-    const groupName = groupElement.getAttribute('name') || ''; 
-    const radioButtons = document.querySelectorAll(`input[type="radio"][name="${groupName}"][value]`);
-    console.log(`VoiceActuator: Found ${radioButtons.length} radio buttons in group "${groupName}"`);
-    let bestMatch: HTMLElement | null = null;
-    let bestScore = 0;
+  //   const groupName = groupElement.getAttribute('name') || ''; 
+  //   const radioButtons = document.querySelectorAll(`input[type="radio"][name="${groupName}"][value]`);
+  //   console.log(`VoiceActuator: Found ${radioButtons.length} radio buttons in group "${groupName}"`);
+  //   let bestMatch: HTMLElement | null = null;
+  //   let bestScore = 0;
     
-    for (const radio of radioButtons) {
-      const voiceName = radio.getAttribute('value')?.toLowerCase() || '';
-      console.log(`VoiceActuator: Checking radio button with voice name "${voiceName}"`);
-      const score = this.actuator.calculateMatchScore(voiceName, targetName.toLowerCase());
+  //   for (const radio of radioButtons) {
+  //     const voiceName = radio.getAttribute('value')?.toLowerCase() || '';
+  //     console.log(`VoiceActuator: Checking radio button with voice name "${voiceName}"`);
+  //     const score = this.actuator.calculateMatchScore(voiceName, targetName.toLowerCase());
       
-      if (score > bestScore && score > 50) {
-        bestScore = score;
-        bestMatch = radio as HTMLElement;
-      }
-    }
+  //     if (score > bestScore && score > 50) {
+  //       bestScore = score;
+  //       bestMatch = radio as HTMLElement;
+  //     }
+  //   }
     
-    return bestMatch;
-  }
+  //   return bestMatch;
+  // }
 }
 
 /* VALUE NORMALIZERS */
