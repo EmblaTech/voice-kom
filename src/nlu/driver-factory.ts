@@ -18,12 +18,16 @@ export class DriverFactory {
       }
     }
 
-    static getReconitionDriver(config: RecognitionConfig): RecognitionDriver {
-      switch (config.provider) {
-        case "default":
-          return new CompromiseRecognitionDriver(config);
+    static getRecognitionDriver(config: RecognitionConfig): RecognitionDriver {
+      const engine = config.provider.toLowerCase();    
+      switch (engine) {
+        case "llm":
+        case "gpt":
         case "openai":
           return new OpenAIRecognitionDriver(config);
+        case "compromise":
+        case "default":
+          return new CompromiseRecognitionDriver(config);
         default:
           throw new Error(`Unsupported driver type: ${config.provider}`);
       }

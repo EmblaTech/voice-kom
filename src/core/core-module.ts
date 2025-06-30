@@ -61,21 +61,29 @@ export class CoreModule {
     });
     
     // Set up nlu event listener
-    this.eventBus.on(SpeechEvents.NLU_COMPLETED, (intent: IntentResult) => {
-      console.log('NLU completed:', intent);
+    this.eventBus.on(SpeechEvents.NLU_COMPLETED, async (intents: any) => {
+      console.log('NLU completed:', intents);
       
       // Set state to executing when we have an intent to process
       this.status.set(StatusType.EXECUTING);
       this.uiHandler.updateUIStatus();
       
       // Try to perform the action
-      const actionPerformed = this.voiceActuator.performAction(intent);
-      
-      if (!actionPerformed) {
-        console.log('No action was performed for intent:', intent);
+      try {
+        const actionPerformed = await this.voiceActuator.performAction(intents);
+        console.log('core-module.ts Action performed result:', actionPerformed);
+        
+        if (!actionPerformed) {
+          console.log('core-module.ts No action was performed for intnt:', intents);
+          // Emit the ACTION_PAUSED event when no action is performed
+          this.eventBus.emit(SpeechEvents.ACTION_PAUSED);
+        }
+      } catch (error) {
+        console.error('core-module.ts Error performing action:', error);
+        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
       }
     });
-    
+
     // Handle action performed event
     this.eventBus.on(SpeechEvents.ACTION_PERFORMED, (actionResult) => {
       console.log('Action performed:', actionResult);
