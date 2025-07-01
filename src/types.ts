@@ -129,7 +129,10 @@ export enum TranscriptionProviders {
 
 export enum ReconitionProvider {
   DEFAULT = 'default',
-  OPENAI = 'openai'
+  OPENAI = 'openai',
+  LLM = 'llm',
+  GPT = 'gpt',
+  COMPROMISE = 'compromise'
 }
 
 // STT Driver interface

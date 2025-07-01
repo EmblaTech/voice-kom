@@ -6,181 +6,324 @@ interface CommandConfig {
     utterances: string[];
     entities: string[];
 }
-  
+
 interface CommandRegistry {
     [key: string]: CommandConfig;
 }
 
 export class OpenAIRecognitionDriver implements RecognitionDriver {
     private readonly logger = Logger.getInstance();
-    private readonly config: RecognitionConfig;
-    private language: string = 'en';
-    private commandRegistry: CommandRegistry | null = null;
+    private language: string;
+    private commandRegistry: CommandRegistry;
     private availableIntents: IntentTypes[] = [IntentTypes.UNKNOWN];
-    private apiKey: string = '';
+    private apiKey: string;
     private apiEndpoint: string = 'https://api.openai.com/v1/chat/completions';
     private model: string = 'gpt-4o';
 
+    private static readonly DEFAULT_TEMPERATURE = 0.3;
+    private static readonly DEFAULT_LANGUAGE = 'en';
+ 
+    private static readonly LANGUAGE_NAMES: Record<string, string> = {
+            'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German', 'it': 'Italian',
+            'pt': 'Portuguese', 'ru': 'Russian', 'zh': 'Chinese', 'ja': 'Japanese', 'ko': 'Korean',
+            'ar': 'Arabic', 'hi': 'Hindi', 'nl': 'Dutch', 'sv': 'Swedish', 'da': 'Danish',
+            'no': 'Norwegian', 'fi': 'Finnish', 'pl': 'Polish', 'cs': 'Czech', 'hu': 'Hungarian',
+            'ro': 'Romanian', 'bg': 'Bulgarian', 'hr': 'Croatian', 'sk': 'Slovak', 'sl': 'Slovenian',
+            'et': 'Estonian', 'lv': 'Latvian', 'lt': 'Lithuanian', 'mt': 'Maltese', 'ga': 'Irish',
+            'cy': 'Welsh', 'eu': 'Basque', 'ca': 'Catalan', 'gl': 'Galician', 'tr': 'Turkish',
+            'he': 'Hebrew', 'th': 'Thai', 'vi': 'Vietnamese', 'id': 'Indonesian', 'ms': 'Malay',
+            'tl': 'Filipino', 'sw': 'Swahili', 'am': 'Amharic', 'yo': 'Yoruba', 'zu': 'Zulu',
+            'xh': 'Xhosa', 'af': 'Afrikaans', 'sq': 'Albanian', 'az': 'Azerbaijani', 'be': 'Belarusian',
+            'bn': 'Bengali', 'bs': 'Bosnian', 'my': 'Burmese', 'km': 'Khmer', 'ka': 'Georgian',
+            'gu': 'Gujarati', 'kk': 'Kazakh', 'ky': 'Kyrgyz', 'lo': 'Lao', 'mk': 'Macedonian',
+            'ml': 'Malayalam', 'mn': 'Mongolian', 'ne': 'Nepali', 'ps': 'Pashto', 'fa': 'Persian',
+            'pa': 'Punjabi', 'si': 'Sinhala', 'ta': 'Tamil', 'te': 'Telugu', 'uk': 'Ukrainian',
+            'ur': 'Urdu', 'uz': 'Uzbek'
+        };
+
     constructor(config: RecognitionConfig) {
-        console.log("openai-driver.ts constructor()...");
-        this.config = config;
-        this.language = config.lang || this.language;
-        this.apiKey = config.apiKey || '';
-        this.setUpCommandRegistry();
-        this.setupIntentsAndEntities();
-        this.logger.info(`OpenAI RecognitionDriver initialized with config: ${JSON.stringify(config)}`);
-    }
-
-    // constructor(@inject(TYPES.CommandRegistry) private registryService: ICommandRegistry) {
-    //     console.log("llm-nlu-driver.ts constructor()...");
-    // }
-
-    /**
-     * Initialize the driver with configuration options
-     */
-    init(lang: string, config: RecognitionConfig): void {
-        console.log("openai-driver.ts init()...");
-        if (lang) {
-            this.language = lang;
-        }
+        this.logger.info('Initializing OpenAI Recognition Driver', { config });
         
-        if (config.apiKey) {
-            this.apiKey = config.apiKey;
-        } else {
-            throw new Error('OpenAI API key is required for LLM-based NLU');
-        }
+        this.validateConfig(config);
         
-        this.setUpCommandRegistry();
-        this.setupIntentsAndEntities();
+        this.language = config.lang || OpenAIRecognitionDriver.DEFAULT_LANGUAGE;
+        this.apiKey = config.apiKey!;
+        this.apiEndpoint = config.apiUrl || this.apiEndpoint;
+        this.model = config.model || this.model;
+        
+        this.commandRegistry = this.createDefaultCommandRegistry();
+        this.availableIntents = this.extractAvailableIntents();
+        
+        this.logger.info('OpenAI Recognition Driver initialized successfully', {
+            language: this.language,
+            model: this.model,
+            intentCount: this.availableIntents.length
+        });
     }
 
     /**
      * Detect intent from input text using OpenAI LLM
      */
     async detectIntent(text: string): Promise<IntentResult[]> {
-        console.log("==== openai-driver.ts detectIntent() text: ", text);
-        this.logger.info(`Detecting intent for text: ${text}`);
+        this.logger.info('Starting intent detection', { text, language: this.language });
         
-        if (!this.apiKey) {
-            throw new Error('OpenAI API key is required for intent identification');
-        }
+        this.validateInput(text);
         
         try {
-            const systemPrompt = this.generateSystemPrompt();
-            const userMessage = this.language !== 'en' 
-                ? `Input language: ${this.getLanguageName(this.language)}\nUser command: ${text}`
-                : text;
+            const response = await this.makeApiRequest(text);
+            const results = await this.parseApiResponse(response);
             
-            const response = await fetch(this.apiEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`
-                },
-                body: JSON.stringify({
-                    model: this.model,
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userMessage }
-                    ],
-                    temperature: 0.3
-                })
+            this.logger.info('Intent detection completed successfully', { 
+                resultsCount: results.length,
+                intents: results.map(r => r.intent)
             });
             
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`OpenAI API error: ${response.status} - ${JSON.stringify(errorData)}`);
-            }
-            
-            const data = await response.json();
-            let content = data.choices[0].message.content;
-            
-            try {
-                content = this.cleanJsonResponse(content);
-                const results = JSON.parse(content);
-                console.log("openai-driver.ts detectIntent() results 1: ", results);
-
-                if (!Array.isArray(results)) {
-                    // If a single object was returned, convert it to an array
-                    if (results.intent) {
-                        console.log("llm-nlu-driver.ts results 1: ", results);
-                        return [{
-                            intent: results.intent || IntentTypes.UNKNOWN,
-                            confidence: results.confidence || 0,
-                            entities: results.entities || {}
-                        }];
-                    }
-                    // If invalid format, return unknown
-                    console.log("llm-nlu-driver.ts createUnknownResult()...");
-                    return [this.createUnknownResult()];
-                }
-
-                console.log("openai-driver.ts detectIntent() results 2: ", results);
-                return results.map(result => ({
-                    intent: result.intent || IntentTypes.UNKNOWN,
-                    confidence: result.confidence || 0,
-                    entities: result.entities || {}
-                }));
-                
-            } catch (parseError) {
-                this.logger.error('Error parsing OpenAI response:', parseError);
-                this.logger.error('Raw OpenAI response:', content);
-                return [this.createUnknownResult()];
-            }
+            return results;
         } catch (error) {
-            this.logger.error('Error during OpenAI intent identification:', error);
+            this.logger.error('Intent detection failed', { error, text });
             return [this.createUnknownResult()];
         }
     }
 
+    /**
+     * Get available intent types
+     */
     getAvailableIntents(): IntentTypes[] {
-        console.log("openai-driver.ts getAvailableIntents()...");
-        return this.availableIntents;
+        return [...this.availableIntents];
     }
 
     /**
-     * Setup available intents
+     * Update the command registry
      */
-    private setupIntentsAndEntities(): void {
-        console.log("openai-driver.ts setupIntentsAndEntities()...");
-        if (!this.commandRegistry) return;
+    setCommandRegistry(registry: CommandRegistry): void {
+        this.logger.info('Updating command registry', { 
+            oldIntentCount: this.availableIntents.length,
+            newIntentCount: Object.keys(registry).length
+        });
         
-        this.availableIntents = Object.keys(this.commandRegistry) as IntentTypes[];
+        this.commandRegistry = { ...registry };
+        this.availableIntents = this.extractAvailableIntents();
+    }
+
+    /**
+     * Update API endpoint
+     */
+    setApiEndpoint(endpoint: string): void {
+        if (!this.isValidUrl(endpoint)) {
+            throw new Error(`Invalid API endpoint: ${endpoint}`);
+        }
         
-        if (!this.availableIntents.includes(IntentTypes.UNKNOWN)) {
-            this.availableIntents.push(IntentTypes.UNKNOWN);
+        this.logger.info('Updating API endpoint', { 
+            oldEndpoint: this.apiEndpoint, 
+            newEndpoint: endpoint 
+        });
+        
+        this.apiEndpoint = endpoint;
+    }
+
+    /**
+     * Update LLM model
+     */
+    setModel(modelName: string): void {
+        if (!modelName?.trim()) {
+            throw new Error('Model name cannot be empty');
+        }
+        
+        this.logger.info('Updating model', { 
+            oldModel: this.model, 
+            newModel: modelName 
+        });
+        
+        this.model = modelName;
+    }
+
+    /**
+     * Update language setting
+     */
+    setLanguage(language: string): void {
+        if (!language?.trim()) {
+            throw new Error('Language cannot be empty');
+        }
+        
+        this.logger.info('Updating language', { 
+            oldLanguage: this.language, 
+            newLanguage: language 
+        });
+        
+        this.language = language;
+    }
+
+    /**
+     * Get current language setting
+     */
+    getCurrentLanguage(): string {
+        return this.language;
+    }
+
+    /**
+     * Get current model setting
+     */
+    getCurrentModel(): string {
+        return this.model;
+    }
+
+    private validateConfig(config: RecognitionConfig): void {
+        if (!config.apiKey?.trim()) {
+            throw new Error('OpenAI API key is required for LLM-based NLU');
+        }
+        
+        if (config.apiUrl && !this.isValidUrl(config.apiUrl)) {
+            throw new Error(`Invalid API URL provided: ${config.apiUrl}`);
         }
     }
 
-    /**
-     * Generate system prompt for the LLM based on available commands with multilingual support
-     */
+    private validateInput(text: string): void {
+        if (!text?.trim()) {
+
+
+            
+            throw new Error('Input text cannot be empty for intent detection');
+        }
+    }
+
+    private async makeApiRequest(text: string): Promise<Response> {
+        const systemPrompt = this.generateSystemPrompt();
+        const userMessage = this.formatUserMessage(text);
+        
+        const requestBody = {
+            model: this.model,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userMessage }
+            ],
+            temperature: OpenAIRecognitionDriver.DEFAULT_TEMPERATURE
+        };
+
+        this.logger.debug('Making OpenAI API request', { 
+            model: this.model,
+            messageLength: userMessage.length
+        });
+
+        const response = await fetch(this.apiEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.apiKey}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            await this.handleApiError(response);
+        }
+
+        return response;
+    }
+
+    private async parseApiResponse(response: Response): Promise<IntentResult[]> {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        
+        if (!content) {
+            throw new Error('Invalid API response: missing content');
+        }
+
+        try {
+            const cleanedContent = this.cleanJsonResponse(content);
+            const results = JSON.parse(cleanedContent);
+            
+            return this.normalizeResults(results);
+        } catch (parseError) {
+            this.logger.error('Failed to parse OpenAI response', { 
+                error: parseError, 
+                rawContent: content 
+            });
+            throw new Error('Failed to parse intent detection response');
+        }
+    }
+
+    private async handleApiError(response: Response): Promise<never> {
+        try {
+            const errorData = await response.json();
+            const errorMessage = errorData.error?.message || 'Unknown API error';
+            throw new Error(`OpenAI API error (${response.status}): ${errorMessage}`);
+        } catch {
+            throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+        }
+    }
+
+    private normalizeResults(results: any): IntentResult[] {
+        if (!Array.isArray(results)) {
+            if (results?.intent) {
+                return [this.createIntentResult(results)];
+            }
+            return [this.createUnknownResult()];
+        }
+
+        return results.map(result => this.createIntentResult(result));
+    }
+
+    private createIntentResult(result: any): IntentResult {
+        return {
+            intent: result.intent || IntentTypes.UNKNOWN,
+            confidence: Math.max(0, Math.min(1, result.confidence || 0)),
+            entities: result.entities || {}
+        };
+    }
+
+    private formatUserMessage(text: string): string {
+        return this.language !== OpenAIRecognitionDriver.DEFAULT_LANGUAGE
+            ? `Input language: ${this.getLanguageName(this.language)}\nUser command: ${text}`
+            : text;
+    }
+
     private generateSystemPrompt(): string {
-        console.log("openai-driver.ts generateSystemPrompt()...");
-        if (!this.commandRegistry) {
-            return '';
+        if (!this.commandRegistry || Object.keys(this.commandRegistry).length === 0) {
+            throw new Error('Command registry is empty or not initialized');
         }
-        
-        const languageInstruction = this.language !== 'en' 
+
+        const languageInstruction = this.buildLanguageInstruction();
+        const intentCategories = this.buildIntentCategories();
+        const entityInstructions = this.buildEntityInstructions();
+        const multilingualInstructions = this.buildMultilingualInstructions();
+        const classificationInstructions = this.buildClassificationInstructions();
+
+        return `You are an advanced intent classification system with full autonomy to understand and interpret user commands for web UI interactions. Your task is to intelligently identify all possible intents from the user's speech input and extract relevant entities for each intent.
+
+${languageInstruction}${intentCategories}
+
+${entityInstructions}${multilingualInstructions}
+
+${classificationInstructions}`;
+    }
+
+    private buildLanguageInstruction(): string {
+        return this.language !== OpenAIRecognitionDriver.DEFAULT_LANGUAGE
             ? `The user input will be in ${this.getLanguageName(this.language)}. You should understand the meaning of the input in that language and match it to the appropriate English command intents listed below. Focus on the semantic meaning rather than exact word matching.\n\n`
             : '';
+    }
+
+    private buildIntentCategories(): string {
+        const validIntents = this.availableIntents.filter(i => i !== IntentTypes.UNKNOWN);
+        return `You have access to the following intent categories: ${validIntents.join(', ')}.`;
+    }
+
+    private buildEntityInstructions(): string {
+        let instructions = '\nFor each intent category, here are the types of entities you should look for:\n';
         
-        let systemPrompt = `You are an advanced intent classification system with full autonomy to understand and interpret user commands for web UI interactions. Your task is to intelligently identify all possible intents from the user's speech input and extract relevant entities for each intent.
-
-${languageInstruction}You have access to the following intent categories: ${this.availableIntents.filter(i => i !== IntentTypes.UNKNOWN).join(', ')}.
-
-For each intent category, here are the types of entities you should look for:
-`;
-
         Object.entries(this.commandRegistry).forEach(([intentName, config]) => {
             if (intentName === IntentTypes.UNKNOWN) return;
             
-            systemPrompt += `\nIntent: ${intentName}
+            instructions += `\nIntent: ${intentName}
 Expected entities: ${config.entities.join(', ')}
 Purpose: Use your understanding to determine if the user's input semantically matches this intent type for web UI interaction.`;
         });
+        
+        return instructions;
+    }
 
-        const multilingualInstructions = this.language !== 'en' 
+    private buildMultilingualInstructions(): string {
+        return this.language !== OpenAIRecognitionDriver.DEFAULT_LANGUAGE
             ? `\n\nIMPORTANT MULTILINGUAL PROCESSING:
 - The user input is in ${this.getLanguageName(this.language)}
 - Use your language understanding capabilities to interpret the semantic meaning
@@ -191,10 +334,10 @@ Purpose: Use your understanding to determine if the user's input semantically ma
 - Normalize numeric, date, and time entities to standard English format
 - Preserve input values as-is when they represent user data`
             : '';
+    }
 
-        systemPrompt += `${multilingualInstructions}
-
-INSTRUCTIONS FOR INTENT CLASSIFICATION:
+    private buildClassificationInstructions(): string {
+        return `INSTRUCTIONS FOR INTENT CLASSIFICATION:
 You have full autonomy to interpret user commands. Use your understanding of:
 - Natural language semantics and context
 - Web UI interaction patterns
@@ -235,57 +378,21 @@ Use your full language understanding capabilities to interpret user intent, even
 - Commands with missing explicit targets
 
 IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code blocks, or backticks. Do not wrap the JSON in \`\`\` or any other formatting.`;
-
-        return systemPrompt;
     }
 
-    /**
-     * Get human-readable language name from language code
-     */
     private getLanguageName(langCode: string): string {
-        console.log("openai-driver.ts getLanguageName()...");
-        const languageNames: { [key: string]: string } = {
-            'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German', 'it': 'Italian',
-            'pt': 'Portuguese', 'ru': 'Russian', 'zh': 'Chinese', 'ja': 'Japanese', 'ko': 'Korean',
-            'ar': 'Arabic', 'hi': 'Hindi', 'nl': 'Dutch', 'sv': 'Swedish', 'da': 'Danish',
-            'no': 'Norwegian', 'fi': 'Finnish', 'pl': 'Polish', 'cs': 'Czech', 'hu': 'Hungarian',
-            'ro': 'Romanian', 'bg': 'Bulgarian', 'hr': 'Croatian', 'sk': 'Slovak', 'sl': 'Slovenian',
-            'et': 'Estonian', 'lv': 'Latvian', 'lt': 'Lithuanian', 'mt': 'Maltese', 'ga': 'Irish',
-            'cy': 'Welsh', 'eu': 'Basque', 'ca': 'Catalan', 'gl': 'Galician', 'tr': 'Turkish',
-            'he': 'Hebrew', 'th': 'Thai', 'vi': 'Vietnamese', 'id': 'Indonesian', 'ms': 'Malay',
-            'tl': 'Filipino', 'sw': 'Swahili', 'am': 'Amharic', 'yo': 'Yoruba', 'zu': 'Zulu',
-            'xh': 'Xhosa', 'af': 'Afrikaans', 'sq': 'Albanian', 'az': 'Azerbaijani', 'be': 'Belarusian',
-            'bn': 'Bengali', 'bs': 'Bosnian', 'my': 'Burmese', 'km': 'Khmer', 'ka': 'Georgian',
-            'gu': 'Gujarati', 'kk': 'Kazakh', 'ky': 'Kyrgyz', 'lo': 'Lao', 'mk': 'Macedonian',
-            'ml': 'Malayalam', 'mn': 'Mongolian', 'ne': 'Nepali', 'ps': 'Pashto', 'fa': 'Persian',
-            'pa': 'Punjabi', 'si': 'Sinhala', 'ta': 'Tamil', 'te': 'Telugu', 'uk': 'Ukrainian',
-            'ur': 'Urdu', 'uz': 'Uzbek'
-        };
-        
-        return languageNames[langCode] || langCode.toUpperCase();
+        return OpenAIRecognitionDriver.LANGUAGE_NAMES[langCode] || langCode.toUpperCase();
     }
 
-    /**
-     * Clean JSON response from potential markdown formatting
-     */
     private cleanJsonResponse(content: string): string {
-        console.log("openai-driver.ts cleanJsonResponse()...");
-        let cleaned = content.trim();
+        const cleaned = content.trim();
         const codeBlockRegex = /^```(?:json)?\s*([\s\S]*?)```$/;
         const match = cleaned.match(codeBlockRegex);
         
-        if (match) {
-            cleaned = match[1].trim();
-        }
-        
-        return cleaned;
+        return match ? match[1].trim() : cleaned;
     }
 
-    /**
-     * Create a default unknown result
-     */
     private createUnknownResult(): IntentResult {
-        console.log("openai-driver.ts createUnknownResult()...");
         return {
             intent: IntentTypes.UNKNOWN,
             confidence: 0,
@@ -293,18 +400,19 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
         };
     }
 
-    /**
-     * Setup command registry with default commands
-     */
-    private setUpCommandRegistry(): void {
-        console.log("openai-driver.ts setUpCommandRegistry()...");
-        this.commandRegistry = {
+    private createDefaultCommandRegistry(): CommandRegistry {
+        return {
             [IntentTypes.CLICK_ELEMENT]: {
                 utterances: ["click (target)", "press (target)", "tap (target)"],
                 entities: ["target"]
             },
             [IntentTypes.FILL_INPUT]: {
-                utterances: ["Fill (target) as (value)", "Enter (target) as (value)", "Enter (target) with (value)", "Fill (target) with (value)"],
+                utterances: [
+                    "Fill (target) as (value)", 
+                    "Enter (target) as (value)", 
+                    "Enter (target) with (value)", 
+                    "Fill (target) with (value)"
+                ],
                 entities: ["target", "value"]
             },
             [IntentTypes.SCROLL_TO_ELEMENT]: {
@@ -314,27 +422,22 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
         };
     }
 
-    /**
-     * Method to change API endpoint (for testing or using compatible services)
-     */
-    setApiEndpoint(endpoint: string): void {
-        console.log("openai-driver.ts setApiEndpoint()...");
-        this.apiEndpoint = endpoint;
-    }
-    
-    /**
-     * Method to change LLM model
-     */
-    setModel(modelName: string): void {
-        console.log("openai-driver.ts setModel()...");
-        this.model = modelName;
+    private extractAvailableIntents(): IntentTypes[] {
+        const intents = Object.keys(this.commandRegistry) as IntentTypes[];
+        
+        if (!intents.includes(IntentTypes.UNKNOWN)) {
+            intents.push(IntentTypes.UNKNOWN);
+        }
+        
+        return intents;
     }
 
-    /**
-     * Get current language setting
-     */
-    getCurrentLanguage(): string {
-        console.log("openai-driver.ts getCurrentLanguage()...");
-        return this.language;
+    private isValidUrl(url: string): boolean {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
     }
 }

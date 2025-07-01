@@ -2,6 +2,7 @@ import { Logger } from '../utils/logger';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { ButtonMode, ErrorType, Status, StatusType, StatusMeta } from '../common/status';
 import { UIConfig } from '../../src/types';
+import { fetchContent } from '../utils/resource-fetcher';
 
 export class UIHandler {
   private config: UIConfig | null = null;
@@ -149,7 +150,7 @@ export class UIHandler {
       const styleElement = document.createElement('style');
       styleElement.id = this.STYLE_ELEMENT_ID;
       // Fetch CSS content from default file
-      const cssContent = await this.fetchContent(this.STYLE_PATH);
+      const cssContent = await fetchContent(this.STYLE_PATH);
       styleElement.textContent = cssContent;
       document.head.appendChild(styleElement);
 
@@ -166,26 +167,13 @@ export class UIHandler {
   async finalizeStyles(fileStyles: string | undefined, inlineStyles: any) {
     if (fileStyles) {
       // Fetch CSS content from custom file
-      const cssContent = await this.fetchContent(fileStyles);
+      const cssContent = await fetchContent(fileStyles);
       const cssProperties = this.parse(cssContent);
       const customStyles = this.toCamelCase(cssProperties);
       this.logger.info(`Custom file styles will take precedence, when multiple styles apply to the same style attribute`);
       return (inlineStyles ? this.mergeStyles(customStyles, inlineStyles) : customStyles);
     }
     return inlineStyles || {};
-  }
-
-  private async fetchContent(url: string): Promise<any> {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        this.logger.error(`Failed to fetch resource at ${url}: ${response.status} ${response.statusText}`);
-      }
-      return response.text();
-    } catch (error) {
-      this.logger.error(`Error fetching resource at ${url}: ${error}`);
-      throw Error(`Error fetching resource at ${url}: ${error}`);
-    }
   }
 
   // Parsing CSS and Clean CSS string and extract properties
@@ -234,7 +222,7 @@ export class UIHandler {
     this.container.innerHTML = '';  
 
     try {
-      const htmlContent = await this.fetchContent(this.TEMPLATE_PATH);
+      const htmlContent = await fetchContent(this.TEMPLATE_PATH);
       this.container.innerHTML = htmlContent;
       this.actionButton = this.container.querySelector(this.ACTION_BUTTON_SELECTOR);
       this.statusDisplay = this.container.querySelector(this.STATUS_DISPLAY_SELECTOR);

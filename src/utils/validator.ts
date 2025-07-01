@@ -91,4 +91,13 @@ export class Validator {
         }
         return { valid: true };
     }
+
+    static isValidUrl(url: string): boolean {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
+    }
 }
