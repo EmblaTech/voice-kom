@@ -2,6 +2,7 @@
 export enum StatusType {
   IDLE = 'idle',
   WAITING = 'waiting', // New state for when we're waiting for speech in listening mode
+  LISTENING = 'listening',
   RECORDING = 'recording',
   PROCESSING = 'processing',
   EXECUTING = 'executing',

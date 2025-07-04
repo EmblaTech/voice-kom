@@ -85,9 +85,15 @@ export enum IntentTypes {
 
 // Audio Capturer interface
 export interface AudioCapturer {
-  startRecording(): void;
-  stopRecording(): Promise<Blob>;
+  listenForUtterance(config: VADConfig): Promise<void>;
+  stopListening(): void;
 }
+
+export interface VADConfig {
+  silenceDelay: number;
+  speakingThreshold: number;
+}
+
 // Intent recognition result
 export interface IntentResult {
   intent: IntentTypes;

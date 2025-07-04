@@ -85,7 +85,7 @@ export class SpeechPlug {
     this.eventBus = new EventBus();
     this.status = new Status();
 
-    this.audioCapturer = new WebAudioCapturer(); 
+    this.audioCapturer = new WebAudioCapturer(this.eventBus); 
 
     this.voiceActuator = new VoiceActuator(this.eventBus);
     this.uiHandler = new UIHandler(this.eventBus, this.status);

@@ -88,6 +88,15 @@ export class UIHandler {
       icon: 'play_arrow',
       cssClass: 'processing-mode',    
       innerHTML: this.SVG_ICONS.RECORD
+    },
+    [StatusType.LISTENING]: {
+      code: StatusType.LISTENING,
+      text: 'Listening...',
+      buttonMode: ButtonMode.STOP,
+      icon: 'hearing',
+      cssClass: 'stop-mode',
+      dataAction: ButtonMode.STOP,
+      innerHTML: this.SVG_ICONS.STOP
     }
   };
 

@@ -6,23 +6,29 @@ import { Logger } from '../utils/logger';
 // Define event types
 export enum SpeechEvents {
   // UI Events
-  RECORD_BUTTON_PRESSED = 'recordButtonPressed',
+  RECORD_BUTTON_PRESSED = 'primaryButtonPressed',
+  LISTEN_BUTTON_PRESSED = 'listenButtonPressed',
   STOP_BUTTON_PRESSED = 'stopButtonPressed',
   
+  // Listening Events
+  LISTEN_STARTED = 'listeningStarted',
+  LISTENING_STOPPED = 'listeningStopped',
   // Recording Events
   RECORDING_STARTED = 'recordingStarted',
   RECORDING_STOPPED = 'recordingStopped',
-  AUDIO_CAPTURED = 'audioCaptured',  // New event for when speech is detected and captured
-
+  AUDIO_CAPTURED = 'audioCaptured',  
+  
   // Processing Events
   TRANSCRIPTION_STARTED = 'transcriptionStarted',
   TRANSCRIPTION_COMPLETED = 'transcriptionCompleted',
   NLU_COMPLETED ='nluCompleted',
+  
 
   // Action Events
   ACTION_PERFORMED = 'actionPerformed',
   ACTION_PAUSED = 'actionPaused',
   EXECUTION_COMPLETE = 'execution-complete',
+  ACTUATOR_COMPLETED = 'actuatorCompleted',
   // Error Events
   ERROR_OCCURRED = 'errorOccurred'
 }
