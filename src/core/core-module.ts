@@ -43,8 +43,6 @@ export class CoreModule {
       if (this.isListeningModeActive) {
         this.isListeningModeActive = false;
         this.nluModule.forceStopSession();
-        this.status.set(StatusType.IDLE);
-        this.uiHandler.updateUIStatus();
       }
     });
 
@@ -62,8 +60,16 @@ export class CoreModule {
     });
 
     this.eventBus.on(SpeechEvents.RECORDING_STOPPED, () => {
-      this.status.set(StatusType.PROCESSING);
-      this.uiHandler.updateUIStatus();
+      if (this.isListeningModeActive) {
+        this.status.set(StatusType.PROCESSING);
+        this.uiHandler.updateUIStatus();
+      }
+    });
+
+    this.eventBus.on(SpeechEvents.LISTENING_STOPPED, () => {
+        this.status.set(StatusType.IDLE);
+        console.log('Listening session stopped.');
+        this.uiHandler.updateUIStatus();
     });
 
     // This handler is the key to the continuous loop.
@@ -90,17 +96,18 @@ export class CoreModule {
 
     // --- Data Pipeline Handlers ---
 
-    this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
-      this.uiHandler.setTranscription(transcription);
-      console.log('Transcription completed:', transcription);
-    });
+    // this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
+    //   this.uiHandler.setTranscription(transcription);
+    //   console.log('Transcription completed:', transcription);
+    // });
 
     this.eventBus.on(SpeechEvents.NLU_COMPLETED, async (intents: IntentResult[]) => {
       console.log('NLU completed:', intents);
       // Status is already PROCESSING, can simplify by removing EXECUTING state
-      this.status.set(StatusType.EXECUTING);
-      this.uiHandler.updateUIStatus();
-
+      if (this.isListeningModeActive) {
+        this.status.set(StatusType.EXECUTING);
+        this.uiHandler.updateUIStatus();
+      }
       try {
         const actionPerformed = await this.voiceActuator.performAction(intents);
         if (!actionPerformed) {

@@ -103,13 +103,18 @@ export class NLUModule {
   private async processAudioChunk(audioBlob: Blob): Promise<void> {
     if (!this.transcriptionDriver || !this.recognitionDriver) {
       this.logger.error('Transcription or Recognition Driver not initialized');
-      this.eventBus.emit(SpeechEvents.ACTUATOR_COMPLETED, { success: false }); // Ensure loop can continue
+      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED); // Ensure loop can continue
       return; 
     }
     
     // Let the system know processing has begun.
     this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
-
+    
+    if (!this.isSessionActive) {
+      this.logger.info("Ignoring audio chunk because session is inactive.");
+      return;
+    }
+    
     try {
       const transcription = await this.transcriptionDriver.transcribe(audioBlob);
       this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
@@ -122,8 +127,6 @@ export class NLUModule {
       this.logger.error('Error during audio chunk processing: ', errMsg);
       this.status.set(StatusType.ERROR, errMsg);
       this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
-      // Even on error, we must emit ACTIONS_COMPLETED so the loop can restart.
-      this.eventBus.emit(SpeechEvents.ACTUATOR_COMPLETED, { success: false });
     }
   }
 

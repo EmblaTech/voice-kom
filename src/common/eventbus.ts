@@ -9,7 +9,7 @@ export enum SpeechEvents {
   RECORD_BUTTON_PRESSED = 'primaryButtonPressed',
   LISTEN_BUTTON_PRESSED = 'listenButtonPressed',
   STOP_BUTTON_PRESSED = 'stopButtonPressed',
-  
+  KEYWORD_DETECTED = 'keyword-detected',
   // Listening Events
   LISTEN_STARTED = 'listeningStarted',
   LISTENING_STOPPED = 'listeningStopped',
