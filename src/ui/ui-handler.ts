@@ -170,8 +170,7 @@ export class UIHandler {
         .action-button.recording-mode:hover { background-color: #c82333 !important; border-color: #bd2130 !important; }
         .button-container.listening .action-button { position: relative; overflow: visible; }
         .button-container.listening .action-button::before { content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border: 2px solid #007bff; border-radius: 50%; transform: translate(-50%, -50%); animation: wave-pulse 2s infinite; opacity: 0.6; }
-        .button-container.listening .action-button::after { content: ''; position: absolute; top: 50%; left: 50%; width: 110%; height: 110%; border: 2px solid #007bff; border-radius: 50%; transform: translate(-50%, -50%); animation: wave-pulse 2s infinite 0.5s; opacity: 0.4; }
-        @keyframes wave-pulse { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.3; } 100% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; } }
+        @keyframes wave-pulse { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.3; } 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } }
         .button-container.recording .action-button { /* No special animation, just red color */ }
       `;
       styleElement.textContent = cssContent + customStyles;
