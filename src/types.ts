@@ -22,6 +22,8 @@ export interface SpeechPlugConfig {
   timeout?: number;
   loglevel?: string; //TODO: Implement display log above configured log level
   ui?: Record<string, any>;
+  clientId?: any;
+  serverUrl?: any;
 }
 
 interface SpeechEngineConfig {
@@ -43,8 +45,10 @@ export interface TranscriptionConfig extends SpeechEngineConfig {
 export interface CoreConfig {
   transcriptionConfig: TranscriptionConfig; 
   recognitionConfig: RecognitionConfig;
-  uiConfig: UIConfig
-  actuatorConfig: ActuatorConfig
+  uiConfig: UIConfig;
+  actuatorConfig: ActuatorConfig;
+  clientId?: any;
+  serverUrl?: any; 
 }
 
 export interface UIConfig {

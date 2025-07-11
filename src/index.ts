@@ -77,7 +77,9 @@ export class SpeechPlug {
       actuatorConfig: { 
         retries: config.retries,
         timeout: config.timeout
-      }
+      },
+      clientId: config.clientId,
+      serverUrl: config.serverUrl
     });
   }
 

@@ -3,11 +3,17 @@ import { TranscriptionConfig } from "../../types";
 import { TranscriptionDriver } from "./driver";
 import { Validator } from "../../utils/validator";
 
+//TODO: Need to set producition server URL
+//const DEFAULT_SERVER_URL = 'https://api.speechplug.com'; // real production backend URL
+const DEFAULT_SERVER_URL = '';
+
 export class WhisperTranscriptionDriver implements TranscriptionDriver {
     private readonly logger = Logger.getInstance();
     private language: string = 'en';
-    private apiKey: string = '';
-    private apiEndpoint: string = 'https://api.openai.com/v1/audio/transcriptions';
+    //private apiKey: string = '';
+    //private apiEndpoint: string = 'https://api.openai.com/v1/audio/transcriptions';
+    private backEndpoint!: string;
+    private clientId!: string;
 
     private readonly DEFAULT_LANGUAGE = 'en';
     private readonly DEFAULT_MODEL = 'whisper-1';
@@ -29,11 +35,13 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
         'ba', 'jw', 'su'
     ];
 
-    constructor(config: TranscriptionConfig) {
-        this.validateConfig(config);
+    constructor(config: TranscriptionConfig, clientId: any, serverUrl: any) {
+        this.validateConfig(config, clientId);      
         this.language = config.lang || this.DEFAULT_LANGUAGE;
-        this.apiKey = config.apiKey!;
-        this.apiEndpoint = config.apiUrl || this.apiEndpoint;
+        //this.apiKey = config.apiKey!;
+        //this.apiEndpoint = config.apiUrl || this.apiEndpoint;
+        this.clientId = clientId;
+        this.backEndpoint = serverUrl || DEFAULT_SERVER_URL;
         this.logger.info(`WhisperTranscriptionDriver initialized with config: ${JSON.stringify(config)}`);
     }
 
@@ -43,10 +51,10 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
     async transcribe(rawAudio: Blob): Promise<string> {
         try {
             const formData = this.buildFormData(rawAudio);
-            const response = await fetch(this.apiEndpoint, {
+            const response = await fetch(`${this.backEndpoint}/api/execute/whisper-transcribe`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.apiKey}`
+                    'X-Client-ID': this.clientId
                 },
                 body: formData
             });
@@ -76,12 +84,12 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
     /**
      * Method to change API endpoint (for testing or using compatible services)
      */
-    setApiEndpoint(endpoint: string): void {
-        if (!endpoint || !Validator.isValidUrl(endpoint)) {
-            throw new Error('Invalid API endpoint provided');
-        }
-        this.apiEndpoint = endpoint;
-    }
+    // setApiEndpoint(endpoint: string): void {
+    //     if (!endpoint || !Validator.isValidUrl(endpoint)) {
+    //         throw new Error('Invalid API endpoint provided');
+    //     }
+    //     this.apiEndpoint = endpoint;
+    // }
 
     /**
      * Get current language setting
@@ -90,13 +98,17 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
         return this.language;
     }
 
-    private validateConfig(config: TranscriptionConfig): void {
-        if (!config.apiKey) {
-            throw new Error('OpenAI API key is required for Whisper transcription');
-        }
+    private validateConfig(config: TranscriptionConfig, clientId: any): void {
+        // if (!config.apiKey) {
+        //     throw new Error('OpenAI API key is required for Whisper transcription');
+        // }
 
         if (config.apiUrl && !Validator.isValidUrl(config.apiUrl)) {
             throw new Error('Invalid API URL provided in configuration');
+        }
+
+        if (!clientId) {
+            throw new Error("clientId must be provided in the configuration!");
         }
     }
 

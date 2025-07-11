@@ -11,14 +11,20 @@ interface CommandRegistry {
     [key: string]: CommandConfig;
 }
 
+//TODO: Need to set producition server URL
+//const DEFAULT_SERVER_URL = 'https://api.speechplug.com'; // real production backend URL
+const DEFAULT_SERVER_URL = '';
+
 export class OpenAIRecognitionDriver implements RecognitionDriver {
     private readonly logger = Logger.getInstance();
     private language: string;
     private commandRegistry: CommandRegistry;
     private availableIntents: IntentTypes[] = [IntentTypes.UNKNOWN];
-    private apiKey: string;
-    private apiEndpoint: string = 'https://api.openai.com/v1/chat/completions';
+    //private apiKey: string;
+    //private apiEndpoint: string = 'https://api.openai.com/v1/chat/completions';
     private model: string = 'gpt-4o';
+    private backEndpoint!: string;
+    private clientId!: string;
 
     private static readonly DEFAULT_TEMPERATURE = 0.3;
     private static readonly DEFAULT_LANGUAGE = 'en';
@@ -41,16 +47,15 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             'ur': 'Urdu', 'uz': 'Uzbek'
         };
 
-    constructor(config: RecognitionConfig) {
+    constructor(config: RecognitionConfig, clientId: any, serverUrl: any) {
         this.logger.info('Initializing OpenAI Recognition Driver', { config });
-        
-        this.validateConfig(config);
-        
+        this.validateConfig(config, clientId);       
         this.language = config.lang || OpenAIRecognitionDriver.DEFAULT_LANGUAGE;
-        this.apiKey = config.apiKey!;
-        this.apiEndpoint = config.apiUrl || this.apiEndpoint;
+        //this.apiKey = config.apiKey!;
+        //this.apiEndpoint = config.apiUrl || this.apiEndpoint;
         this.model = config.model || this.model;
-        
+        this.clientId = clientId;
+        this.backEndpoint = serverUrl || DEFAULT_SERVER_URL;
         this.commandRegistry = this.createDefaultCommandRegistry();
         this.availableIntents = this.extractAvailableIntents();
         
@@ -108,18 +113,18 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
     /**
      * Update API endpoint
      */
-    setApiEndpoint(endpoint: string): void {
-        if (!this.isValidUrl(endpoint)) {
-            throw new Error(`Invalid API endpoint: ${endpoint}`);
-        }
+    // setApiEndpoint(endpoint: string): void {
+    //     if (!this.isValidUrl(endpoint)) {
+    //         throw new Error(`Invalid API endpoint: ${endpoint}`);
+    //     }
         
-        this.logger.info('Updating API endpoint', { 
-            oldEndpoint: this.apiEndpoint, 
-            newEndpoint: endpoint 
-        });
+    //     this.logger.info('Updating API endpoint', { 
+    //         oldEndpoint: this.apiEndpoint, 
+    //         newEndpoint: endpoint 
+    //     });
         
-        this.apiEndpoint = endpoint;
-    }
+    //     this.apiEndpoint = endpoint;
+    // }
 
     /**
      * Update LLM model
@@ -167,21 +172,22 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         return this.model;
     }
 
-    private validateConfig(config: RecognitionConfig): void {
-        if (!config.apiKey?.trim()) {
-            throw new Error('OpenAI API key is required for LLM-based NLU');
-        }
-        
+    private validateConfig(config: RecognitionConfig, clientId: any): void {
+        // if (!config.apiKey?.trim()) {
+        //     throw new Error('OpenAI API key is required for LLM-based NLU');
+        // }
+
         if (config.apiUrl && !this.isValidUrl(config.apiUrl)) {
             throw new Error(`Invalid API URL provided: ${config.apiUrl}`);
+        }
+
+        if (!clientId) {
+            throw new Error("clientId must be provided in the configuration!");
         }
     }
 
     private validateInput(text: string): void {
         if (!text?.trim()) {
-
-
-            
             throw new Error('Input text cannot be empty for intent detection');
         }
     }
@@ -204,15 +210,15 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             messageLength: userMessage.length
         });
 
-        const response = await fetch(this.apiEndpoint, {
+        const response = await fetch(`${this.backEndpoint}/api/execute/openai-recognize`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.apiKey}`
+                'X-Client-ID': this.clientId
             },
             body: JSON.stringify(requestBody)
-        });
-
+        }); 
+        
         if (!response.ok) {
             await this.handleApiError(response);
         }

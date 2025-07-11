@@ -16,7 +16,7 @@ export class CoreModule {
   
   public async init(config: CoreConfig): Promise<void> {
     await this.uiHandler.init(config.uiConfig); 
-    await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig )
+    await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig, config.clientId, config.serverUrl)
     this.bindEvents();
     
     // Set initial state

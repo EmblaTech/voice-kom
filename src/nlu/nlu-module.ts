@@ -20,7 +20,7 @@ export class NLUModule {
     private readonly status: Status
   ) { }
 
-  public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): Promise<void> {
+    public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig, clientId: any, serverUrl: any): Promise<void> {
     try {
       // Set language from config if provided
       if (transConfig.lang) {
@@ -28,10 +28,9 @@ export class NLUModule {
       }
 
       // Initialize transcription & recognition driver
-      this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig);
-      this.recognitionDriver = DriverFactory.getRecognitionDriver(recogConfig);
+      this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig, clientId, serverUrl);
+      this.recognitionDriver = DriverFactory.getRecognitionDriver(recogConfig, clientId, serverUrl);
       // Get commands
-      //this.commandRegistry = await fetchContent('command-registry.json');
       this.commandRegistry = await fetchContent('../../src/nlu/command-registry.json');
     } catch (error) {
       this.logger.error('Error injectStyles(): ', error);
@@ -58,13 +57,16 @@ export class NLUModule {
 
       // Transcribe the audio using the STT driver
       const transcription = await this.transcriptionDriver.transcribe(audioBlob);
+      console.log('nlu-module after transcripvtion:', transcription);
       this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
 
       // Identify intent using the NLU driver
       const intentResult = await this.recognitionDriver.detectIntent(transcription);
+      console.log('nlu-module after intentResult:', intentResult);
       this.eventBus.emit(SpeechEvents.NLU_COMPLETED, intentResult);
 
     } catch (error: unknown) {
+      console.log('nlu-module error:', error);
       const errMsg = error instanceof Error ? error.message : String(error);
       this.logger.error('Error: ', errMsg);
       this.status.set(StatusType.ERROR, errMsg);
