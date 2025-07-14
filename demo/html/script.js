@@ -8,12 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // height: '58px',
     transcription: {
       provider: 'default',
-      apiKey: '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'
+      apiKey: 'Your API Key'
     },
     recognition: {
       provider: 'default',
       // provider: 'default',
-      apiKey: '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'
+      apiKey: 'Your API Key'
     },
     
   }).then(() => {
