@@ -5,6 +5,8 @@ import { Logger } from '../utils/logger';
 //TODO: Remove this class and set status from necessary places to avoid complexity
 // Define event types
 export enum SpeechEvents {
+  //Wakeword Events
+  WAKE_WORD_DETECTED = 'wakeWordDetected',
   // UI Events
   RECORD_BUTTON_PRESSED = 'primaryButtonPressed',
   LISTEN_BUTTON_PRESSED = 'listenButtonPressed',

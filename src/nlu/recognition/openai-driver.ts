@@ -337,6 +337,7 @@ Purpose: Use your understanding to determine if the user's input semantically ma
     }
 
     private buildClassificationInstructions(): string {
+        // MODIFICATION IS HERE
         return `INSTRUCTIONS FOR INTENT CLASSIFICATION:
 You have full autonomy to interpret user commands. Use your understanding of:
 - Natural language semantics and context
@@ -346,6 +347,17 @@ You have full autonomy to interpret user commands. Use your understanding of:
 - Multi-step or compound commands
 
 Don't rely on exact phrase matching - use your intelligence to understand what the user wants to accomplish on a web interface.
+
+CRITICAL RULE FOR 'target' and 'group' ENTITY EXTRACTION:
+When extracting a 'target' or 'group' entity, you MUST use the most complete and descriptive noun phrase from the user's command that identifies the UI element.
+The system has its own powerful downstream matching logic. Your role is to provide it with the most accurate and verbose text possible.
+Do NOT simplify, generalize, or guess a different name for the target. Extract the text as spoken by the user.
+Example for "the preferred date is today":
+- GOOD: { "target": "preferred date" }
+- BAD: { "target": "date field" }
+Example for "click the big red save button":
+- GOOD: { "target": "big red save button" }
+- BAD: { "target": "save button" }
 
 Respond with a JSON array containing multiple intents in order of likelihood or relevance. Each intent should be a JSON object containing:
 1. "intent": The identified intent name (use "unknown" only if genuinely unclear)

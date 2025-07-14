@@ -1,5 +1,8 @@
 // enhanced-types.ts
 export interface SpeechPlugConfig {
+  //WakewordConfig
+  wakeWord?: string; // Optional wake word for voice activation
+  
   //Key configs
   containerId? :string;
   lang?: string;   
@@ -45,6 +48,7 @@ export interface CoreConfig {
   recognitionConfig: RecognitionConfig;
   uiConfig: UIConfig
   actuatorConfig: ActuatorConfig
+  wakeWord?: string; // Optional wake word for voice activation
 }
 
 export interface UIConfig {
@@ -92,6 +96,12 @@ export interface AudioCapturer {
 export interface VADConfig {
   silenceDelay: number;
   speakingThreshold: number;
+}
+
+//Wakeword detector interface
+export interface WakewordDetector {
+  start(): void;
+  stop(): void;
 }
 
 // Intent recognition result

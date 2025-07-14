@@ -25,14 +25,12 @@ export class VoiceActuator {
   private valueNormalizers: ValueNormalizer[] = [];
 
   constructor(private readonly eventBus: EventBus) {
-    console.log("voice-actuator.ts constructor()..");
     this.initializeProcessors();
     this.initializeNormalizers();
     this.initializeActionMap();
   }
 
   private initializeProcessors(): void {
-    console.log("voice-actuator.ts initializeProcessors()..");
     this.elementProcessors = [
       new GroupedTargetProcessor(this),
       new MultipleTargetProcessor(),
@@ -41,7 +39,6 @@ export class VoiceActuator {
   }
 
   private initializeNormalizers(): void {
-    console.log("voice-actuator.ts initializeNormalizers()..");
     this.valueNormalizers = [
       new EmailNormalizer(),
       new DateNormalizer(),
@@ -51,7 +48,6 @@ export class VoiceActuator {
   }
 
   private initializeActionMap(): void {
-    console.log("voice-actuator.ts initializeActionMap()..");
     this.registerAction(IntentTypes.CLICK_ELEMENT, { execute: (entities) => this.executeElementAction(entities, 'click') });
     this.registerAction(IntentTypes.FILL_INPUT, { execute: (entities) => this.executeInputAction(entities) });
     this.registerAction(IntentTypes.SCROLL_TO_ELEMENT, { execute: (entities) => this.executeScrollToElementAction(entities) });
@@ -66,12 +62,10 @@ export class VoiceActuator {
   }
 
   private registerAction(intentName: IntentTypes, action: Action): void {
-    console.log("voice-actuator.ts registerAction()..");
     this.actionMap.set(intentName, action);
   }
 
   private processEntities(intent: string, entities: Entities): ProcessedEntities {
-    console.log("voice-actuator.ts processEntities()..");
     let processedEntities: ProcessedEntities = { ...entities };
     for (const processor of this.elementProcessors) {
       if (processor.canProcess(intent, entities)) {
@@ -109,7 +103,6 @@ export class VoiceActuator {
   }
 
   private async executeIntent(intent: IntentResult): Promise<boolean> {
-    console.log("voice-actuator.ts executeIntent()..");
     const action = this.actionMap.get(intent.intent);
     if (!action) {
       this.eventBus.emit(SpeechEvents.ACTION_PAUSED);
@@ -130,7 +123,6 @@ export class VoiceActuator {
   }
 
   public findElement(targetName: string, context?: HTMLElement): HTMLElement | null {
-    console.log("voice-actuator.ts findElement()..");
     const selector = context ?
       context.querySelectorAll('[voice\\.name]') :
       document.querySelectorAll('[voice\\.name]');
@@ -140,7 +132,7 @@ export class VoiceActuator {
       .map(element => ({
         element: element as HTMLElement,
         score: this.calculateMatchScore(
-          element.getAttribute('voice.name')?.toLowerCase() || '',
+          element.getAttribute('voice.name') || '',
           targetName.toLowerCase()
         ),
         voiceName: element.getAttribute('voice.name') || ''
@@ -155,32 +147,75 @@ export class VoiceActuator {
   }
 
   public findElementsInGroup(groupName: string): HTMLElement[] {
-    console.log("voice-actuator.ts findElementsInGroup()..");
     return Array.from(document.querySelectorAll(`[name="${groupName}"]`));
   }
 
+  /**
+   * Calculates the Longest Common Subsequence of tokens.
+   */
+  private calculateTokenLCS(tokens1: string[], tokens2: string[]): number {
+    const m = tokens1.length;
+    const n = tokens2.length;
+    const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (tokens1[i - 1] === tokens2[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+    }
+    return dp[m][n];
+  }
+
   public calculateMatchScore(voiceName: string, targetName: string): number {
-    console.log("voice-actuator.ts calculateMatchScore()..");
     const normalize = (str: string) =>
       str.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
+
+    const voiceNameNormalized = voiceName.toLowerCase();
+    const targetNameNormalized = targetName.toLowerCase();
+
     const voiceTokens = normalize(voiceName);
     const targetTokens = normalize(targetName);
+
     if (voiceTokens.length === 0 || targetTokens.length === 0) return 0;
+
     let score = 0;
-    if (voiceName === targetName) score += 100;
-    if (voiceName.includes(targetName)) score += 50;
-    else if (targetName.includes(voiceName)) score += 40;
-    const matchingTokens = voiceTokens.filter(token => targetTokens.includes(token));
-    score += matchingTokens.length * 10;
-    score += (matchingTokens.length / voiceTokens.length) * 30;
-    score += (matchingTokens.length / targetTokens.length) * 30;
-    if (voiceTokens[0] === targetTokens[0]) score += 15;
-    score += this.getLevenshteinSimilarity(voiceName, targetName) * 25;
+
+    // 1. Exact match bonus (highest weight)
+    if (voiceNameNormalized === targetNameNormalized) {
+      score += 100;
+    }
+
+    // 2. Contained Phrase Bonus (addresses substring bias)
+    // Matches "save" within "save as" but not as a partial word
+    if ((' ' + voiceNameNormalized + ' ').includes(' ' + targetNameNormalized + ' ')) {
+      score += 40;
+    }
+
+    // 3. Token Overlap Score (Jaccard-like, order-agnostic)
+    const matchingTokens = voiceTokens.filter(vToken => targetTokens.includes(vToken));
+    const unionSize = new Set([...voiceTokens, ...targetTokens]).size;
+    if (unionSize > 0) {
+      score += (matchingTokens.length / unionSize) * 30;
+    }
+
+    // 4. Token Order Score (LCS) - crucial for multi-word commands
+    const lcsLength = this.calculateTokenLCS(voiceTokens, targetTokens);
+    const maxLen = Math.max(voiceTokens.length, targetTokens.length);
+    if (maxLen > 0) {
+      score += (lcsLength / maxLen) * 50;
+    }
+
+    // 5. Proximity/Typo Score (Levenshtein on full strings)
+    score += this.getLevenshteinSimilarity(voiceNameNormalized, targetNameNormalized) * 20;
+
     return score;
   }
 
   private getLevenshteinSimilarity(str1: string, str2: string): number {
-    console.log("voice-actuator.ts getLevenshteinSimilarity()..");
     const track = Array(str2.length + 1).fill(null).map(() =>
       Array(str1.length + 1).fill(null));
     for (let i = 0; i <= str1.length; i += 1) track[0][i] = i;
@@ -203,7 +238,6 @@ export class VoiceActuator {
   // --- Action Executors ---
 
   private executeElementAction(entities: ProcessedEntities, actionType: string): boolean {
-    console.log("voice-actuator.ts executeElementAction()..");
     if (!entities.target || !entities.targetElement) {
       return false;
     }
@@ -219,7 +253,6 @@ export class VoiceActuator {
   }
 
   private executeInputAction(entities: ProcessedEntities): boolean {
-    console.log("voice-actuator.ts executeInputAction()..");
     if (!entities.target || !entities.value || !entities.targetElement) {
       return false;
     }
@@ -234,7 +267,6 @@ export class VoiceActuator {
   }
 
   private executeCheckboxAction(entities: ProcessedEntities, check: boolean): boolean {
-    console.log("voice-actuator.ts executeCheckboxAction()..");
     if (!entities.target || !entities.targetElement) {
       return false;
     }
@@ -249,7 +281,6 @@ export class VoiceActuator {
   }
 
   private executeMultipleCheckboxAction(entities: ProcessedEntities, check: boolean): boolean {
-    console.log("voice-actuator.ts executeMultipleCheckboxAction()..");
     if (!entities.targetElements || entities.targetElements.length === 0) {
       return false;
     }

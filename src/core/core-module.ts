@@ -4,6 +4,7 @@ import { Status, StatusType } from '../common/status';
 import { CoreConfig, IntentResult } from '../types';
 import { VoiceActuator } from '../actuator/voice-actuator';
 import { NLUModule } from '../nlu/nlu-module';
+import {WebspeechWakewordDetector} from '../wakeword/WebspeechAPICapturer';
 
 export class CoreModule {
   private isListeningModeActive = false;
@@ -13,16 +14,25 @@ export class CoreModule {
     private readonly uiHandler: UIHandler,
     private readonly voiceActuator: VoiceActuator,
     private readonly eventBus: EventBus,
-    private readonly status: Status
+    private readonly status: Status,
+    private readonly wakeWordDetector: WebspeechWakewordDetector
+
   ) {}
 
   public async init(config: CoreConfig): Promise<void> {
     await this.uiHandler.init(config.uiConfig);
     await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig);
+    const key = 'KECjnDldxPbxJXTOu3XiY5rF0vB1IqNlEPC83MBJjNgDFvqhlnXovg=='
     this.bindEvents();
 
     this.status.set(StatusType.IDLE);
     this.uiHandler.updateUIStatus();
+
+    // --- INITIALIZE AND START THE WAKE WORD DETECTOR ---
+    if (config.wakeWord) {
+      this.wakeWordDetector.init(config.wakeWord);
+      this.wakeWordDetector.start();
+    }
   }
 
   private bindEvents(): void {
@@ -33,16 +43,28 @@ export class CoreModule {
       // Prevent starting a new session if one is already active.
       if (!this.isListeningModeActive) {
         this.isListeningModeActive = true;
+        this.wakeWordDetector.stop(); // Ensure passive listening is off
         this.nluModule.startListeningSession();
       }
     });
 
+    this.eventBus.on(SpeechEvents.WAKE_WORD_DETECTED, () => {
+      // Prevent starting if a session is already active.
+      if (!this.isListeningModeActive) {
+        console.log("CoreModule: Wake word detected, starting active session.");
+        this.wakeWordDetector.stop(); // Stop passive listening
+        this.isListeningModeActive = true;
+        this.nluModule.startListeningSession(); // Start active listening
+      }
+    });
     // This event stops the entire listening session.
     this.eventBus.on(SpeechEvents.STOP_BUTTON_PRESSED, () => {
       // Only act if a session is currently active.
       if (this.isListeningModeActive) {
         this.isListeningModeActive = false;
         this.nluModule.forceStopSession();
+        this.wakeWordDetector.start();
+
       }
     });
 
