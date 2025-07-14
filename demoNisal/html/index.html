@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceLib Form Demo</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <h1>Contact Form Demo</h1>
+  
+  <div class="form-container">
+    <form id="contact-form" voice.name="Personal Information">
+      <!-- Personal Information Section -->
+      <fieldset>
+        <legend>Personal Information</legend>
+        
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" voice.name="name field" placeholder="Enter your full name">
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" voice.name="email field" placeholder="Enter your email address">
+        </div>
+        
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" voice.name="phone field" placeholder="Enter your phone number">
+        </div>
+        
+        <div class="form-group">
+          <label for="date">Preferred Date</label>
+          <input type="date" id="date" voice.name="Preferred date">
+        </div>
+
+        <div class="form-group">
+          <label for="time">Preferred time</label>
+          <input type="time" id="time" voice.name="Preferred time">
+        </div>
+      </fieldset>
+      
+      <!-- Preference Section -->
+      <fieldset>
+        <legend>Preferences</legend>
+        
+        <div class="form-group" voice.name="Preferences">
+          <label>Preferred Contact Method</label>
+          <div class="radio-group" voice.name="prefered contact method" name="contact-preference">
+            <label class="radio-label">
+              <input type="radio" name="contact-preference" value="email" voice.name="email option" checked>
+              Email
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="contact-preference" value="phone" voice.name="phone option">
+              Phone
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="contact-preference" value="text" voice.name="text message">
+              Text Message
+            </label>
+          </div>
+        </div>
+        
+        <div class="form-group" voice.name="interests">
+          <label>Interests (Check all that apply)</label>
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" name="interests" value="product-updates" voice.name="product updates checkbox">
+              Product Updates
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="interests" value="newsletter" voice.name="newsletter checkbox">
+              Monthly Newsletter
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="interests" value="events" voice.name="events checkbox">
+              Upcoming Events
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="interests" value="promotions" voice.name="promotions checkbox">
+              Special Promotions
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      
+      <!-- Message Section -->
+      <fieldset>
+        <legend>Your Message</legend>
+        
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <select id="subject" voice.name="subject dropdown">
+            <option value="">-- Select a subject --</option>
+            <option value="general" voice.name="general">General Inquiry</option>
+            <option value="support" voice.name="support">Technical Support</option>
+            <option value="feedback" voice.name="feedback">Feedback</option>
+            <option value="other" voice.name="other">Other</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" voice.name="message" rows="5" placeholder="Type your message here..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="file-upload">Attach File (Optional)</label>
+          <input type="file" id="file-upload" voice.name="choose file">
+        </div>
+      </fieldset>
+      
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <input type="checkbox" id="agree-terms" voice.name="terms checkbox">
+        <label for="agree-terms">I agree to the <a href="#" voice.name="terms link" id="terms-link">Terms and Conditions</a></label>
+        
+        <div class="button-group">
+          <button type="reset" voice.name="reset button" class="btn btn-secondary">Reset</button>
+          <button type="submit" id="submit-button" voice.name="submit button" class="btn btn-submit">Submit</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div class="help-text">
+    <p>Try voice commands like: <strong>"Fill name as John Smith"</strong>, <strong>"Select email option"</strong>, or <strong>"Click submit button"</strong></p>
+    <p>Need assistance? <a href="#" voice.name="help link" id="help-link">Get Help</a> or view our <a href="#" voice.name="faq link" id="faq-link">FAQ</a></p>
+  </div>
+  
+  <!-- Modal for Terms and Conditions -->
+  <div id="terms-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" voice.name="close modal">&times;</span>
+      <h2>Terms and Conditions</h2>
+      <div class="modal-body">
+        <p>This is a demo of terms and conditions content. In a real application, this would contain the actual terms.</p>
+      </div>
+      <button class="btn" voice.name="accept terms">Accept</button>
+    </div>
+  </div>
+  
+  <script src="../../dist/speechplug.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
