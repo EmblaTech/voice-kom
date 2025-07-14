@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     recognition: {
       provider: 'openai',
-      // provider: 'default',
       apiKey: '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'
     },
     ui: {

@@ -57,13 +57,16 @@ export class NLUModule {
       this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
 
       // Transcribe the audio using the STT driver
-      const transcription = await this.transcriptionDriver.transcribe(audioBlob);
+      const transcription = await this.transcriptionDriver.transcribe(audioBlob);     
       this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
 
-      // Identify intent using the NLU driver
-      const intentResult = await this.recognitionDriver.detectIntent(transcription);
-      this.eventBus.emit(SpeechEvents.NLU_COMPLETED, intentResult);
-
+      if (transcription) {
+        // Identify intent using the NLU driver
+        const intentResult = await this.recognitionDriver.detectIntent(transcription);
+        this.eventBus.emit(SpeechEvents.NLU_COMPLETED, intentResult);
+      } else {
+        this.eventBus.emit(SpeechEvents.NLU_COMPLETED);
+      }
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error);
       this.logger.error('Error: ', errMsg);

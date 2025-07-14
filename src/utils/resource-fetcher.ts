@@ -3,8 +3,6 @@ const logger = Logger.getInstance();
 
 export async function fetchContent(url: string): Promise<any> {
   try {
-    console.log("fetchContent() URL:", url);
-    
     const response = await fetch(url);
     if (!response.ok) {
       logger.error(`Failed to fetch resource at ${url}: ${response.status} ${response.statusText}`);
