@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {  
   SpeechPlug.init({   // Initialize SpeechPlug with params
+    wakeWord: 'Hello', // Set the wake word
     containerId: 'speech-container',
     lang: 'en',
     // position: 'bottom-right',
@@ -7,12 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // height: '58px',
     transcription: {
       provider: 'default',
-      apiKey: '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'
+      apiKey: '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'
     },
     recognition: {
-      provider: 'openai',
+      provider: 'default',
       // provider: 'default',
-      apiKey: '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'
+      apiKey: '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'
     },
     
   }).then(() => {

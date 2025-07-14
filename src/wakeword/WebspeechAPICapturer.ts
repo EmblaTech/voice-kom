@@ -1,11 +1,12 @@
 import { EventBus, SpeechEvents } from '../common/eventbus';
-import {WakewordDetector} from '../types';
-
+import { WakewordDetector } from '../types';
 
 export class WebspeechWakewordDetector implements WakewordDetector {
   private readonly recognition: SpeechRecognition;
   private isListening = false;
-  private wakeWord: string = '';
+  private wakeWord: string = 'hey';
+  // Use an array to support multiple stop phrases for better UX
+  private stopWords: string[] = ['stop listening'];
 
   constructor(private readonly eventBus: EventBus) {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -21,26 +22,61 @@ export class WebspeechWakewordDetector implements WakewordDetector {
   }
 
   /**
-   * Initializes the detector with the wake word.
+   * Initializes the detector with the wake word and optional stop words.
    * @param wakeWord The word or phrase to listen for.
+   * @param stopWords A single stop word or an array of stop words.
    */
-  public init(wakeWord: string): void {
+  public init(wakeWord: string, stopWords?: string | string[]): void {
     if (!wakeWord) {
       throw new Error("A wake word must be provided for the WakeWordDetector.");
     }
     this.wakeWord = wakeWord.toLowerCase();
+    
+    // Allow customizing the stop word(s)
+    if (stopWords) {
+      if (Array.isArray(stopWords)) {
+        // If it's an array, map all to lowercase
+        this.stopWords = stopWords.map(sw => sw.toLowerCase());
+      } else {
+        // If it's a single string, put it in an array
+        this.stopWords = [stopWords.toLowerCase()];
+      }
+    }
+  }
+
+  /**
+   * Checks if a given transcription is a direct match for any of the configured stop words.
+   * If a match is found, it emits the STOP_WORD_DETECTED event.
+   * @param transcription The text transcribed from the user's command.
+   */
+  public checkForStopWord(transcription: string): void {
+    const normalizedTranscription = this.normalizeText(transcription);
+
+    // Check if the normalized text is an exact match for any of the stop words
+    if (this.stopWords.some(stopWord => normalizedTranscription === stopWord)) {
+      console.log(`WakeWordDetector: Detected exact stop phrase! Emitting event.`);
+      this.eventBus.emit(SpeechEvents.STOP_WORD_DETECTED);
+    }
+  }
+  
+  /**
+   * Cleans text by converting to lowercase, removing common punctuation, and trimming whitespace.
+   */
+  private normalizeText(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[.,!?;]/g, '') // Remove common punctuation marks
+      .trim();
   }
 
   private setupListeners(): void {
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = Array.from(event.results)
-        .map(result => result[0].transcript)
+      // This part is for PASSIVE listening only
+      const fullHistory = Array.from(event.results)
+        .map(r => r[0].transcript)
         .join('').toLowerCase();
         
-      if (transcript.includes(this.wakeWord)) {
-        console.log(`WakeWordDetector: Detected "${this.wakeWord}"!`);
-        // The detector's only job is to emit this event.
-        // It does not stop itself; the CoreModule will do that.
+      if (fullHistory.includes(this.wakeWord)) {
         this.eventBus.emit(SpeechEvents.WAKE_WORD_DETECTED);
       }
     };

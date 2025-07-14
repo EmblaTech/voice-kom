@@ -48,6 +48,7 @@ export class CoreModule {
       }
     });
 
+    
     this.eventBus.on(SpeechEvents.WAKE_WORD_DETECTED, () => {
       // Prevent starting if a session is already active.
       if (!this.isListeningModeActive) {
@@ -58,14 +59,28 @@ export class CoreModule {
       }
     });
     // This event stops the entire listening session.
+    this.eventBus.on(SpeechEvents.STOP_WORD_DETECTED, () => {
+      console.log("CoreModule: Stop word detected, ending session.");
+      stopSessionLogic();
+    });
+
+    // The stop button now just calls the same shared logic
     this.eventBus.on(SpeechEvents.STOP_BUTTON_PRESSED, () => {
+      console.log("CoreModule: Stop button pressed, ending session.");
+      stopSessionLogic();
+    });
+
+    const stopSessionLogic = () => {
       // Only act if a session is currently active.
       if (this.isListeningModeActive) {
         this.isListeningModeActive = false;
         this.nluModule.forceStopSession();
+        // After stopping, return to passively listening for the wake word.
         this.wakeWordDetector.start();
-
       }
+    };
+    this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
+      this.wakeWordDetector.checkForStopWord(transcription);
     });
 
     // --- Internal State and UI Update Handlers ---

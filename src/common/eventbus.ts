@@ -7,11 +7,13 @@ import { Logger } from '../utils/logger';
 export enum SpeechEvents {
   //Wakeword Events
   WAKE_WORD_DETECTED = 'wakeWordDetected',
+  STOP_WORD_DETECTED = 'stop_word_detected', 
+
   // UI Events
   RECORD_BUTTON_PRESSED = 'primaryButtonPressed',
   LISTEN_BUTTON_PRESSED = 'listenButtonPressed',
   STOP_BUTTON_PRESSED = 'stopButtonPressed',
-  KEYWORD_DETECTED = 'keyword-detected',
+  LISTENING_TIMED_OUT='listening_timed_out', // <-- ADD THIS
   // Listening Events
   LISTEN_STARTED = 'listeningStarted',
   LISTENING_STOPPED = 'listeningStopped',

@@ -6,6 +6,7 @@
     "declaration": true,
     "outDir": "./dist/types",
     "strict": true,
+    "resolveJsonModule": true, // <-- to load JSON files
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

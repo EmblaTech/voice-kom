@@ -371,7 +371,6 @@ export class UIHandler {
     }
     const trimmed = this.transcription?.trim() ?? '';
     const hasContent = trimmed.length > 0;
-    this.logger.info('Syncing transcription display:', { hasContent, transcription: trimmed, displayElement: !!this.transcriptionDisplay });
     if (hasContent) {
       this.transcriptionDisplay.textContent = trimmed;
       this.transcriptionDisplay.style.display = 'block';
@@ -389,7 +388,6 @@ export class UIHandler {
     if (this.transcriptionDisplay.textContent && this.transcriptionDisplay.textContent.trim().length > 0) {
       this.transcriptionDisplay.style.opacity = '0.4';
       this.transcriptionDisplay.style.transition = 'opacity 0.3s ease';
-      this.logger.info('Faded existing transcription');
     }
   }
 
@@ -397,21 +395,18 @@ export class UIHandler {
     if (!this.transcriptionDisplay) return;
     this.transcriptionDisplay.style.opacity = '1';
     this.transcriptionDisplay.style.transition = 'opacity 0.3s ease';
-    this.logger.info('Restored transcription opacity');
   }
 
   private expandContainer(): void {
     if (!this.container) return;
     this.container.style.maxHeight = 'none';
     this.container.style.height = 'auto';
-    this.logger.info('Container expanded for transcription display');
   }
 
   private resetContainerSize(): void {
     if (!this.container) return;
     this.container.style.maxHeight = '75px';
     this.container.style.height = 'auto';
-    this.logger.info('Container reset to original size');
   }
 
   /**

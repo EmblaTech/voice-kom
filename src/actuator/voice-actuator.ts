@@ -59,6 +59,8 @@ export class VoiceActuator {
     this.registerAction(IntentTypes.SELECT_RADIO_OR_DROPDOWN, { execute: (entities) => this.executeSelectionAction(entities) });
     this.registerAction(IntentTypes.OPEN_DROPDOWN, { execute: (entities) => this.executeOpenDropdownAction(entities) });
     this.registerAction(IntentTypes.GO_BACK, { execute: (entities) => this.executeGoBackAction(entities) });
+    this.registerAction(IntentTypes.TYPE_TEXT, { execute: (entities) => this.executeInputAction(entities) });
+
   }
 
   private registerAction(intentName: IntentTypes, action: Action): void {

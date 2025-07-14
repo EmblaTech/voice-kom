@@ -1,0 +1,86 @@
+{
+  "click_element": {
+    "utterances": [
+      "click on? [<target>.+]",
+      "press [<target>.+]"
+    ],
+    "entities": ["target"]
+  },
+  "fill_input": {
+    "utterances": [
+      "fill [<target>.+] (as|with) [<value>.+]",
+      "enter [<target>.+] (as|with) [<value>.+]",
+      "enter [<value>.+] in [<target>.+]"
+    ],
+    "entities": ["target", "value"]
+  },
+  "type_text": {
+    "utterances": [
+      "type [<target>.+] (in|as) [<value>.+]"
+    ],
+    "entities": ["target", "value"],
+    "rawEntities": ["value"]
+  },
+  "scroll": {
+    "utterances": [
+      "scroll [<direction>(up|down|left|right|top|bottom)]",
+      "scroll to the? [<direction>(top|bottom|end|start)]",
+      "go [<direction>(up|down|left|right)]"
+    ],
+    "entities": ["direction"]
+  },
+  "scroll_to_element": {
+    "utterances": [
+      "scroll to the? [<target>.+]",
+      "go to the? [<target>.+]"
+    ],
+    "entities": ["target"]
+  },
+  "check_checkbox": {
+    "utterances": [
+      "check [<target>.+]",
+      "enable [<target>.+] option"
+    ],
+    "entities": ["target"]
+  },
+  "uncheck_checkbox": {
+    "utterances": [
+      "uncheck [<target>.+]",
+      "disable [<target>.+] option"
+    ],
+    "entities": ["target"]
+  },
+  "check_all": {
+    "utterances": [
+      "check all [<targetGroup>.+]"
+    ],
+    "entities": ["targetGroup"]
+  },
+  "uncheck_all": {
+    "utterances": [
+      "uncheck all [<targetGroup>.+]"
+    ],
+    "entities": ["targetGroup"]
+  },
+  "select_radio_or_dropdown": {
+    "utterances": [
+      "select [<target>.+] (in|from|as) [<group>.+]",
+      "select [<target>.+]"
+    ],
+    "entities": ["target", "group"]
+  },
+  "open_dropdown": {
+    "utterances": [
+      "open [<target>.+]",
+      "drop down [<target>.+]",
+      "open [<target>.+] drop down"
+    ],
+    "entities": ["target"]
+  },
+  "go_back": {
+    "utterances": [
+      "go back"
+    ],
+    "entities": []
+  }
+}

@@ -74,6 +74,7 @@ export enum IntentTypes {
   SCROLL= 'scroll',
   SCROLL_TO_ELEMENT = 'scroll_to_element',
   FILL_INPUT = 'fill_input',
+  TYPE_TEXT = 'type_text',
   SPEAK_TEXT = 'speak_text',
   SUBMIT_FORM = 'submit_form',
   UNKNOWN = 'UNKNOWN',
