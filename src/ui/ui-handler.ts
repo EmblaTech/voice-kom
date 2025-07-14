@@ -339,6 +339,19 @@ export class UIHandler {
     const hasContent = trimmed.length > 0;
     this.transcriptionDisplay.textContent = hasContent ? trimmed : '';
     this.transcriptionDisplay.style.display = hasContent ? 'block' : 'none';
+    hasContent ? this.expandContainer() : this.resetContainerSize();
+  }
+
+  private expandContainer(): void {
+    if (!this.container) return;
+    this.container.style.maxHeight = 'none';
+    this.container.style.height = 'auto';
+  }
+
+  private resetContainerSize(): void {
+    if (!this.container) return;
+    this.container.style.maxHeight = '75px';
+    this.container.style.height = 'auto';
   }
 
   private showError(message: string): void {
