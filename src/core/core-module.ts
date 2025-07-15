@@ -21,7 +21,7 @@ export class CoreModule {
     
     // Set initial state
     this.status.set(StatusType.IDLE);
-    this.uiHandler.updateFromState();
+    this.uiHandler.updateUIStatus();
   }
 
   private bindEvents(): void {
@@ -42,7 +42,7 @@ export class CoreModule {
       // Update state when recording starts
       this.status.set(StatusType.RECORDING);
       // Update UI
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
     
     // Handle recording stopped event
@@ -50,7 +50,7 @@ export class CoreModule {
       // Update state to processing when recording stops
       this.status.set(StatusType.PROCESSING);
       // Update UI
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
     
     // Set up transcription event listener
@@ -61,41 +61,49 @@ export class CoreModule {
     });
     
     // Set up nlu event listener
-    this.eventBus.on(SpeechEvents.NLU_COMPLETED, (intent: IntentResult) => {
-      console.log('NLU completed:', intent);
+    this.eventBus.on(SpeechEvents.NLU_COMPLETED, async (intents: any) => {
+      console.log('NLU completed:', intents);
       
       // Set state to executing when we have an intent to process
       this.status.set(StatusType.EXECUTING);
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
       
       // Try to perform the action
-      const actionPerformed = this.voiceActuator.performAction(intent);
-      
-      if (!actionPerformed) {
-        console.log('No action was performed for intent:', intent);
+      try {
+        const actionPerformed = await this.voiceActuator.performAction(intents);
+        console.log('core-module.ts Action performed result:', actionPerformed);
+        
+        if (!actionPerformed) {
+          console.log('core-module.ts No action was performed for intnt:', intents);
+          // Emit the ACTION_PAUSED event when no action is performed
+          this.eventBus.emit(SpeechEvents.ACTION_PAUSED);
+        }
+      } catch (error) {
+        console.error('core-module.ts Error performing action:', error);
+        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
       }
     });
-    
+
     // Handle action performed event
     this.eventBus.on(SpeechEvents.ACTION_PERFORMED, (actionResult) => {
       console.log('Action performed:', actionResult);
       
       // Update state to idle after action is completed
       this.status.set(StatusType.IDLE);
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
     this.eventBus.on(SpeechEvents.ACTION_PAUSED, (actionResult) => {
       console.log('Action paused:', actionResult);
       
       // Update state to idle after action is completed
       this.status.set(StatusType.IDLE);
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
     // Handle errors
     this.eventBus.on(SpeechEvents.ERROR_OCCURRED, (error: Error) => {
       console.error('VoiceLib error:', error);
       this.status.set(StatusType.ERROR, error.message);
-      this.uiHandler.updateFromState();
+      this.uiHandler.updateUIStatus();
     });
   }
   

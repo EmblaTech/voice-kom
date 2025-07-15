@@ -74,14 +74,14 @@ document.addEventListener('DOMContentLoaded', () => {
   SpeechPlug.init({
 
     // containerId: 'voice-lib-container', // Changed from container element to containerId string
-    // lang: 'no',
+    //lang: 'en',
     // sttEngine: 'default',
     // sttApiKey: '',
     // nluEngine: 'llm',
     // nluApiKey: '',
   
     containerId: 'speech-container',
-    lang: 'en',
+    lang: 'no',
     position: 'bottom-right',
     width: '188px',
     height: '58px',

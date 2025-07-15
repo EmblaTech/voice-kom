@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Invoice</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div id="notification" class="notification"></div>
+  <div class="form-container">
+    <form id="transactionForm">
+      <select id="creditor" name="creditor" voice.name="creditor" required>
+                            <option value="">-- Select Creditor --</option>
+                            <option value="supplier1">ABC Supply Co.</option>
+                            <option value="supplier2">XYZ Materials Ltd.</option>
+                            <option value="supplier3">Global Trading Inc.</option>
+                            <option value="supplier4">Metro Office Supplies</option>
+                            <option value="supplier5">Tech Solutions Provider</option>
+                            <option value="supplier6">Industrial Equipment Co.</option>
+                            <option value="supplier7">Professional Services LLC</option>
+                            <option value="supplier8">Construction Materials Ltd.</option>
+                            <option value="supplier9">Food & Beverage Suppliers</option>
+                            <option value="supplier10">Transport & Logistics Co.</option>
+                            <option value="supplier11">Energy Solutions Inc.</option>
+                            <option value="supplier12">Marketing & Media Group</option>
+                            <option value="supplier13">Healthcare Equipment Co.</option>
+                            <option value="supplier14">Educational Resources Ltd.</option>
+                            <option value="supplier15">Environmental Services Inc.</option>
+        </select>
+        <select id="transactionType" name="transactionType" voice.name="transaction Type">
+                            <option value="IN">IN</option>
+                            <option value="OUT">OUT</option>
+        </select>
+        <input type="date" id="voucherDate" name="voucherDate" voice.name="voucher Date" >
+        <input type="date" id="dueDate" name="dueDate" voice.name="due Date" >
+        <input type="text" id="refNo" name="refNo" voice.name="ref No" >
+        <input type="number" id="amount" name="amount" voice.name="amount" step="0.01" 
+            min="0" 
+            placeholder="0.00" 
+            oninput="formatCurrency(this)" >
+        <input type="text" id="transtext" name="transtext" voice.name="transaction text" >
+        <button type="submit" id="addTransaction" class="submit-btn" voice.name="add transaction">+ Add Transaction</button>
+    </form>
+  </div>
+
+
+  <script src="../../../dist/speechplug.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

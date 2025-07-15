@@ -1,4 +1,4 @@
-.voice-recorder-container {
+  .voice-recorder-container {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 300px;
     max-height: 75px;
@@ -6,21 +6,22 @@
     background-color: #f0f4f8;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-  }
-  
-  .voice-bottom-left {
-    position: fixed;
-    bottom: 20px;
-    left: 25px;
-    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   }
 
+  .voice-bottom-left,
   .voice-bottom-right {
     position: fixed;
     bottom: 20px;
-    right: 25px;
     z-index: 1000;
+  }
+
+  .voice-bottom-left {
+    left: 25px;
+  }
+
+  .voice-bottom-right {
+    right: 25px;
   }
 
   .voice-interface {
@@ -113,7 +114,7 @@
   .transcription-display {
     padding: 10px;
     min-height: 30px;
-    max-height: 120px;
+    max-height: 320px;
     overflow-y: auto;
     background-color: white;
     font-size: 13px;
@@ -121,6 +122,14 @@
     white-space: pre-wrap;
     border-top: 1px solid #e0e0e0;
     color: #2D3748;
+    /* Smooth opacity transitions */
+    transition: opacity 0.3s ease;
+    opacity: 1;
+  }
+
+  /* Faded state for old transcription */
+  .transcription-display.faded {
+    opacity: 0.4;
   }
     
   @media (max-width: 480px) {

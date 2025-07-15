@@ -7,7 +7,7 @@ interface CommandConfig {
     utterances: string[];
     entities: string[];
 }
-  
+
 interface CommandRegistry {
     [key: string]: CommandConfig;
 }
@@ -18,6 +18,7 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
     private commandRegistry: CommandRegistry | null = null;
     private availableIntents: IntentTypes[] = [IntentTypes.UNKNOWN];
     private entityMap: Map<string, string[]> = new Map();
+    private language: string = 'en';
   
     // Common polite phrases to strip from input
     private politePhrases: string[] = [
@@ -27,38 +28,59 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
     ];
 
     constructor(config: RecognitionConfig) {
+      console.log("compromise-driver.ts constructor()...");
         this.config = config;
-        this.setUpCommandRegistry()
+        this.language = config.lang || this.language;
+        this.setUpCommandRegistry();
+        this.setupIntentsAndEntities();
+    }
+
+    /**
+     * Initialize the driver with configuration options
+     */
+    init(lang: string, config: RecognitionConfig): void {
+      console.log("compromise-driver.ts init()...");
+        if (lang) {
+            this.language = lang;
+        }
+        this.setUpCommandRegistry();
         this.setupIntentsAndEntities();
     }
 
     detectIntent(text: string): IntentResult {
+      console.log("compromise-driver.ts detectIntent()...");
         return this.findBestMatch(text);
     }
      
     getAvailableIntents(): IntentTypes[] {
+      console.log("compromise-driver.ts getAvailableIntents()...");
         return this.availableIntents;
-      }
-
-    private setUpCommandRegistry(): void {
-        // Initialize with default command registry if needed
-    this.commandRegistry = {
-        [IntentTypes.CLICK_ELEMENT]: {
-          utterances: ["click (target)", "press (target)", "tap (target)"],
-          entities: ["target"]
-        },
-        [IntentTypes.FILL_INPUT]: {
-          utterances: ["Fill (target) as (value)", "Enter (target) as (value)","Enter (target) with (value)", "Fill (target) with (value)"],
-          entities: ["target", "value"]
-        },
-        [IntentTypes.SCROLL_TO_ELEMENT]: {
-          utterances: ["scroll to (target)", "go to (target) section"],
-          entities: ["target"]
-        }
-      };
     }
 
+    private setUpCommandRegistry(): void {
+      console.log("compromise-driver.ts setUpCommandRegistry()...");
+        // Initialize with default command registry if needed
+        this.commandRegistry = {
+            [IntentTypes.CLICK_ELEMENT]: {
+              utterances: ["click (target)", "press (target)", "tap (target)"],
+              entities: ["target"]
+            },
+            [IntentTypes.FILL_INPUT]: {
+              utterances: ["Fill (target) as (value)", "Enter (target) as (value)","Enter (target) with (value)", "Fill (target) with (value)"],
+              entities: ["target", "value"]
+            },
+            [IntentTypes.SCROLL_TO_ELEMENT]: {
+              utterances: ["scroll to (target)", "go to (target) section"],
+              entities: ["target"]
+            }
+          };
+    }
+
+    /**
+     * Setup available intents and entity mappings
+     */
     private setupIntentsAndEntities(): void {
+      console.log("compromise-driver.ts setupIntentsAndEntities()...");
         if (!this.commandRegistry) return;
         
         // Extract intent names from object keys
@@ -73,19 +95,21 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         Object.entries(this.commandRegistry).forEach(([intentName, config]) => {
           this.entityMap.set(intentName, config.entities);
         });
-      }
+    }
     
-      /**
-       * Converts a pattern with (entity) syntax to Compromise-friendly syntax
-       */
-      private convertToCompromisePattern(pattern: string): string {
+    /**
+     * Converts a pattern with (entity) syntax to Compromise-friendly syntax
+     */
+    private convertToCompromisePattern(pattern: string): string {
+      console.log("compromise-driver.ts convertToCompromisePattern()...");
         return pattern.replace(/\(([a-zA-Z0-9_]+)\)/g, '{$1}');
-      }
+    }
     
-      /**
-       * Preprocess input text to remove polite phrases and clean up
-       */
-      private preprocessInputText(text: string): string {
+    /**
+     * Preprocess input text to remove polite phrases and clean up
+     */
+    private preprocessInputText(text: string): string {
+      console.log("compromise-driver.ts preprocessInputText()...");
         let cleanedText = text.trim();
         
         // Remove polite phrases from beginning and end
@@ -98,14 +122,14 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
           const endRegex = new RegExp(`\\s+${phrase}[,.!?]*$`, 'i');
           cleanedText = cleanedText.replace(endRegex, '');
         }
-        
+
         return cleanedText.trim();
-      }
+    }
     
-      /**
-       * Clean extracted entity values
-       */
-      private cleanEntityValue(value: string): string {
+    /**
+     * Clean extracted entity values
+     */
+    private cleanEntityValue(value: string): string {
         if (!value) return '';
         
         // Remove leading/trailing punctuation
@@ -124,12 +148,12 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         }
         
         return cleaned.trim();
-      }
+    }
     
-      /**
-       * Extract entity values from text based on the pattern
-       */
-      private extractEntities(text: string, pattern: string): Record<string, string> {
+    /**
+     * Extract entity values from text based on the pattern
+     */
+    private extractEntities(text: string, pattern: string): Record<string, string> {
         const entities: Record<string, string> = {};
         const entityMatches = pattern.match(/\(([a-zA-Z0-9_]+)\)/g) || [];
         
@@ -148,12 +172,12 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         }
         
         return entities;
-      }
+    }
     
-      /**
-       * Get regex patterns for content before and after an entity
-       */
-      private getContextPatterns(pattern: string, entityMatch: string): [string, string] {
+    /**
+     * Get regex patterns for content before and after an entity
+     */
+    private getContextPatterns(pattern: string, entityMatch: string): [string, string] {
         const [beforeEntityPattern, afterEntityPattern = ''] = pattern.split(entityMatch);
         
         // Create regex patterns with flexible whitespace
@@ -168,12 +192,12 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
           .replace(/\s+/g, '\\s+');
           
         return [beforePattern, afterPattern];
-      }
+    }
     
-      /**
-       * Extract entity value using regex patterns
-       */
-      private extractEntityValue(text: string, beforePattern: string, afterPattern: string): string {
+    /**
+     * Extract entity value using regex patterns
+     */
+    private extractEntityValue(text: string, beforePattern: string, afterPattern: string): string {
         if (beforePattern && afterPattern) {
           const regex = new RegExp(`${beforePattern}\\s*(.*?)\\s*${afterPattern}`, 'i');
           const match = text.match(regex);
@@ -191,12 +215,12 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         }
         
         return '';
-      }
+    }
     
-      /**
-       * Calculate confidence score based on pattern match
-       */
-      private calculateConfidence(pattern: string, text: string, hasExactMatch: boolean): number {
+    /**
+     * Calculate confidence score based on pattern match
+     */
+    private calculateConfidence(pattern: string, text: string, hasExactMatch: boolean): number {
         const wordCount = text.split(' ').length;
         const patternWordCount = pattern.replace(/\([^)]*\)/g, '').trim().split(/\s+/).length;
         const specificityScore = patternWordCount / wordCount;
@@ -205,29 +229,35 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         return hasExactMatch 
           ? Math.min(0.8 + specificityScore, 1)
           : 0.7;
-      }
+    }
     
-      /**
-       * Try to match text using exact and fuzzy matching techniques
-       */
-      private findBestMatch(text: string): IntentResult {
-        if (this.config.lang !== 'en' || !this.commandRegistry) {
+    /**
+     * Try to match text using exact and fuzzy matching techniques
+     */
+    private findBestMatch(text: string): IntentResult {
+      console.log("compromise-driver.ts findBestMatch() text: ", text);
+        if (this.language !== 'en' || !this.commandRegistry) {
           return this.createUnknownResult();
         }
         
         // Preprocess the input text to remove polite phrases
         const preprocessedText = this.preprocessInputText(text);
+        console.log("compromise-driver.ts findBestMatch() preprocessedText: ", preprocessedText);
         const doc = nlp(preprocessedText);
+        console.log("compromise-driver.ts findBestMatch() doc: ", doc);
         let bestMatch = this.createUnknownResult();
+        console.log('compromise-driver findBestMatch() bestMatch 1:', bestMatch);
+
+        console.log("compromise-driver.ts this.availableIntents: ", this.availableIntents);
         
         // Try to match each intent pattern
         for (const intentName of this.availableIntents) {
           if (intentName === IntentTypes.UNKNOWN) continue;
           
-          const CommandConfig = this.commandRegistry[intentName];
-          if (!CommandConfig) continue;
+          const commandConfig = this.commandRegistry[intentName];
+          if (!commandConfig) continue;
           
-          for (const pattern of CommandConfig.utterances) {
+          for (const pattern of commandConfig.utterances) {
             const result = this.matchPattern(doc, pattern, preprocessedText);
             
             if (result.confidence > bestMatch.confidence) {
@@ -236,14 +266,15 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
             }
           }
         }
+        console.log('compromise-driver findBestMatch() bestMatch 2:', bestMatch);
         
         return bestMatch;
-      }
+    }
     
-      /**
-       * Try to match a specific pattern against the text
-       */
-      private matchPattern(doc: any, pattern: string, text: string): IntentResult {
+    /**
+     * Try to match a specific pattern against the text
+     */
+    private matchPattern(doc: any, pattern: string, text: string): IntentResult {
         // Try exact match first
         const compromisePattern = this.convertToCompromisePattern(pattern);
         const matches = doc.match(compromisePattern);
@@ -258,12 +289,12 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         
         // Try fuzzy match
         return this.tryFuzzyMatch(pattern, text);
-      }
+    }
     
-      /**
-       * Try fuzzy matching for the pattern
-       */
-      private tryFuzzyMatch(pattern: string, text: string): IntentResult {
+    /**
+     * Try fuzzy matching for the pattern
+     */
+    private tryFuzzyMatch(pattern: string, text: string): IntentResult {
         const commandPart = pattern.replace(/\s*\([^)]+\)\s*/g, ' ').trim();
         const commandWords = commandPart.split(/\s+/);
         
@@ -286,16 +317,16 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         }
         
         return this.createUnknownResult();
-      }
+    }
     
-      /**
-       * Create a default unknown result
-       */
-      private createUnknownResult(): IntentResult {
+    /**
+     * Create a default unknown result
+     */
+    private createUnknownResult(): IntentResult {
         return {
-          intent: IntentTypes.UNKNOWN,
-          confidence: 0,
-          entities: {}
+            intent: IntentTypes.UNKNOWN,
+            confidence: 0,
+            entities: {}
         };
-      }
+    }
 }
