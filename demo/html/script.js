@@ -8,12 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // height: '58px',
     transcription: {
       provider: 'default',
-      apiKey: 'Your API Key'
+      apiKey: '__TRANSCRIPTION_API_KEY__' 
     },
     recognition: {
       provider: 'default',
       // provider: 'default',
-      apiKey: 'Your API Key'
+      apiKey: '__RECOGNITION_API_KEY__'
     },
     
   }).then(() => {

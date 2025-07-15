@@ -46,7 +46,7 @@ input, textarea, select, button {
 body {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background-color: #F0F9FF;
-    color: var(--font-color-white);
+    color: var(--font-color-primary); /* Changed to primary for better readability */
     line-height: 1.6;
 }
 
@@ -119,26 +119,26 @@ nav {
 }
 
 
-/* Style the input to make space for the icon and act as a container */
+/* Style the date input to make space for the icon */
 .date-input {
   position: relative; 
-  background-image: url("Calendar.png");
+  background-image: url("recources/Calendar.png");
   background-repeat: no-repeat;
   background-position: left 15px center;
   background-size: 17px 17px;
-  text-indent: 15px; 
+  text-indent: 25px; 
   color: var(--font-color-primary);
 }
 
-/* Style the "fake" placeholder text */
+/* Style the "fake" placeholder text for the date input */
 .date-input::before {
-  content: attr(data-placeholder); /* Use the text from our data-placeholder attribute */
+  content: attr(data-placeholder);
   position: absolute;
-  left: 30px; /* Position it next to your icon (15px + 17px + a little space) */
+  left: 42px;
   top: 50%;
   transform: translateY(-50%);
-  color:var(--font-color-placeholder); /* A typical placeholder color */
-  pointer-events: none; /* Make sure it doesn't block clicks */
+  color:var(--font-color-placeholder);
+  pointer-events: none;
 }
 
 /* Hide the placeholder when a date is selected OR the input is in focus */
@@ -163,45 +163,42 @@ nav {
 }
 
 
-/* Style the input to make space for the icon and act as a container */
-.time-input {
+/* ===== NEW STYLES FOR TIME INPUT ===== */
+/* Style the time input to make space for the icon */
+.time-input-styled {
   position: relative; 
-  /* The main change is the icon image */
-  background-image: url("Clock.png"); /* You'll need a clock icon image */
+  background-image: url("recources/clock.png");
   background-repeat: no-repeat;
   background-position: left 15px center;
   background-size: 17px 17px;
-  text-indent: 15px; 
+  text-indent: 25px; 
   color: var(--font-color-primary);
 }
 
-/* Style the "fake" placeholder text */
-.time-input::before {
-  content: attr(data-placeholder); /* Use the text from our data-placeholder attribute */
+/* Style the "fake" placeholder text for the time input */
+.time-input-styled::before {
+  content: attr(data-placeholder);
   position: absolute;
-  left: 30px; /* Position it next to your icon (15px icon padding + 17px icon width = 32px, so 30px is good) */
+  left: 42px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--font-color-placeholder); /* A typical placeholder color */
-  pointer-events: none; /* Make sure it doesn't block clicks */
+  color: var(--font-color-placeholder);
+  pointer-events: none;
 }
 
 /* Hide the placeholder when a time is selected OR the input is in focus */
-.time-input:valid::before,
-.time-input:focus::before {
+.time-input-styled:valid::before,
+.time-input-styled:focus::before {
   display: none;
 }
 
 /* Hide the default "hh:mm --" text when the input is empty */
-.time-input:invalid {
+.time-input-styled:invalid {
   color: transparent;
 }
 
-/* 
-  Style the native picker-indicator to be an invisible, clickable overlay.
-  This works for type="time" just as it does for type="date".
-*/
-.time-input::-webkit-calendar-picker-indicator {
+/* Style the native picker-indicator to be an invisible, clickable overlay */
+.time-input-styled::-webkit-calendar-picker-indicator {
   opacity: 0;
   position: absolute;
   top: 0;
@@ -210,6 +207,7 @@ nav {
   height: 100%;
   cursor: pointer;
 }
+/* ===== END OF NEW STYLES ===== */
 
 
 /* Main Content */

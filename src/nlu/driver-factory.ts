@@ -1,12 +1,17 @@
-import { RecognitionConfig, ReconitionProvider, TranscriptionConfig, TranscriptionProviders } from "../types";
+import { RecognitionConfig, ReconitionProvider, TranscriptionConfig, TranscriptionProviders, AudioCapturer } from "../types";
 import { CompromiseRecognitionDriver } from "./recognition/compromise-driver";
 import { RecognitionDriver } from "./recognition/driver";
 import { OpenAIRecognitionDriver } from "./recognition/openai-driver";
 import { TranscriptionDriver } from "./transcription/driver";
 import { GoogleTranscriptionDriver } from "./transcription/google-driver";
 import { WhisperTranscriptionDriver } from "./transcription/whisper-driver";
+import { WebAudioCapturer } from './audio-capturer'; 
+import { WebSpeechAPICapturer } from './audio-transcription/web-speech-api-capturer'; 
+
+import { EventBus } from "../common/eventbus";
 
 export class DriverFactory {
+  
   static getTranscriptionDriver(config: TranscriptionConfig): TranscriptionDriver {
     const engine = config.provider.toLowerCase();
     switch (engine) {
@@ -32,5 +37,15 @@ export class DriverFactory {
       default:
         throw new Error(`Unsupported driver type: ${config.provider}`);
     }
+  }
+
+  static getAudioCapturer(config: TranscriptionConfig, eventBus: EventBus): AudioCapturer {
+    const provider = config.provider.toLowerCase();
+
+    if (provider === TranscriptionProviders.WEBSPEECH) {
+      return new WebSpeechAPICapturer(eventBus, config.lang);
+    }    
+    return new WebAudioCapturer(eventBus);
+    
   }
 }

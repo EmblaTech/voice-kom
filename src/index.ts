@@ -29,7 +29,6 @@ export class SpeechPlug {
   private readonly DEFAULT_SHOW_TRANSCRIPTION = true;
   private eventBus!: EventBus;
   private status!: Status;
-  private audioCapturer!: AudioCapturer;
   private voiceActuator!: VoiceActuator;
   private coreModule!: CoreModule; 
   private nluModule!: NLUModule; 
@@ -89,11 +88,10 @@ export class SpeechPlug {
     this.eventBus = new EventBus();
     this.status = new Status();
 
-    this.audioCapturer = new WebAudioCapturer(this.eventBus); 
     this.wakeWordDetector = new WebspeechWakewordDetector(this.eventBus);
     this.voiceActuator = new VoiceActuator(this.eventBus);
     this.uiHandler = new UIHandler(this.eventBus, this.status);
-    this.nluModule = new NLUModule(this.audioCapturer, this.eventBus, this.status);
+    this.nluModule = new NLUModule(this.eventBus, this.status);
     this.coreModule = new CoreModule(this.nluModule, this.uiHandler, this.voiceActuator, this.eventBus, this.status, this.wakeWordDetector);
   }
   // Function to validate the configuration

@@ -10,6 +10,7 @@ import { fetchContent } from '../utils/resource-fetcher';
 export class NLUModule {
   private commandRegistry: CommandRegistry | null = null;
   private language: string = 'en';
+  private audioCapturer!: AudioCapturer;
   private transcriptionDriver: TranscriptionDriver | null = null;
   private recognitionDriver: RecognitionDriver | null = null;
   private readonly logger = Logger.getInstance();
@@ -22,22 +23,20 @@ export class NLUModule {
   private isSessionActive = false;
 
   constructor(
-    private readonly audioCapturer: AudioCapturer,
     private readonly eventBus: EventBus,
     private readonly status: Status
   ) {
-    // This listener triggers the processing pipeline for a single utterance.
+
     this.eventBus.on(SpeechEvents.AUDIO_CAPTURED, (blob: Blob) => {
       this.processAudioChunk(blob);
     });
 
-    // This listener is the key to the continuous loop.
-    // It re-arms the listener after the previous command's action is complete.
     this.eventBus.on(SpeechEvents.ACTUATOR_COMPLETED, () => {
       if (this.isSessionActive) {
         this.startSingleListeningCycle();
       }
     });
+
   }
 
   public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): Promise<void> {
@@ -47,6 +46,7 @@ export class NLUModule {
 
       this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig);
       this.recognitionDriver = DriverFactory.getRecognitionDriver(recogConfig);
+      this.audioCapturer = DriverFactory.getAudioCapturer(transConfig, this.eventBus);
       
       this.commandRegistry = await fetchContent('../../src/nlu/command-registry.json');
     } catch (error) {

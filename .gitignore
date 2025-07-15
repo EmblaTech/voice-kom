@@ -6,6 +6,7 @@ yarn-error.log
 package-lock.json
 
 # Build outputs
+demo supun/
 dist/
 build/
 out/

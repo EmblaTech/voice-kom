@@ -141,7 +141,8 @@ export interface IActionRegistry {
 export enum TranscriptionProviders {
   DEFAULT = 'default',
   GOOGLE = 'google',
-  AZURE = 'azure'
+  AZURE = 'azure',
+  WEBSPEECH = 'webspeech' // New provider
 }
 
 export enum ReconitionProvider {

@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - Embla</title>
     <link rel="stylesheet" href="contact.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
         <nav>
             <div class="logo">
-                <img src="embla-logo-2.png" alt="Embla Logo" class="embla-logo">
+                <img src="recources/embla-logo-2.png" alt="Embla Logo" class="embla-logo">
             </div>
             <ul class="nav-menu">
                 <li><a href="#" class="nav-link" voice.name="home">Home</a></li>
@@ -60,7 +59,16 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="time">Preferred time</label>
-                            <input type="time" id="time"  class="time-input" name="time" required data-placeholder="Select a time"  voice.name="prefered time">
+                            <!-- UPDATED TIME INPUT BELOW -->
+                            <input 
+                                type="time" 
+                                id="time"  
+                                class="time-input-styled" 
+                                name="time" 
+                                required 
+                                data-placeholder="Chose time"  
+                                voice.name="prefered time"
+                            >
                         </div>
                     </div>
                 </div>
@@ -139,11 +147,6 @@
                     <div class="form-group">
                         <label for="message">Message</label>
                         <textarea id="message" name="message" placeholder="Type your message here" rows="6"  voice.name="message"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="attachment">Attach File (Optional)</label>
-                        <button type="button" class="attach-btn"  voice.name="attach file">Attach File</button>
                     </div>
                 </div>
 
