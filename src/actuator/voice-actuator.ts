@@ -3,14 +3,6 @@ import { IntentResult, Entities, Action, IntentTypes, IVoiceActuator,isVoiceEnti
 import * as chrono from 'chrono-node';
 
 // Interface for processed entities with resolved DOM elements
-// export interface ProcessedEntities {
-//   rawentities: Entities;
-//   targetElement?: HTMLElement | undefined;
-//   targetElements?: HTMLElement[];
-//   groupElement?: HTMLElement | undefined;
-//   targetName?: string | undefined; // Normalized value for input actions
-// }
-
 export interface ProcessedEntities {
   rawentities: Entities;
   targetElement?: HTMLElement | undefined;
@@ -530,10 +522,7 @@ private executeGoBackAction(entities: ProcessedEntities): boolean {
 
 }
 
-
-
 /* ELEMENT PROCESSORS */
-
 class SingleTargetProcessor implements ElementProcessor {
   constructor(private actuator: VoiceActuator) {}
 
