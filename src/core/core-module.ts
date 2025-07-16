@@ -139,7 +139,7 @@ export class CoreModule {
     // });
 
     this.eventBus.on(SpeechEvents.NLU_COMPLETED, async (intents: IntentResult[]) => {
-      console.log('NLU completed:', intents);
+      console.log('Going to execute intents:');
       // Status is already PROCESSING, can simplify by removing EXECUTING state
       if (this.isListeningModeActive) {
         this.status.set(StatusType.EXECUTING);

@@ -8,18 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // height: '58px',
     transcription: {
       provider: 'default',
-      apiKey: '__TRANSCRIPTION_API_KEY__' 
+      apiKey: '' 
     },
     recognition: {
       provider: 'default',
       // provider: 'default',
-      apiKey: '__RECOGNITION_API_KEY__'
+      apiKey: ''
     },
     
   }).then(() => {
     console.log('Speech plug library initialized successfully');
   })
+  .then(() => {
+    console.log('111 VoiceLib initialized successfully'); })
   .catch(error => {
-    console.error('Speech plug library failed to initialize: ', error);
+    console.error('111 Failed to initialize VoiceLib:', error);
   });
 });
