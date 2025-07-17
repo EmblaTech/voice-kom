@@ -12,7 +12,7 @@ import {WebspeechWakewordDetector} from "./wakeword/WebspeechAPICapturer";
 
 export class SpeechPlug {
   private readonly logger = Logger.getInstance();
-  private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure'];
+  private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure', 'webspeech'];
   private readonly VALID_UI_POSITIONS = ['bottom-left', 'bottom-right'];
   private readonly DEFAULT_CONTAINER_ID = 'speech-plug-container';
   private readonly DEFAULT_LANG = 'en';

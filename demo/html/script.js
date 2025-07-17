@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // width: '188px',
     // height: '58px',
     transcription: {
-      provider: 'default',
+      provider: 'webspeech',
       apiKey: '' 
     },
     recognition: {
-      provider: 'default',
+      provider: 'openai',
       // provider: 'default',
       apiKey: ''
     },

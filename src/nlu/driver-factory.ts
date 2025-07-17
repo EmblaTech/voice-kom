@@ -7,6 +7,7 @@ import { GoogleTranscriptionDriver } from "./transcription/google-driver";
 import { WhisperTranscriptionDriver } from "./transcription/whisper-driver";
 import { WebAudioCapturer } from './audio-capturer'; 
 import { WebSpeechAPICapturer } from './audio-transcription/web-speech-api-capturer'; 
+import { DummyTranscriptionDriver } from './transcription/dummy-driver';
 
 import { EventBus } from "../common/eventbus";
 
@@ -19,6 +20,8 @@ export class DriverFactory {
         return new WhisperTranscriptionDriver(config);
       case TranscriptionProviders.GOOGLE:
         return new GoogleTranscriptionDriver(config);
+      case TranscriptionProviders.WEBSPEECH:
+        return new DummyTranscriptionDriver();
       default:
         throw new Error(`Unsupported driver type: ${config.provider}`);
     }

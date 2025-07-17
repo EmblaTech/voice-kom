@@ -28,7 +28,12 @@ export class NLUModule {
   ) {
 
     this.eventBus.on(SpeechEvents.AUDIO_CAPTURED, (blob: Blob) => {
+      this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
       this.processAudioChunk(blob);
+    });
+
+     this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
+      this.processTranscription(transcription);
     });
 
     this.eventBus.on(SpeechEvents.ACTUATOR_COMPLETED, () => {
@@ -39,21 +44,28 @@ export class NLUModule {
 
   }
 
-  public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): Promise<void> {
+ // in NLUModule.ts
+public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): Promise<void> {
+    this.logger.info("NLUModule.init() starting...");
     try {
       this.language = transConfig.lang || 'en';
       
-
+      this.logger.info("Getting transcription driver...");
       this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig);
+
+      this.logger.info("Getting recognition driver...");
       this.recognitionDriver = DriverFactory.getRecognitionDriver(recogConfig);
+      
+      this.logger.info("Getting audio capturer...");
       this.audioCapturer = DriverFactory.getAudioCapturer(transConfig, this.eventBus);
+      this.logger.info("Audio capturer has been assigned.", this.audioCapturer); // Check if this logs an object
       
       this.commandRegistry = await fetchContent('../../src/nlu/command-registry.json');
+      this.logger.info("NLUModule.init() completed successfully.");
     } catch (error) {
-      this.logger.error('Error in NLUModule init: ', error);
-      this.commandRegistry ??= this.getCommands();
+      this.logger.error('CRITICAL ERROR in NLUModule init: ', error);
     }
-  }
+}
 
   /**
    * Starts the entire listening session. Called once by CoreModule.
@@ -64,7 +76,6 @@ export class NLUModule {
         return;
     }
     this.isSessionActive = true;
-    // Kick off the very first listening cycle.
     this.startSingleListeningCycle();
   }
 
@@ -88,8 +99,8 @@ export class NLUModule {
     if (!this.isSessionActive) return;
 
     this.logger.info("Starting a single listening cycle.");
-    // Tell the AudioCapturer to listen for ONE utterance with the configured sensitivity.
-    this.audioCapturer.listenForUtterance({
+
+    this.audioCapturer.startListening({
         silenceDelay: this.silenceTimeout,
         speakingThreshold: this.speakingThreshold
     });
@@ -97,39 +108,48 @@ export class NLUModule {
     this.eventBus.emit(SpeechEvents.LISTEN_STARTED);
   }
 
-  /**
-   * Processes a single audio chunk after it has been captured by the AudioCapturer.
-   */
+  
   private async processAudioChunk(audioBlob: Blob): Promise<void> {
-    if (!this.transcriptionDriver || !this.recognitionDriver) {
+
+    if (!this.transcriptionDriver) { 
       this.logger.error('Transcription or Recognition Driver not initialized');
-      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED); // Ensure loop can continue
       return; 
     }
-    
-    // Let the system know processing has begun.
-    this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
-    
-    if (!this.isSessionActive) {
-      this.logger.info("Ignoring audio chunk because session is inactive.");
-      return;
-    }
-    
+  // if (!this.isSessionActive) {
+  //     this.logger.info("Ignoring audio chunk because session is inactive.");
+  //     return;
+  //   }
     try {
       const transcription = await this.transcriptionDriver.transcribe(audioBlob);
       this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
+    } catch (error) {
+      this.logger.error('Error during transcription: ', error);
+      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED);
+    }
+  }
 
+  private async processTranscription(transcription: string): Promise<void> {
+    if (!this.recognitionDriver) { 
+      this.logger.error('Recognition Driver not initialized');
+      return; 
+    }
+
+    // Handle empty transcriptions
+    if (!transcription || transcription.trim() === '') {
+        this.logger.warn("Empty transcription received. Skipping intent detection.");
+        return;
+    }
+
+    try {
       const intentResult = await this.recognitionDriver.detectIntent(transcription);
       this.eventBus.emit(SpeechEvents.NLU_COMPLETED, intentResult);
-
-    } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : String(error);
-      this.logger.error('Error during audio chunk processing: ', errMsg);
-      this.status.set(StatusType.ERROR, errMsg);
+    } catch (error) {
+      this.logger.error('Error during intent recognition: ', error);
       this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
     }
   }
 
+  
   public getAvailableLanguages(): string[] {
     if (!this.transcriptionDriver) return [];
     return this.transcriptionDriver.getAvailableLanguages();

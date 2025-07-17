@@ -34,7 +34,7 @@ export class WebAudioCapturer implements AudioCapturer {
 
   constructor(private readonly eventBus: EventBus) {}
 
-  public async listenForUtterance(config: VADConfig): Promise<void> {
+  public async startListening(config: VADConfig): Promise<void> {
     if (this.isMonitoring) return;
     this.logger.info('Starting VAD monitoring with pre-roll buffering.');
 

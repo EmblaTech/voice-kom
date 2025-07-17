@@ -53,22 +53,7 @@ export class VoiceActuator implements IVoiceActuator {
   }
 
   private initializeActionMap(): void {
-    // this.registerAction(IntentTypes.CLICK_ELEMENT, { execute: (entities) => this.executeElementAction(entities, 'click') });
-    // this.registerAction(IntentTypes.FILL_INPUT, { execute: (entities) => this.executeInputAction(entities) });
-    // this.registerAction(IntentTypes.SCROLL_TO_ELEMENT, { execute: (entities) => this.executeScrollToElementAction(entities) });
-    // this.registerAction(IntentTypes.SCROLL, { execute: (entities) => this.executeScrollAction(entities) });
-    // this.registerAction(IntentTypes.CHECK_CHECKBOX, { execute: (entities) => this.executeCheckboxAction(entities, true) });
-    // this.registerAction(IntentTypes.UNCHECK_CHECKBOX, { execute: (entities) => this.executeCheckboxAction(entities, false) });
-    // this.registerAction(IntentTypes.CHECK_ALL, { execute: (entities) => this.executeMultipleCheckboxAction(entities, true) });
-    // this.registerAction(IntentTypes.UNCHECK_ALL, { execute: (entities) => this.executeMultipleCheckboxAction(entities, false) });
-    // this.registerAction(IntentTypes.SELECT_RADIO_OR_DROPDOWN, { execute: (entities) => this.executeSelectionAction(entities) });
-    // this.registerAction(IntentTypes.OPEN_DROPDOWN, { execute: (entities) => this.executeOpenDropdownAction(entities) });
-    // this.registerAction(IntentTypes.GO_BACK, { execute: (entities) => this.executeGoBackAction(entities) });
-    // this.registerAction(IntentTypes.TYPE_TEXT, { execute: (entities) => this.executeInputAction(entities) });
-
     this.actionMap = new Map<IntentTypes, Action>();
-    
-    // Register actions using generalized handlers
     this.registerAction(IntentTypes.CLICK_ELEMENT, { execute: (entities) => this.executeElementAction(entities, 'click')});
     this.registerAction(IntentTypes.FILL_INPUT, { execute: (entities) => this.executeInputAction(entities)});
     this.registerAction(IntentTypes.SCROLL_TO_ELEMENT, { execute: (entities) => this.executeScrollToElementAction(entities)});
@@ -778,47 +763,6 @@ class GroupedTargetProcessor implements ElementProcessor {
     return Array.from(groups);
   }
 
-  // private findTargetInDropdown(selectElement: HTMLSelectElement, targetName: EntityValue): HTMLElement | null {
-  //   const options = Array.from(selectElement.options);
-  //   const targetLower = targetName.toLowerCase();
-    
-  //   for (const option of options) {
-  //     const optionText = option.textContent?.toLowerCase() || '';
-  //     const optionValue = option.value.toLowerCase();
-      
-  //     if (optionText === targetLower || 
-  //         optionValue === targetLower || 
-  //         optionText.includes(targetLower) || 
-  //         this.actuator.calculateMatchScore(optionText, targetLower) > 50) {
-  //       return option as HTMLElement;
-  //     }
-  //   }
-    
-  //   return null;
-  // }
-
-  // private findTargetInRadioGroup(groupElement: HTMLElement, targetName: EntityValue): HTMLElement | null {
-  //   console.log(`VoiceActuator: Checking radio button"`);
-
-  //   const groupName = groupElement.getAttribute('name') || ''; 
-  //   const radioButtons = document.querySelectorAll(`input[type="radio"][name="${groupName}"][value]`);
-  //   console.log(`VoiceActuator: Found ${radioButtons.length} radio buttons in group "${groupName}"`);
-  //   let bestMatch: HTMLElement | null = null;
-  //   let bestScore = 0;
-    
-  //   for (const radio of radioButtons) {
-  //     const voiceName = radio.getAttribute('value')?.toLowerCase() || '';
-  //     console.log(`VoiceActuator: Checking radio button with voice name "${voiceName}"`);
-  //     const score = this.actuator.calculateMatchScore(voiceName, targetName.toLowerCase());
-      
-  //     if (score > bestScore && score > 50) {
-  //       bestScore = score;
-  //       bestMatch = radio as HTMLElement;
-  //     }
-  //   }
-    
-  //   return bestMatch;
-  // }
 }
 
 /* VALUE NORMALIZERS */

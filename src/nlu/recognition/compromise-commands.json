@@ -10,7 +10,9 @@
     "utterances": [
       "fill [<target>.+] (as|with) [<value>.+]",
       "enter [<target>.+] (as|with) [<value>.+]",
-      "enter [<value>.+] in [<target>.+]"
+      "enter [<value>.+] in [<target>.+]",
+      "fill [<target>] [<value>.+]",  
+      "enter [<target>] [<value>.+]"
     ],
     "entities": ["target", "value"]
   },
@@ -36,6 +38,22 @@
     ],
     "entities": ["target"]
   },
+
+  "check_all": {
+    "utterances": [
+      "check all [<targetGroup>.+]"
+      
+    ],
+    "entities": ["targetGroup"]
+  },
+   
+  "uncheck_all": {
+    "utterances": [
+      "uncheck all [<targetGroup>.+]"
+    ],
+    "entities": ["targetGroup"]
+  },
+  
   "check_checkbox": {
     "utterances": [
       "check [<target>.+]",
@@ -50,18 +68,7 @@
     ],
     "entities": ["target"]
   },
-  "check_all": {
-    "utterances": [
-      "check all [<targetGroup>.+]"
-    ],
-    "entities": ["targetGroup"]
-  },
-  "uncheck_all": {
-    "utterances": [
-      "uncheck all [<targetGroup>.+]"
-    ],
-    "entities": ["targetGroup"]
-  },
+ 
   "select_radio_or_dropdown": {
     "utterances": [
       "select [<target>.+] (in|from|as) [<group>.+]",

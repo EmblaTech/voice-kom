@@ -50,7 +50,7 @@ export class EventBus {
   }
   
   public emit(eventName: SpeechEvents, ...args: any[]): void {
-    this.events.emit(eventName, ...args);
     this.logger.debug(`[SpeechEventBus] Event emitted: ${eventName}`, ...args);;
+    this.events.emit(eventName, ...args);
   }
 }

@@ -90,7 +90,7 @@ export enum IntentTypes {
 
 // Audio Capturer interface
 export interface AudioCapturer {
-  listenForUtterance(config: VADConfig): Promise<void>;
+  startListening(config: VADConfig): Promise<void>;
   stopListening(): void;
 }
 
