@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     recognition: {
       provider: 'openai',
       // provider: 'default',
-      apiKey: ''
+      apiKey: '' 
     },
     
   }).then(() => {

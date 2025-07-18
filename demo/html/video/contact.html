@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - Embla</title>
     <link rel="stylesheet" href="contact.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
 </head>
 <body>
     <header>
         <nav>
             <div class="logo">
-                <img src="recources/embla-logo-2.png" alt="Embla Logo" class="embla-logo">
+                <img src="embla-logo-2.png" alt="Embla Logo" class="embla-logo">
             </div>
             <ul class="nav-menu">
                 <li><a href="#" class="nav-link" voice.name="home">Home</a></li>
@@ -52,23 +53,14 @@
                         </div>
                         <div class="form-group">
                             <label for="date">Preferred date</label>
-                            <input type="date" id="date" name="date" data-placeholder="Choose date" required class="date-input" voice.name="Prefered date">
+                            <input type="date" id="date" name="date" placeholder="Choose date"  voice.name="Prefered date">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="time">Preferred time</label>
-                            <!-- UPDATED TIME INPUT BELOW -->
-                            <input 
-                                type="time" 
-                                id="time"  
-                                class="time-input-styled" 
-                                name="time" 
-                                required 
-                                data-placeholder="Chose time"  
-                                voice.name="prefered time"
-                            >
+                            <input type="time" id="time" name="time" placeholder="Choose time"  voice.name="prefered time">
                         </div>
                     </div>
                 </div>
@@ -148,6 +140,11 @@
                         <label for="message">Message</label>
                         <textarea id="message" name="message" placeholder="Type your message here" rows="6"  voice.name="message"></textarea>
                     </div>
+
+                    <div class="form-group">
+                        <label for="attachment">Attach File (Optional)</label>
+                        <button type="button" class="attach-btn"  voice.name="attach file">Attach File</button>
+                    </div>
                 </div>
 
                 <div class="bottom-form-section">
@@ -168,7 +165,7 @@
             </div>
         </div>
     </main>
-<script src="../../../dist/speechplug.js"></script>
+<script src="dist\speechplug.cjs.js"></script>
 <script src="speech.js"></script>
 </body>
 </html>
