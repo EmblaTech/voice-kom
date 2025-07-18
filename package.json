@@ -1,17 +1,17 @@
 {
-  "name": "speechplug",
+  "name": "voicekom",
   "version": "1.0.0",
   "description": "Voice library for speech recognition and processing",
-  "main": "dist/speechplug.cjs.js",
-  "module": "dist/speechplug.esm.js",
-  "browser": "dist/speechplug.js",
-  "unpkg": "dist/speechplug.min.js",
+  "main": "dist/voicekom.cjs.js",
+  "module": "dist/voicekom.esm.js",
+  "browser": "dist/voicekom.js",
+  "unpkg": "dist/voicekom.min.js",
   "types": "dist/types/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/speechplug.esm.js",
-      "require": "./dist/speechplug.cjs.js",
-      "browser": "./dist/speechplug.js",
+      "import": "./dist/voicekom.esm.js",
+      "require": "./dist/voicekom.cjs.js",
+      "browser": "./dist/voicekom.js",
       "types": "./dist/types/index.d.ts"
     }
   },
