@@ -276,6 +276,7 @@ export class UIHandler {
   public updateUIStatus(): void {
     if (!this.container) return;
     const status = this.status.get().value;
+    console.log('Updating UI status:', status);
     this.showStatus(status);
     this.setActionButton(status);
     this.setButtonAnimation(status);

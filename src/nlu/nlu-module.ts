@@ -137,6 +137,7 @@ public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConf
     // Handle empty transcriptions
     if (!transcription || transcription.trim() === '') {
         this.logger.warn("Empty transcription received. Skipping intent detection.");
+        this.eventBus.emit(SpeechEvents.ACTUATOR_COMPLETED);
         return;
     }
 
