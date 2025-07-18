@@ -1,12 +1,14 @@
-  .voice-recorder-container {
+.voice-recorder-container {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 300px;
-    max-height: 75px;
+    max-height: none; /* Allow expansion */
+    min-height: 75px; /* Maintain minimum height */
     margin: 0;
     background-color: #f0f4f8;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    transition: height 0.3s ease; /* Smooth height transitions */
   }
 
   .voice-bottom-left,
@@ -41,7 +43,57 @@
     justify-content: center;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     flex-shrink: 0;
+    position: relative;
   }
+
+  /* Loader animation for listening state */
+  /* .button-container.listening::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top: 2px solid #5A67D8;
+    border-right: 2px solid #5A67D8;
+    animation: listening-spin 1.5s linear infinite;
+    z-index: -1;
+  } */
+
+  /* Loader animation for recording state */
+  /* .button-container.recording::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(229, 62, 62, 0.3);
+    border-top: 2px solid #E53E3E;
+    animation: recording-spin 1s linear infinite;
+    z-index: -1;
+  } */
+
+  /* @keyframes listening-spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes recording-spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  } */
   
   .action-button {
     width: 36px;

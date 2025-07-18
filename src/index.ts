@@ -8,10 +8,11 @@ import { AudioCapturer, ReconitionProvider, SpeechPlugConfig, TranscriptionProvi
 import { UIHandler } from "./ui/ui-handler";
 import { Logger, LogLevel } from "./utils/logger";
 import { Validator } from "./utils/validator";
+import {WebspeechWakewordDetector} from "./wakeword/WebspeechAPICapturer";
 
 export class SpeechPlug {
   private readonly logger = Logger.getInstance();
-  private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure'];
+  private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure', 'webspeech'];
   private readonly VALID_UI_POSITIONS = ['bottom-left', 'bottom-right'];
   private readonly DEFAULT_CONTAINER_ID = 'speech-plug-container';
   private readonly DEFAULT_LANG = 'en';
@@ -28,12 +29,13 @@ export class SpeechPlug {
   private readonly DEFAULT_SHOW_TRANSCRIPTION = true;
   private eventBus!: EventBus;
   private status!: Status;
-  private audioCapturer!: AudioCapturer;
   private voiceActuator!: VoiceActuator;
   private coreModule!: CoreModule; 
   private nluModule!: NLUModule; 
   private uiHandler!: UIHandler;
-  
+  private wakeWordDetector!: WebspeechWakewordDetector;
+
+
   constructor() {
     this.injectDependencies();
   }
@@ -77,7 +79,8 @@ export class SpeechPlug {
       actuatorConfig: { 
         retries: config.retries,
         timeout: config.timeout
-      }
+      },
+      wakeWord: config.wakeWord
     });
   }
 
@@ -85,12 +88,11 @@ export class SpeechPlug {
     this.eventBus = new EventBus();
     this.status = new Status();
 
-    this.audioCapturer = new WebAudioCapturer(); 
-
+    this.wakeWordDetector = new WebspeechWakewordDetector(this.eventBus);
     this.voiceActuator = new VoiceActuator(this.eventBus);
     this.uiHandler = new UIHandler(this.eventBus, this.status);
-    this.nluModule = new NLUModule(this.audioCapturer, this.eventBus, this.status);
-    this.coreModule = new CoreModule(this.nluModule, this.uiHandler, this.voiceActuator, this.eventBus, this.status);
+    this.nluModule = new NLUModule(this.eventBus, this.status);
+    this.coreModule = new CoreModule(this.nluModule, this.uiHandler, this.voiceActuator, this.eventBus, this.status, this.wakeWordDetector);
   }
   // Function to validate the configuration
  private validateSpeechPlugConfig(config: SpeechPlugConfig): { isValid: boolean; errors: string[] } {

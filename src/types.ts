@@ -1,5 +1,8 @@
 // enhanced-types.ts
 export interface SpeechPlugConfig {
+  //WakewordConfig
+  wakeWord?: string; // Optional wake word for voice activation
+  
   //Key configs
   containerId? :string;
   lang?: string;   
@@ -45,6 +48,7 @@ export interface CoreConfig {
   recognitionConfig: RecognitionConfig;
   uiConfig: UIConfig
   actuatorConfig: ActuatorConfig
+  wakeWord?: string; // Optional wake word for voice activation
 }
 
 export interface UIConfig {
@@ -70,6 +74,7 @@ export enum IntentTypes {
   SCROLL= 'scroll',
   SCROLL_TO_ELEMENT = 'scroll_to_element',
   FILL_INPUT = 'fill_input',
+  TYPE_TEXT = 'type_text',
   SPEAK_TEXT = 'speak_text',
   CHECK_CHECKBOX = 'check_checkbox',
   UNCHECK_CHECKBOX ='uncheck_checkbox',
@@ -85,9 +90,21 @@ export enum IntentTypes {
 
 // Audio Capturer interface
 export interface AudioCapturer {
-  startRecording(): void;
-  stopRecording(): Promise<Blob>;
+  startListening(config: VADConfig): Promise<void>;
+  stopListening(): void;
 }
+
+export interface VADConfig {
+  silenceDelay: number;
+  speakingThreshold: number;
+}
+
+//Wakeword detector interface
+export interface WakewordDetector {
+  start(): void;
+  stop(): void;
+}
+
 // Intent recognition result
 export interface IntentResult {
   intent: IntentTypes;
@@ -121,7 +138,8 @@ export interface IActionRegistry {
 export enum TranscriptionProviders {
   DEFAULT = 'default',
   GOOGLE = 'google',
-  AZURE = 'azure'
+  AZURE = 'azure',
+  WEBSPEECH = 'webspeech' // New provider
 }
 
 export enum ReconitionProvider {
