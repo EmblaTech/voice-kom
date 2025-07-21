@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Speech API Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        #app-container {
+            width: 90%;
+            max-width: 600px;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 { margin-top: 0; color: #1a73e8; }
+        #toggleBtn {
+            padding: 12px 24px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #28a745;
+            color: white;
+            margin-bottom: 1.5rem;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        #toggleBtn.stop { background-color: #dc3545; }
+        #toggleBtn:hover { opacity: 0.9; }
+        #toggleBtn:active { transform: scale(0.98); }
+        #status {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #6c757d;
+            height: 25px;
+            margin-bottom: 1.5rem;
+            transition: color 0.3s;
+        }
+        #status.capturing { color: #1a73e8; }
+        #result-container {
+            text-align: left;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #fafafa;
+        }
+        #result-container p { margin: 0 0 0.75rem 0; padding-bottom: 0.75rem; border-bottom: 1px solid #eee; }
+        #result-container p:last-child { border-bottom: none; margin-bottom: 0; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <h1>Web Speech API Test</h1>
+        <button id="toggleBtn">Start Listening</button>
+        <div id="status">Click "Start Listening" to begin.</div>
+        <div id="result-container"></div>
+    </div>
+
+    <script>
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const toggleBtn = document.getElementById('toggleBtn');
+        const statusDiv = document.getElementById('status');
+        const resultContainer = document.getElementById('result-container');
+
+        let recognition;
+        let isListening = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+
+            // --- Event Handlers for Status Updates ---
+
+            // When recognition starts, we are in the "Listening" state.
+            recognition.onstart = () => {
+                statusDiv.textContent = 'Listening...';
+                statusDiv.classList.remove('capturing');
+            };
+
+            // When the browser detects speech, we move to the "Capturing" state.
+            recognition.onspeechstart = () => {
+                statusDiv.textContent = 'Capturing...';
+                statusDiv.classList.add('capturing');
+            };
+            
+            recognition.onsoundstart = () => {
+                statusDiv.textContent = 'Capturing...';
+                statusDiv.classList.add('capturing');
+            };
+            recognition.onaaudiostart = () => {
+                statusDiv.textContent = 'Capturing...';
+                statusDiv.classList.add('capturing');
+            };
+            
+            // === THIS IS THE KEY PART FOR YOUR REQUEST ===
+            // When the user stops speaking, the API fires this event.
+            // We then switch the status back to "Listening" for the next phrase.
+            recognition.onspeechend = () => {
+                statusDiv.textContent = 'Listening...';
+                statusDiv.classList.remove('capturing');
+            };
+
+            // Process the final result for an utterance.
+            recognition.onresult = (event) => {
+                const lastResultIndex = event.results.length - 1;
+                const transcript = event.results[lastResultIndex][0].transcript;
+                
+                const p = document.createElement('p');
+                p.textContent = transcript.trim();
+                resultContainer.appendChild(p);
+                resultContainer.scrollTop = resultContainer.scrollHeight;
+
+                                statusDiv.textContent = 'Listening...';
+                statusDiv.classList.remove('capturing');
+            };
+
+            recognition.onerror = (event) => {
+                statusDiv.textContent = 'Error: ' + event.error;
+                console.error('Speech recognition error', event);
+            };
+
+            // Auto-restart if the service disconnects (e.g., due to a timeout)
+            recognition.onend = () => {
+                if (isListening) {
+                    recognition.start();
+                } else {
+                    statusDiv.textContent = 'Click "Start Listening" to begin.';
+                    statusDiv.classList.remove('capturing');
+                }
+            };
+
+            toggleBtn.addEventListener('click', () => {
+                if (isListening) {
+                    recognition.stop();
+                    isListening = false;
+                    toggleBtn.textContent = 'Start Listening';
+                    toggleBtn.classList.remove('stop');
+                } else {
+                    try {
+                        recognition.start();
+                        isListening = true;
+                        toggleBtn.textContent = 'Stop Listening';
+                        toggleBtn.classList.add('stop');
+                        resultContainer.innerHTML = '';
+                    } catch (error) {
+                        console.error("Could not start recognition:", error);
+                        statusDiv.textContent = 'Error: Could not start.';
+                    }
+                }
+            });
+
+        } else {
+            statusDiv.textContent = "Sorry, your browser does not support the Web Speech API.";
+            toggleBtn.disabled = true;
+        }
+    </script>
+</body>
+</html>
