@@ -9,12 +9,12 @@ export class UIHandler {
   private readonly logger = Logger.getInstance();
 
   // Paths and Identifiers
-  private readonly TEMPLATE_PATH = '../../src/ui/speech-container.html';
-  private readonly STYLE_ELEMENT_ID = 'speech-container-style';
-  private readonly STYLE_PATH = '../../src/ui/speech-container.css';
+  private readonly TEMPLATE_PATH = '../../src/ui/assets/widget.html';
+  private readonly STYLE_ELEMENT_ID = 'voicekom-style';
+  private readonly STYLE_PATH = '../../src/ui/assets/style.css';
 
   // UI Elements
-  private container: HTMLElement | null = null;
+  private widget: HTMLElement | null = null;
   private actionButton: HTMLButtonElement | null = null;
   private buttonContainer: HTMLElement | null = null;
   private statusDisplay: HTMLDivElement | null = null;
@@ -42,7 +42,7 @@ export class UIHandler {
   private readonly STATUS_CONFIG: Record<StatusType, StatusMeta> = {
     [StatusType.IDLE]: {
       code: StatusType.IDLE,
-      text: 'SpeechPlug',
+      text: 'VoiceKom ready',
       buttonMode: ButtonMode.RECORD,
       icon: 'mic',
       cssClass: 'record-mode',
@@ -78,7 +78,7 @@ export class UIHandler {
     },
     [StatusType.WAITING]: {
     code: StatusType.WAITING,
-    text: "Say 'Hey SpeechPlug'", // Example text
+    text: "Say 'Hey VoiceKom'", // Example text
     buttonMode: ButtonMode.RECORD,
     icon: 'hearing',
     cssClass: 'record-mode', // Can reuse an existing style
@@ -121,41 +121,41 @@ export class UIHandler {
 
   public async init(config: UIConfig): Promise<void> {
     this.config = config;
-    const containerId = this.config.containerId;
-    this.container = containerId ? document.getElementById(containerId) : null;
-    this.container ??= await this.createDefaultUI(containerId!);
+    const widgetId = this.config.widgetId;
+    this.widget = widgetId ? document.getElementById(widgetId) : null;
+    this.widget ??= await this.createDefaultUI(widgetId!);
     this.updateUIStatus();
   }
 
-  private async createDefaultUI(containerId: string): Promise<HTMLElement> { 
-    this.container = this.createContainer(containerId); 
+  private async createDefaultUI(widgetId: string): Promise<HTMLElement> { 
+    this.widget = this.createWidget(widgetId); 
     await this.setUI(this.config!.position!, this.config!.width!, this.config!.height!);
-    return this.container;
+    return this.widget;
   }
 
   
   private async setUI(position: string, width: string, height: string): Promise<void> {
-    if (!this.container) return;
-    this.container.classList.add('voice-recorder-container');
+    if (!this.widget) return;
+    this.widget.classList.add('voice-recorder-container');
     if (position) {     
-      this.container.classList.add(`voice-${position}`);
+      this.widget.classList.add(`voice-${position}`);
     } 
     if (width) {
-      this.container.style.width = width;
+      this.widget.style.width = width;
     } 
     if (height) {
-      this.container.style.height = height;
+      this.widget.style.height = height;
     }
     await this.createUIElements();
-    await this.injectStyles(this.container, this.config?.styleUrl, this.config?.styles);   
+    await this.injectStyles(this.widget, this.config?.styleUrl, this.config?.styles);   
   }
 
-  private createContainer(id: string): HTMLElement {
-    const container = document.createElement('div');
-    container.id = id;
-    this.config!.containerId = id;
-    document.body.appendChild(container);
-    return container;
+  private createWidget(id: string): HTMLElement {
+    const widget = document.createElement('div');
+    widget.id = id;
+    this.config!.widgetId = id;
+    document.body.appendChild(widget);
+    return widget;
   }
   
   private async injectStyles(container: any, fileStyles: string | undefined, inlineStyles: any): Promise<void> {
@@ -236,17 +236,17 @@ export class UIHandler {
   }
 
   private async createUIElements(): Promise<void> {
-    if (!this.container) return;
-    this.container.innerHTML = '';  
+    if (!this.widget) return;
+    this.widget.innerHTML = '';  
 
     try {
       const htmlContent = await fetchContent(this.TEMPLATE_PATH);
-      this.container.innerHTML = htmlContent;
+      this.widget.innerHTML = htmlContent;
       
-      this.actionButton = this.container.querySelector(this.ACTION_BUTTON_SELECTOR);
-      this.buttonContainer = this.container.querySelector(this.BUTTON_CONTAINER_SELECTOR);
-      this.statusDisplay = this.container.querySelector(this.STATUS_DISPLAY_SELECTOR);
-      this.transcriptionDisplay = this.container.querySelector(this.TRANSCRIPTION_DISPLAY_SELECTOR);
+      this.actionButton = this.widget.querySelector(this.ACTION_BUTTON_SELECTOR);
+      this.buttonContainer = this.widget.querySelector(this.BUTTON_CONTAINER_SELECTOR);
+      this.statusDisplay = this.widget.querySelector(this.STATUS_DISPLAY_SELECTOR);
+      this.transcriptionDisplay = this.widget.querySelector(this.TRANSCRIPTION_DISPLAY_SELECTOR);
       
       this.logger.info('UI Elements found:', { actionButton: !!this.actionButton, buttonContainer: !!this.buttonContainer, statusDisplay: !!this.statusDisplay, transcriptionDisplay: !!this.transcriptionDisplay });
       
@@ -274,7 +274,7 @@ export class UIHandler {
   }
   
   public updateUIStatus(): void {
-    if (!this.container) return;
+    if (!this.widget) return;
     const status = this.status.get().value;
     this.showStatus(status);
     this.setActionButton(status);
@@ -375,11 +375,11 @@ export class UIHandler {
       this.transcriptionDisplay.textContent = trimmed;
       this.transcriptionDisplay.style.display = 'block';
       this.restoreTranscriptionOpacity();
-      this.expandContainer();
+      this.expandWidget();
     } else {
       this.transcriptionDisplay.textContent = '';
       this.transcriptionDisplay.style.display = 'none';
-      this.resetContainerSize();
+      this.resetWidgetSize();
     }
   }
 
@@ -397,16 +397,16 @@ export class UIHandler {
     this.transcriptionDisplay.style.transition = 'opacity 0.3s ease';
   }
 
-  private expandContainer(): void {
-    if (!this.container) return;
-    this.container.style.maxHeight = 'none';
-    this.container.style.height = 'auto';
+  private expandWidget(): void {
+    if (!this.widget) return;
+    this.widget.style.maxHeight = 'none';
+    this.widget.style.height = 'auto';
   }
 
-  private resetContainerSize(): void {
-    if (!this.container) return;
-    this.container.style.maxHeight = '75px';
-    this.container.style.height = 'auto';
+  private resetWidgetSize(): void {
+    if (!this.widget) return;
+    this.widget.style.maxHeight = '75px';
+    this.widget.style.height = 'auto';
   }
 
   /**
