@@ -167,11 +167,7 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         return this.model;
     }
 
-    private validateConfig(config: RecognitionConfig): void {
-        if (!config.apiKey?.trim()) {
-            throw new Error('OpenAI API key is required for LLM-based NLU');
-        }
-        
+    private validateConfig(config: RecognitionConfig): void {        
         if (config.apiUrl && !this.isValidUrl(config.apiUrl)) {
             throw new Error(`Invalid API URL provided: ${config.apiUrl}`);
         }
