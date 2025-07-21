@@ -4,9 +4,9 @@ import { WakewordDetector } from '../types';
 export class WebspeechWakewordDetector implements WakewordDetector {
   private readonly recognition: SpeechRecognition;
   private isListening = false;
-  private wakeWord: string = 'hey';
+  private wakeWords: string[] = ['hey'];
   // Use an array to support multiple stop phrases for better UX
-  private stopWords: string[] = ['stop listening'];
+  private sleepWords: string[] = ['stop listening'];
 
   constructor(private readonly eventBus: EventBus) {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -26,20 +26,20 @@ export class WebspeechWakewordDetector implements WakewordDetector {
    * @param wakeWord The word or phrase to listen for.
    * @param stopWords A single stop word or an array of stop words.
    */
-  public init(wakeWord: string, stopWords?: string | string[]): void {
-    if (!wakeWord) {
+  public init(wakeWords: string[], sleepWords?: string | string[]): void {
+    if (!wakeWords || wakeWords.length === 0) {
       throw new Error("A wake word must be provided for the WakeWordDetector.");
     }
-    this.wakeWord = wakeWord.toLowerCase();
+    this.wakeWords = wakeWords.map(word => word.toLowerCase());
     
     // Allow customizing the stop word(s)
-    if (stopWords) {
-      if (Array.isArray(stopWords)) {
+    if (sleepWords) {
+      if (Array.isArray(sleepWords)) {
         // If it's an array, map all to lowercase
-        this.stopWords = stopWords.map(sw => sw.toLowerCase());
+        this.sleepWords = sleepWords.map(sw => sw.toLowerCase());
       } else {
         // If it's a single string, put it in an array
-        this.stopWords = [stopWords.toLowerCase()];
+        this.sleepWords = [sleepWords.toLowerCase()];
       }
     }
   }
@@ -53,7 +53,7 @@ export class WebspeechWakewordDetector implements WakewordDetector {
     const normalizedTranscription = this.normalizeText(transcription);
 
     // Check if the normalized text is an exact match for any of the stop words
-    if (this.stopWords.some(stopWord => normalizedTranscription === stopWord)) {
+    if (this.sleepWords.some(stopWord => normalizedTranscription === stopWord)) {
       console.log(`WakeWordDetector: Detected exact stop phrase! Emitting event.`);
       this.eventBus.emit(SpeechEvents.STOP_WORD_DETECTED);
     }
@@ -76,7 +76,7 @@ export class WebspeechWakewordDetector implements WakewordDetector {
         .map(r => r[0].transcript)
         .join('').toLowerCase();
         
-      if (fullHistory.includes(this.wakeWord)) {
+      if (this.wakeWords.some(wakeWord => fullHistory.includes(wakeWord))) {
         this.eventBus.emit(SpeechEvents.WAKE_WORD_DETECTED);
       }
     };
@@ -100,13 +100,13 @@ export class WebspeechWakewordDetector implements WakewordDetector {
    * Starts the wake word detection.
    */
   public start(): void {
-    if (this.isListening || !this.wakeWord) {
+    if (this.isListening || !this.wakeWords || this.wakeWords.length === 0) {
       return;
     }
     try {
       this.isListening = true;
       this.recognition.start();
-      console.log(`WakeWordDetector: Passively listening for "${this.wakeWord}"...`);
+      console.log(`WakeWordDetector: Passively listening for "${this.wakeWords.join(", ")}"...`);
     } catch (e) {
       this.isListening = false;
       console.error("Could not start WakeWordDetector:", e);

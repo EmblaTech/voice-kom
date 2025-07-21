@@ -2,28 +2,27 @@ import { VoiceActuator } from "./actuator/voice-actuator";
 import { EventBus } from "./common/eventbus";
 import { Status } from "./common/status";
 import { CoreModule } from "./core/core-module";
-import { WebAudioCapturer } from "./nlu/audio-capturer";
 import { NLUModule } from "./nlu/nlu-module";
-import { AudioCapturer, ReconitionProvider, SpeechPlugConfig, TranscriptionProviders } from "./types";
+import { ReconitionProvider, VoiceKomConfig, TranscriptionProviders } from "./types";
 import { UIHandler } from "./ui/ui-handler";
 import { Logger, LogLevel } from "./utils/logger";
 import { Validator } from "./utils/validator";
 import {WebspeechWakewordDetector} from "./wakeword/WebspeechAPICapturer";
 
-export class SpeechPlug {
+export class VoiceKom {
   private readonly logger = Logger.getInstance();
   private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure', 'webspeech'];
   private readonly VALID_UI_POSITIONS = ['bottom-left', 'bottom-right'];
-  private readonly DEFAULT_CONTAINER_ID = 'speech-plug-container';
+  private readonly DEFAULT_WIDGET_ID = 'voice-kom-widget';
   private readonly DEFAULT_LANG = 'en';
   private readonly DEFAULT_TRANSCRIPTION_PROVIDER = TranscriptionProviders.DEFAULT;
   private readonly DEFAULT_RECOGNITION_PROVIDER = ReconitionProvider.DEFAULT;
   private readonly DEFAULT_RETRY_ATTEMPTS = 3;
   private readonly DEFAULT_TIMEOUT = 5000;
   private readonly DEFAULT_LOG_LEVEL = LogLevel.INFO;
-  private readonly DEFAULT_CONTAINER_POSITION = 'bottom-right';
-  private readonly DEFAULT_CONTAINER_WIDTH = '300px';
-  private readonly DEFAULT_CONTAINER_HEIGHT = '75px';
+  private readonly DEFAULT_WIDGET_POSITION = 'bottom-right';
+  private readonly DEFAULT_WIDGET_WIDTH = '300px';
+  private readonly DEFAULT_WIDGET_HEIGHT = '75px';
   private readonly DEFAULT_AUTO_START = false;
   private readonly DEFAULT_SHOW_PROGRESS = true;
   private readonly DEFAULT_SHOW_TRANSCRIPTION = true;
@@ -40,8 +39,8 @@ export class SpeechPlug {
     this.injectDependencies();
   }
   
-  public async init(config: SpeechPlugConfig): Promise<void> {
-    const validation = this.validateSpeechPlugConfig(config);
+  public async init(config: VoiceKomConfig): Promise<void> {
+    const validation = this.validateConfig(config);
     if (!validation.isValid) {
       this.logger.error(`Invalid configuration: ${validation.errors.join(', ')}`);
       throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
@@ -51,7 +50,6 @@ export class SpeechPlug {
         lang: config.lang ?? this.DEFAULT_LANG,
         provider: config.transcription?.provider ?? this.DEFAULT_TRANSCRIPTION_PROVIDER,
         apiUrl: config.transcription?.apiUrl,
-        apiKey: config.transcription?.apiKey,
         model: config.transcription?.model,
         confidence: config.transcription?.confidence,
         options: config.transcription?.options
@@ -60,16 +58,15 @@ export class SpeechPlug {
         lang: config.lang ?? this.DEFAULT_LANG,
         provider: config.recognition?.provider ?? this.DEFAULT_RECOGNITION_PROVIDER,
         apiUrl: config.recognition?.apiUrl,
-        apiKey: config.recognition?.apiKey,
         model: config.recognition?.model,
         confidence: config.recognition?.confidence
       },
       uiConfig: {
-        containerId: config.containerId ?? this.DEFAULT_CONTAINER_ID,
+        widgetId: config.widgetId ?? this.DEFAULT_WIDGET_ID,
         autoStart: config.autoStart ?? this.DEFAULT_AUTO_START,
-        position: config.position ?? this.DEFAULT_CONTAINER_POSITION,
-        width: config.width ?? this.DEFAULT_CONTAINER_WIDTH,
-        height: config.height ?? this.DEFAULT_CONTAINER_HEIGHT,
+        position: config.position ?? this.DEFAULT_WIDGET_POSITION,
+        width: config.width ?? this.DEFAULT_WIDGET_WIDTH,
+        height: config.height ?? this.DEFAULT_WIDGET_HEIGHT,
         theme: config.theme,
         showProgress: config.showProgress ?? this.DEFAULT_SHOW_PROGRESS,
         showTranscription: config.showTranscription ?? this.DEFAULT_SHOW_TRANSCRIPTION,
@@ -80,7 +77,7 @@ export class SpeechPlug {
         retries: config.retries,
         timeout: config.timeout
       },
-      wakeWord: config.wakeWord
+      wakeWords: config.wakeWords
     });
   }
 
@@ -95,10 +92,10 @@ export class SpeechPlug {
     this.coreModule = new CoreModule(this.nluModule, this.uiHandler, this.voiceActuator, this.eventBus, this.status, this.wakeWordDetector);
   }
   // Function to validate the configuration
- private validateSpeechPlugConfig(config: SpeechPlugConfig): { isValid: boolean; errors: string[] } {
+ private validateConfig(config: VoiceKomConfig): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    if (!Validator.isStringOrUndefined(config.containerId)) {
-      errors.push('ContainerId must be a string');
+    if (!Validator.isStringOrUndefined(config.widgetId)) {
+      errors.push('Widget Id must be a string');
     }  
 
     if (!Validator.isStringOrUndefined(config.lang)) {
@@ -140,19 +137,19 @@ export class SpeechPlug {
     }
   }
 
-  private validateUIConfig(config: SpeechPlugConfig, errors:string[]){
+  private validateUIConfig(config: VoiceKomConfig, errors:string[]){
       if (!Validator.isBoolean(config.autoStart)) errors.push("AutoStart must be a boolean");          
 
-      const widthResult = Validator.isValidPixelValue(config.width, this.DEFAULT_CONTAINER_WIDTH);
+      const widthResult = Validator.isValidPixelValue(config.width, this.DEFAULT_WIDGET_WIDTH);
       if (!widthResult.valid) {
           this.logger.error(`Invalid widget width. ${widthResult.message}`);
-          config.width = this.DEFAULT_CONTAINER_WIDTH;
+          config.width = this.DEFAULT_WIDGET_WIDTH;
       }
 
-      const heightResult = Validator.isValidPixelValue(config.height, this.DEFAULT_CONTAINER_HEIGHT);
+      const heightResult = Validator.isValidPixelValue(config.height, this.DEFAULT_WIDGET_HEIGHT);
       if (!heightResult.valid) {
           this.logger.error(`Invalid widget height. ${heightResult.message}`);
-          config.height = this.DEFAULT_CONTAINER_HEIGHT;
+          config.height = this.DEFAULT_WIDGET_HEIGHT;
       }
       
       if (!Validator.isStringOrUndefined(config.theme)) errors.push("Container theme must be a string");
@@ -163,19 +160,19 @@ export class SpeechPlug {
       const positionResult = Validator.isInValues(config.position, this.VALID_UI_POSITIONS, 'Container position');
       if (!positionResult.valid && positionResult.message) {
           this.logger.error(`Invalid position configuration: ${positionResult.message}`);
-          config.position = this.DEFAULT_CONTAINER_POSITION;
+          config.position = this.DEFAULT_WIDGET_POSITION;
       }     
   }
 }
 
 // Create singleton instance
-const speechPlug = new SpeechPlug();
+const voiceKom = new VoiceKom();
 
 // Make sure it's properly exposed for both module systems and global context
 if (typeof window !== 'undefined') {
-  (window as any).SpeechPlug = speechPlug;
+  (window as any).SpeechPlug = voiceKom;
 }
 
 // Export as both default and named export for better compatibility
-export { speechPlug };
-export default speechPlug;
+export { voiceKom };
+export default voiceKom;

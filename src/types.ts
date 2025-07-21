@@ -1,16 +1,15 @@
 // enhanced-types.ts
-export interface SpeechPlugConfig {
-  //WakewordConfig
-  wakeWord?: string; // Optional wake word for voice activation
-  
+export interface VoiceKomConfig { 
   //Key configs
-  containerId? :string;
+  widgetId? :string;
   lang?: string;   
 
   //Speech engine configs
   transcription?: TranscriptionConfig;  //Transcription options
-  recognition?: RecognitionConfig; // NLU options    
-
+  recognition?: RecognitionConfig; // Intent Detection options    
+  //WakewordConfig
+  wakeWords?: string[]; // Optional wake word for start listening
+  sleepWords?: string[]; // Optional sleep word to stop listening
   //UI configs
   autoStart?: boolean;
   position?: string;
@@ -27,7 +26,7 @@ export interface SpeechPlugConfig {
   ui?: Record<string, any>;
 }
 
-interface SpeechEngineConfig {
+interface VoiceEngineConfig {
   provider: string; // Provider name (e.g., 'default' | 'openai' | 'google' | 'azure' | 'custom',)
   lang?: string;
   apiUrl?: string;  // API endpoint URL 
@@ -37,10 +36,10 @@ interface SpeechEngineConfig {
   options?: Record<string, any>; // Any additional options needed
 }
 
-export interface RecognitionConfig extends SpeechEngineConfig {
+export interface RecognitionConfig extends VoiceEngineConfig {
 }
 
-export interface TranscriptionConfig extends SpeechEngineConfig {  
+export interface TranscriptionConfig extends VoiceEngineConfig {  
 }
 
 export interface CoreConfig {
@@ -48,11 +47,12 @@ export interface CoreConfig {
   recognitionConfig: RecognitionConfig;
   uiConfig: UIConfig
   actuatorConfig: ActuatorConfig
-  wakeWord?: string; // Optional wake word for voice activation
+  wakeWords?: string[]; // Optional wake word for start listening
+  sleepWords?: string[]; // Optional wake word for stop listening
 }
 
 export interface UIConfig {
-  containerId?: string;
+  widgetId?: string;
   autoStart?: boolean;
   position?: string;
   width?: string;

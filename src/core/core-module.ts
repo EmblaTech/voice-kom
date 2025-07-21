@@ -29,8 +29,8 @@ export class CoreModule {
     this.uiHandler.updateUIStatus();
 
     // --- INITIALIZE AND START THE WAKE WORD DETECTOR ---
-    if (config.wakeWord) {
-      this.wakeWordDetector.init(config.wakeWord);
+    if (config.wakeWords) {
+      this.wakeWordDetector.init(config.wakeWords, config.sleepWords);
       this.wakeWordDetector.start();
     }
   }
