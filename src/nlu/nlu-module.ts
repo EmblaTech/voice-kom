@@ -1,4 +1,4 @@
-import { AudioCapturer, CommandRegistry, TranscriptionConfig, RecognitionConfig } from '../types';
+import { AudioCapturer, CommandRegistry, TranscriptionConfig, RecognitionConfig, TranscriptionProviders, ReconitionProvider } from '../types';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { Status, StatusType } from '../common/status';
 import { TranscriptionDriver } from './transcription/driver';
@@ -13,6 +13,7 @@ export class NLUModule {
   private audioCapturer!: AudioCapturer;
   private transcriptionDriver: TranscriptionDriver | null = null;
   private recognitionDriver: RecognitionDriver | null = null;
+  private backendDriver: BackendDriver | null = null;
   private readonly logger = Logger.getInstance();
 
   // VAD Configuration with defaults
@@ -50,12 +51,17 @@ public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConf
     try {
       this.language = transConfig.lang || 'en';
       
-      this.logger.info("Getting transcription driver...");
-      this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig);
+      if(transConfig.provider === TranscriptionProviders.DEFAULT || recogConfig.provider === ReconitionProvider.DEFAULT) {
+        this.logger.info("Getting transcription driver...");
+        this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig);
+        
+        this.logger.info("Getting recognition driver...");
+        this.recognitionDriver = DriverFactory.getRecognitionDriver(recogConfig);
+      }else{
+        this.logger.info("Using backend drivers for transcription and recognition.");
+        this.transcriptionDriver = DriverFactory.backendDriver(transConfig, recogConfig);
+      }
 
-      this.logger.info("Getting recognition driver...");
-      this.recognitionDriver = DriverFactory.getRecognitionDriver(recogConfig);
-      
       this.logger.info("Getting audio capturer...");
       this.audioCapturer = DriverFactory.getAudioCapturer(transConfig, this.eventBus);
       this.logger.info("Audio capturer has been assigned.", this.audioCapturer); // Check if this logs an object

@@ -139,7 +139,8 @@ export enum TranscriptionProviders {
   DEFAULT = 'default',
   GOOGLE = 'google',
   AZURE = 'azure',
-  WEBSPEECH = 'webspeech' // New provider
+  WEBSPEECH = 'webspeech', // New provider
+  WHISPER = 'whisper', // New provider
 }
 
 export enum ReconitionProvider {

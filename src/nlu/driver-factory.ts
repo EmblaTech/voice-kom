@@ -17,11 +17,12 @@ export class DriverFactory {
     const engine = config.provider.toLowerCase();
     switch (engine) {
       case TranscriptionProviders.DEFAULT:
-        return new WhisperTranscriptionDriver(config);
-      case TranscriptionProviders.GOOGLE:
-        return new GoogleTranscriptionDriver(config);
       case TranscriptionProviders.WEBSPEECH:
         return new DummyTranscriptionDriver();
+      case TranscriptionProviders.GOOGLE:
+        return new GoogleTranscriptionDriver(config);
+      case TranscriptionProviders.WHISPER:
+        return new WhisperTranscriptionDriver(config);
       default:
         throw new Error(`Unsupported driver type: ${config.provider}`);
     }
@@ -45,7 +46,7 @@ export class DriverFactory {
   static getAudioCapturer(config: TranscriptionConfig, eventBus: EventBus): AudioCapturer {
     const provider = config.provider.toLowerCase();
 
-    if (provider === TranscriptionProviders.WEBSPEECH) {
+    if (provider === TranscriptionProviders.WEBSPEECH || provider === TranscriptionProviders.DEFAULT) {
       return new WebSpeechAPICapturer(eventBus, config.lang);
     }    
     return new WebAudioCapturer(eventBus);

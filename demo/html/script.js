@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // width: '188px',
     // height: '58px',
     transcription: {
-      provider: 'webspeech',
+      provider: 'default',
       apiKey: '' 
     },
     recognition: {
