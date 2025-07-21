@@ -6,7 +6,6 @@ import { NLUModule } from "./nlu/nlu-module";
 import { ReconitionProvider, VoiceKomConfig, TranscriptionProviders, CoreConfig } from "./types";
 import { UIHandler } from "./ui/ui-handler";
 import { Logger, LogLevel } from "./utils/logger";
-import { validateIfPresent } from "./utils/optional-validater";
 import { Validator } from "./utils/validator";
 import { WebspeechWakewordDetector } from "./wakeword/WebspeechAPICapturer";
 
@@ -67,10 +66,10 @@ export class VoiceKom {
 
     private processAndValidateConfig(config: VoiceKomConfig): { finalConfig: CoreConfig, errors: string[] } {
         const errors: string[] = [];
-        validateIfPresent(config.widgetId, Validator.isString, 'Widget Id must be a string', errors);
-        validateIfPresent(config.lang, Validator.isString, 'Language must be a string', errors);
-        validateIfPresent(config.retries, Validator.isNum, 'Retries must be a number', errors);
-        validateIfPresent(config.timeout, Validator.isNum, 'Timeout must be a number', errors);
+        Validator.validateOptional(config.widgetId, Validator.isString, 'Widget Id must be a string', errors);
+        Validator.validateOptional(config.lang, Validator.isString, 'Language must be a string', errors);
+        Validator.validateOptional(config.retries, Validator.isNum, 'Retries must be a number', errors);
+        Validator.validateOptional(config.timeout, Validator.isNum, 'Timeout must be a number', errors);
 
         const providerResult = Validator.isInValues(config.transcription?.provider, this.VALID_PROVIDERS, 'transcription.provider');
         if (!providerResult.valid && providerResult.message !== undefined) errors.push(providerResult.message);
@@ -103,21 +102,21 @@ export class VoiceKom {
         }
 
         if (config.transcription) {
-            validateIfPresent(config.transcription.provider, Validator.isString, 'Transcription provider must be a string', errors);
-            validateIfPresent(config.transcription.model, Validator.isString, 'Transcription model must be a string', errors);
-            validateIfPresent(config.transcription.apiUrl, Validator.isString, 'Transcription apiUrl must be a string', errors);
-            validateIfPresent(config.transcription.confidence, Validator.isNum, 'Transcription confidence must be a number', errors);
+            Validator.validateOptional(config.transcription.provider, Validator.isString, 'Transcription provider must be a string', errors);
+            Validator.validateOptional(config.transcription.model, Validator.isString, 'Transcription model must be a string', errors);
+            Validator.validateOptional(config.transcription.apiUrl, Validator.isString, 'Transcription apiUrl must be a string', errors);
+            Validator.validateOptional(config.transcription.confidence, Validator.isNum, 'Transcription confidence must be a number', errors);
         }
 
         if (config.recognition) {
-            validateIfPresent(config.recognition.provider, Validator.isString, 'Recognition provider must be a string', errors);
-            validateIfPresent(config.recognition.apiUrl, Validator.isString, 'Recognition apiUrl must be a string', errors);
-            validateIfPresent(config.recognition.model, Validator.isString, 'Recognition model must be a string', errors);
-            validateIfPresent(config.recognition.confidence, Validator.isNum, 'Recognition confidence must be a number', errors);
+            Validator.validateOptional(config.recognition.provider, Validator.isString, 'Recognition provider must be a string', errors);
+            Validator.validateOptional(config.recognition.apiUrl, Validator.isString, 'Recognition apiUrl must be a string', errors);
+            Validator.validateOptional(config.recognition.model, Validator.isString, 'Recognition model must be a string', errors);
+            Validator.validateOptional(config.recognition.confidence, Validator.isNum, 'Recognition confidence must be a number', errors);
         }
 
         if (config.ui) {
-            validateIfPresent(config.ui.url, Validator.isValidUrl, 'ui.url must be a valid URL', errors);
+            Validator.validateOptional(config.ui.url, Validator.isValidUrl, 'ui.url must be a valid URL', errors);
         }
 
         // Build the final, complete configuration object by merging user config over defaults.
