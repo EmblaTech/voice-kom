@@ -42,7 +42,9 @@ export class VoiceKom {
 
     public async init(config: VoiceKomConfig): Promise<void> {
         // 1. Process, validate, and apply defaults all in one step.
+        console.log(config)
         const { finalConfig, errors } = this.processAndValidateConfig(config);
+        console.log('Final config:', finalConfig);
         // 2. Check if there were any validation errors.
         if (errors.length > 0) {
             const errorMsg = `Invalid configuration: ${errors.join(', ')}`;
@@ -152,7 +154,8 @@ export class VoiceKom {
                 retries: config.retries ?? this.DEFAULT_RETRY_ATTEMPTS,
                 timeout: config.timeout ?? this.DEFAULT_TIMEOUT
             },
-            wakeWords: config.wakeWords
+            wakeWords: config.wakeWords,
+            sleepWords: config.sleepWords
         };
 
         return { finalConfig, errors };
@@ -164,7 +167,7 @@ const voiceKom = new VoiceKom();
 
 // Make sure it's properly exposed for both module systems and global context
 if (typeof window !== 'undefined') {
-    (window as any).SpeechPlug = voiceKom;
+    (window as any).VoiceKom = voiceKom;
 }
 
 // Export as both default and named export for better compatibility

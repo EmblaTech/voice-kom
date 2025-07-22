@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     
   }).then(() => {
-    console.log('Speech plug library initialized successfully');
+    console.log('Voice Kom library initialized successfully');
   })
   .catch(error => {
-    console.error('Speech plug library failed to initialize: ', error);
+    console.error('Voice Kom library failed to initialize: ', error);
   });
 });
