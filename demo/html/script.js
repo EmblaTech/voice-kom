@@ -9,12 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // height: '58px',
     transcription: {
       provider: 'default',
-      apiKey: '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' 
+      apiKey: '' 
     },
     recognition: {
       provider: 'openai',
-      // provider: 'default',
-      apiKey: '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' 
+      // provider: 'default'
+      apiKey: '' 
     },
     
   }).then(() => {
