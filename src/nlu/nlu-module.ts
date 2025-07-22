@@ -1,4 +1,4 @@
-import { AudioCapturer, CommandRegistry, TranscriptionConfig, RecognitionConfig, TranscriptionProviders, ReconitionProvider } from '../types';
+import { AudioCapturer, CommandRegistry, TranscriptionConfig, RecognitionConfig, TranscriptionProviders, RecognitionProvider } from '../types';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { Status, StatusType } from '../common/status';
 import { TranscriptionDriver } from './transcription/driver';
@@ -6,6 +6,7 @@ import { RecognitionDriver } from './recognition/driver';
 import { DriverFactory } from './driver-factory';
 import { Logger } from '../utils/logger';
 import { fetchContent } from '../utils/resource-fetcher';
+import { BackendDriver } from './transcription-recognition/backend-driver';
 
 export class NLUModule {
   private commandRegistry: CommandRegistry | null = null;
@@ -30,7 +31,12 @@ export class NLUModule {
 
     this.eventBus.on(SpeechEvents.AUDIO_CAPTURED, (blob: Blob) => {
       this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
-      this.processAudioChunk(blob);
+      if(this.backendDriver) {
+        this.sendAudioChunk(blob);
+      }
+      else if(this.transcriptionDriver) {
+        this.processAudioChunk(blob);
+      }
     });
 
      this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
@@ -45,13 +51,14 @@ export class NLUModule {
 
   }
 
+
  // in NLUModule.ts
-public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): Promise<void> {
+public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig, clientId: string): Promise<void> {
     this.logger.info("NLUModule.init() starting...");
     try {
       this.language = transConfig.lang || 'en';
       
-      if(transConfig.provider === TranscriptionProviders.DEFAULT || recogConfig.provider === ReconitionProvider.DEFAULT) {
+      if(transConfig.provider === TranscriptionProviders.DEFAULT || recogConfig.provider === RecognitionProvider.DEFAULT) {
         this.logger.info("Getting transcription driver...");
         this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig);
         
@@ -59,7 +66,7 @@ public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConf
         this.recognitionDriver = DriverFactory.getRecognitionDriver(recogConfig);
       }else{
         this.logger.info("Using backend drivers for transcription and recognition.");
-        this.transcriptionDriver = DriverFactory.backendDriver(transConfig, recogConfig);
+        this.backendDriver = new BackendDriver(transConfig, recogConfig, clientId);
       }
 
       this.logger.info("Getting audio capturer...");
@@ -114,10 +121,37 @@ public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConf
     this.eventBus.emit(SpeechEvents.LISTEN_STARTED);
   }
 
+  private async sendAudioChunk(audioBlob: Blob): Promise<void> {
+    if (!this.backendDriver) {
+      this.logger.error('Backend Driver not initialized');
+      return;
+    }
+
+    try {
+      const result = await this.backendDriver.getIntentFromAudio(audioBlob);
+      
+      // Emit transcription result
+      if (result.transcription) {
+        this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, result.transcription);
+      }
+      
+      // Emit intent results array
+      if (result.intent && result.intent.length > 0) {
+        this.eventBus.emit(SpeechEvents.NLU_COMPLETED, result.intent);
+      } else {
+        this.logger.warn('No intents detected in the response');
+      }
+    } catch (error) {
+      this.logger.error('Error during backend intent recognition: ', error);
+      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
+    }
+  }
+
   
   private async processAudioChunk(audioBlob: Blob): Promise<void> {
 
     if (!this.transcriptionDriver) { 
+      
       this.logger.error('Transcription or Recognition Driver not initialized');
       return; 
     }

@@ -1,3 +1,5 @@
+// const { cli } = require("webpack");
+
 document.addEventListener('DOMContentLoaded', () => {  
   VoiceKom.init({   // Initialize SpeechPlug with params
     wakeWord: 'Hello', // Set the wake word
@@ -6,14 +8,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // position: 'bottom-right',
     // width: '188px',
     // height: '58px',
+    clientId: '123',
     transcription: {
-      provider: 'default',
-      apiKey: '' 
+      provider: 'whisper', // 'whisper' or 'default' 
+      temperature: '',
+      apiKey: ''
     },
     recognition: {
-      provider: 'openai',
-      // provider: 'default',
-      apiKey: '' 
+      provider: 'default', // 'openai' or 'default' 
+      temperature: '',
+      apiKey: ''
     },
     
   }).then(() => {

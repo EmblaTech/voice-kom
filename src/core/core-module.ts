@@ -21,7 +21,7 @@ export class CoreModule {
 
   public async init(config: CoreConfig): Promise<void> {
     await this.uiHandler.init(config.uiConfig);
-    await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig);
+    await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig, config.clientId);
     const key = 'KECjnDldxPbxJXTOu3XiY5rF0vB1IqNlEPC83MBJjNgDFvqhlnXovg=='
     this.bindEvents();
 

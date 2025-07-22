@@ -4,6 +4,7 @@ export interface VoiceKomConfig {
   widgetId? :string;
   lang?: string;   
 
+  clientId: string; // Unique identifier for the client, used for tracking and analytics
   //Speech engine configs
   transcription?: TranscriptionConfig;  //Transcription options
   recognition?: RecognitionConfig; // Intent Detection options    
@@ -37,12 +38,15 @@ interface VoiceEngineConfig {
 }
 
 export interface RecognitionConfig extends VoiceEngineConfig {
+  temperature?: number; // Optional temperature for LLM-based recognition
 }
 
-export interface TranscriptionConfig extends VoiceEngineConfig {  
+export interface TranscriptionConfig extends VoiceEngineConfig {
+  temperature?: number; // Optional temperature for LLM-based transcription  
 }
 
 export interface CoreConfig {
+  clientId: string; // Unique identifier for the client, used for tracking and analytics
   transcriptionConfig: TranscriptionConfig; 
   recognitionConfig: RecognitionConfig;
   uiConfig: UIConfig
@@ -143,7 +147,7 @@ export enum TranscriptionProviders {
   WHISPER = 'whisper', // New provider
 }
 
-export enum ReconitionProvider {
+export enum RecognitionProvider {
   DEFAULT = 'default',
   OPENAI = 'openai',
   LLM = 'llm',

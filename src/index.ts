@@ -3,7 +3,7 @@ import { EventBus } from "./common/eventbus";
 import { Status } from "./common/status";
 import { CoreModule } from "./core/core-module";
 import { NLUModule } from "./nlu/nlu-module";
-import { ReconitionProvider, VoiceKomConfig, TranscriptionProviders } from "./types";
+import { RecognitionProvider, VoiceKomConfig, TranscriptionProviders } from "./types";
 import { UIHandler } from "./ui/ui-handler";
 import { Logger, LogLevel } from "./utils/logger";
 import { Validator } from "./utils/validator";
@@ -11,12 +11,12 @@ import {WebspeechWakewordDetector} from "./wakeword/WebspeechAPICapturer";
 
 export class VoiceKom {
   private readonly logger = Logger.getInstance();
-  private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure', 'webspeech'];
+  private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure', 'webspeech','whisper'];
   private readonly VALID_UI_POSITIONS = ['bottom-left', 'bottom-right'];
   private readonly DEFAULT_WIDGET_ID = 'voice-kom-widget';
   private readonly DEFAULT_LANG = 'en';
   private readonly DEFAULT_TRANSCRIPTION_PROVIDER = TranscriptionProviders.DEFAULT;
-  private readonly DEFAULT_RECOGNITION_PROVIDER = ReconitionProvider.DEFAULT;
+  private readonly DEFAULT_RECOGNITION_PROVIDER = RecognitionProvider.DEFAULT;
   private readonly DEFAULT_RETRY_ATTEMPTS = 3;
   private readonly DEFAULT_TIMEOUT = 5000;
   private readonly DEFAULT_LOG_LEVEL = LogLevel.INFO;
@@ -52,14 +52,16 @@ export class VoiceKom {
         apiUrl: config.transcription?.apiUrl,
         model: config.transcription?.model,
         confidence: config.transcription?.confidence,
-        options: config.transcription?.options
+        options: config.transcription?.options,
+        apiKey: config.transcription?.apiKey,
       },
       recognitionConfig: {
         lang: config.lang ?? this.DEFAULT_LANG,
         provider: config.recognition?.provider ?? this.DEFAULT_RECOGNITION_PROVIDER,
         apiUrl: config.recognition?.apiUrl,
         model: config.recognition?.model,
-        confidence: config.recognition?.confidence
+        confidence: config.recognition?.confidence,
+        apiKey: config.recognition?.apiKey,
       },
       uiConfig: {
         widgetId: config.widgetId ?? this.DEFAULT_WIDGET_ID,
@@ -77,7 +79,8 @@ export class VoiceKom {
         retries: config.retries,
         timeout: config.timeout
       },
-      wakeWords: config.wakeWords
+      wakeWords: config.wakeWords,
+      clientId: config.clientId
     });
   }
 

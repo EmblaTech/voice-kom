@@ -1,4 +1,4 @@
-import { RecognitionConfig, ReconitionProvider, TranscriptionConfig, TranscriptionProviders, AudioCapturer } from "../types";
+import { RecognitionConfig, RecognitionProvider, TranscriptionConfig, TranscriptionProviders, AudioCapturer } from "../types";
 import { CompromiseRecognitionDriver } from "./recognition/compromise-driver";
 import { RecognitionDriver } from "./recognition/driver";
 import { OpenAIRecognitionDriver } from "./recognition/openai-driver";
@@ -31,12 +31,12 @@ export class DriverFactory {
   static getRecognitionDriver(config: RecognitionConfig): RecognitionDriver {
     const engine = config.provider.toLowerCase();
     switch (engine) {
-      case ReconitionProvider.LLM:
-      case ReconitionProvider.GPT:
-      case ReconitionProvider.OPENAI:
+      case RecognitionProvider.LLM:
+      case RecognitionProvider.GPT:
+      case RecognitionProvider.OPENAI:
         return new OpenAIRecognitionDriver(config);
-      case ReconitionProvider.COMPROMISE:
-      case ReconitionProvider.DEFAULT:
+      case RecognitionProvider.COMPROMISE:
+      case RecognitionProvider.DEFAULT:
         return new CompromiseRecognitionDriver(config);
       default:
         throw new Error(`Unsupported driver type: ${config.provider}`);
@@ -45,10 +45,13 @@ export class DriverFactory {
 
   static getAudioCapturer(config: TranscriptionConfig, eventBus: EventBus): AudioCapturer {
     const provider = config.provider.toLowerCase();
-
+    
+    // Use WebSpeechAPICapturer for webspeech and default providers
     if (provider === TranscriptionProviders.WEBSPEECH || provider === TranscriptionProviders.DEFAULT) {
       return new WebSpeechAPICapturer(eventBus, config.lang);
-    }    
+    }
+    
+    // Fallback to WebAudioCapturer for all other providers
     return new WebAudioCapturer(eventBus);
     
   }
