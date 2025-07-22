@@ -15,7 +15,7 @@ export class VoiceKom {
     private readonly VALID_UI_POSITIONS = ['bottom-left', 'bottom-right'];
     private readonly DEFAULT_LOG_LEVEL = LogLevel.INFO;
 
-    private readonly DEFAULT_WIDGET_ID = 'voice-kom-widget';
+    private readonly DEFAULT_WIDGET_ID = 'voicekom-container';
     private readonly DEFAULT_LANG = 'en';
     private readonly DEFAULT_TRANSCRIPTION_PROVIDER = TranscriptionProviders.DEFAULT;
     private readonly DEFAULT_RECOGNITION_PROVIDER = ReconitionProvider.DEFAULT;
