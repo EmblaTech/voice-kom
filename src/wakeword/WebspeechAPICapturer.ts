@@ -26,21 +26,17 @@ export class WebspeechWakewordDetector implements WakewordDetector {
    * @param wakeWord The word or phrase to listen for.
    * @param stopWords A single stop word or an array of stop words.
    */
-  public init(wakeWords: string[], sleepWords?: string | string[]): void {
+  public init(wakeWords: string[], sleepWords?: string[]): void {
+    console.log(`Initializing WakeWordDetector with wake words: ${wakeWords.join(', ')}`);
+    console.log(`Sleep words are ffffff: ${sleepWords ? sleepWords.join(', ') : 'none'}`);
     if (!wakeWords || wakeWords.length === 0) {
       throw new Error("A wake word must be provided for the WakeWordDetector.");
     }
     this.wakeWords = wakeWords.map(word => word.toLowerCase());
-    
+    console.log(`Sleep words are: ${this.sleepWords.join(', ')}`);
     // Allow customizing the stop word(s)
     if (sleepWords) {
-      if (Array.isArray(sleepWords)) {
-        // If it's an array, map all to lowercase
-        this.sleepWords = sleepWords.map(sw => sw.toLowerCase());
-      } else {
-        // If it's a single string, put it in an array
-        this.sleepWords = [sleepWords.toLowerCase()];
-      }
+      this.sleepWords = sleepWords.map(sw => sw.toLowerCase());
     }
   }
 
@@ -51,7 +47,7 @@ export class WebspeechWakewordDetector implements WakewordDetector {
    */
   public checkForStopWord(transcription: string): void {
     const normalizedTranscription = this.normalizeText(transcription);
-
+    console.log(`Sleep words are: ${this.sleepWords.join(', ')}`);
     // Check if the normalized text is an exact match for any of the stop words
     if (this.sleepWords.some(stopWord => normalizedTranscription === stopWord)) {
       console.log(`WakeWordDetector: Detected exact stop phrase! Emitting event.`);

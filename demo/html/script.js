@@ -1,8 +1,9 @@
 // const { cli } = require("webpack");
 
 document.addEventListener('DOMContentLoaded', () => {  
-  VoiceKom.init({   // Initialize SpeechPlug with params
-    wakeWord: 'Hello', // Set the wake word
+  VoiceKom.init({   // Initialize VoiceKom with params
+    wakeWords: ['Hello','Hi'], // Set the wake word
+    sleepWords: ['Stop listening'], // Set the sleep words
     containerId: 'speech-container',
     lang: 'en',
     // position: 'bottom-right',

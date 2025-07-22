@@ -56,7 +56,7 @@ Initialize the library once the DOM is loaded. You will need API keys for the ST
 
 ```javascript
 document.addEventListener('DOMContentLoaded', () => {
-  SpeechPlug.init({
+  VoiceKom.init({
     // Required: The ID of the element to host the UI
     widgetId: 'voicekom-widget', 
     // Required: Language code (e.g., 'en' for English, 'no' for Norwegian)
@@ -109,7 +109,7 @@ VoiceKom is designed to understand natural language. Below are the core intents 
 | Scroll to Element | "Scroll to the footer", "Go to the contact section" | Scrolls a specific element into the view. |
 | Go Back | "Go back" | Navigates to the previous page in history. |
 
-The terms in *italics* are entities that SpeechPlug identifies, such as the target element's name or the value to be entered. It intelligently finds elements based on their `aria-label`, `placeholder`, associated `<label>` text, or button text.
+The terms in *italics* are entities that VoiceKom identifies, such as the target element's name or the value to be entered. It intelligently finds elements based on their `aria-label`, `placeholder`, associated `<label>` text, or button text.
 
 ## 🛠️ How It Works (Architecture)
 

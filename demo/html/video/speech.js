@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {  
-  SpeechPlug.init({   // Initialize SpeechPlug with params
+  VoiceKom.init({   // Initialize VoiceKom with params
     wakeWord: 'Hello', // Set the wake word
     containerId: 'speech-container',
     lang: 'en',
@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     
   }).then(() => {
-    console.log('Speech plug library initialized successfully');
+    console.log('Voice Kom library initialized successfully');
   })
   .catch(error => {
-    console.error('Speech plug library failed to initialize: ', error);
+    console.error('Voice Kom library failed to initialize: ', error);
   });
 });
