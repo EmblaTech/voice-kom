@@ -8,6 +8,7 @@ import {WebspeechWakewordDetector} from '../wakeword/WebspeechAPICapturer';
 
 export class CoreModule {
   private isListeningModeActive = false;
+  private isRecordingModeActive = false;
 
   constructor(
     private readonly nluModule: NLUModule,
@@ -93,11 +94,21 @@ export class CoreModule {
     });
 
     this.eventBus.on(SpeechEvents.RECORDING_STARTED, () => {
+      this.isRecordingModeActive = true;
       this.status.set(StatusType.RECORDING);
       this.uiHandler.updateUIStatus();
     });
 
     this.eventBus.on(SpeechEvents.RECORDING_STOPPED, () => {
+        this.isRecordingModeActive = false;
+        // If we are still in listening mode, we should not change the status.
+        // The VAD will continue to run and listen for wake words.
+        if (this.isListeningModeActive) {
+            this.status.set(StatusType.LISTENING);
+        } else {
+            this.status.set(StatusType.IDLE);
+        }
+        this.uiHandler.updateUIStatus();  
       if (this.isListeningModeActive) {
         this.status.set(StatusType.PROCESSING);
         this.uiHandler.updateUIStatus();
@@ -113,7 +124,7 @@ export class CoreModule {
     // This handler is the key to the continuous loop.
     const onActionFinished = () => {
       // After processing a command, check if we should continue listening.
-      if (this.isListeningModeActive) {
+      if (this.isListeningModeActive && !this.isRecordingModeActive)  {
         // If so, just reset the status. The VAD is still running.
         this.status.set(StatusType.LISTENING);
         this.uiHandler.updateUIStatus();
@@ -142,7 +153,7 @@ export class CoreModule {
     this.eventBus.on(SpeechEvents.NLU_COMPLETED, async (intents: IntentResult[]) => {
       console.log('Going to execute intents:');
       // Status is already PROCESSING, can simplify by removing EXECUTING state
-      if (this.isListeningModeActive) {
+      if (this.isListeningModeActive && !this.isRecordingModeActive)  {
         this.status.set(StatusType.EXECUTING);
         this.uiHandler.updateUIStatus();
       }
