@@ -22,15 +22,16 @@ export class CoreModule {
   public async init(config: CoreConfig): Promise<void> {
     await this.uiHandler.init(config.uiConfig);
     await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig);
-    const key = 'KECjnDldxPbxJXTOu3XiY5rF0vB1IqNlEPC83MBJjNgDFvqhlnXovg=='
     this.bindEvents();
 
     this.status.set(StatusType.IDLE);
     this.uiHandler.updateUIStatus();
-
+    console.log('CoreModule initialized with config:', config);
     // --- INITIALIZE AND START THE WAKE WORD DETECTOR ---
-    if (config.wakeWord) {
-      this.wakeWordDetector.init(config.wakeWord);
+    if (config.wakeWords) {
+      console.log(`Initializing wake word detector with: ${config.wakeWords.join(', ')}`);
+      console.log(`Sleep words are: ${config.sleepWords ? config.sleepWords.join(', ') : 'none'}`);
+      this.wakeWordDetector.init(config.wakeWords, config.sleepWords);
       this.wakeWordDetector.start();
     }
   }

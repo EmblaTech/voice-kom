@@ -91,10 +91,6 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
     }
 
     private validateConfig(config: TranscriptionConfig): void {
-        if (!config.apiKey) {
-            throw new Error('OpenAI API key is required for Whisper transcription');
-        }
-
         if (config.apiUrl && !Validator.isValidUrl(config.apiUrl)) {
             throw new Error('Invalid API URL provided in configuration');
         }

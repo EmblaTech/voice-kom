@@ -13,7 +13,7 @@ const createConfig = (target, outputFile, options = {}) => {
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: outputFile,
-      library: target === 'module' ? undefined : 'SpeechPlug',
+      library: target === 'module' ? undefined : 'VoiceKom',
       libraryTarget: target,
       libraryExport: 'default',
       globalObject: 'this',
@@ -64,14 +64,14 @@ const configs = [];
 
 if (isProduction) {
   // Minified production builds
-  configs.push(createConfig('umd', 'speechplug.min.js', { clean: isFirstBuild }));
-  configs.push(createConfig('commonjs2', 'speechplug.cjs.min.js'));
-  configs.push(createConfig('module', 'speechplug.esm.min.js'));
+  configs.push(createConfig('umd', 'voicekom.min.js', { clean: isFirstBuild }));
+  configs.push(createConfig('commonjs2', 'voicekom.cjs.min.js'));
+  configs.push(createConfig('module', 'voicekom.esm.min.js'));
 } else {
   // Unminified development builds
-  configs.push(createConfig('umd', 'speechplug.js', { clean: isFirstBuild }));
-  configs.push(createConfig('commonjs2', 'speechplug.cjs.js'));
-  configs.push(createConfig('module', 'speechplug.esm.js'));
+  configs.push(createConfig('umd', 'voicekom.js', { clean: isFirstBuild }));
+  configs.push(createConfig('commonjs2', 'voicekom.cjs.js'));
+  configs.push(createConfig('module', 'voicekom.esm.js'));
 }
 
 module.exports = configs;
