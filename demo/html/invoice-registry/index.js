@@ -1,4 +1,4 @@
-SpeechPlug.init({
+VoiceKom.init({
     containerId: 'voice-lib-container', // Changed from container element to containerId string
     lang: 'no',
     sttEngine: 'default',

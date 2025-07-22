@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {  
-  SpeechPlug.init({   // Initialize SpeechPlug with params
+  VoiceKom.init({   // Initialize VoiceKom with params
     wakeWord: 'Hello', // Set the wake word
     containerId: 'speech-container',
     lang: 'en',
