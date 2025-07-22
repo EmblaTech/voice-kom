@@ -129,14 +129,16 @@ export class VoiceKom {
                 apiUrl: config.transcription?.apiUrl,
                 model: config.transcription?.model,
                 confidence: config.transcription?.confidence,
-                options: config.transcription?.options
+                options: config.transcription?.options,
+                apiKey: config.transcription?.apiKey
             },
             recognitionConfig: {
                 lang: config.lang ?? this.DEFAULT_LANG,
                 provider: config.recognition?.provider ?? this.DEFAULT_RECOGNITION_PROVIDER,
                 apiUrl: config.recognition?.apiUrl,
                 model: config.recognition?.model,
-                confidence: config.recognition?.confidence
+                confidence: config.recognition?.confidence,
+                apiKey: config.recognition?.apiKey
             },
             uiConfig: {
                 widgetId: config.widgetId ?? this.DEFAULT_WIDGET_ID,
