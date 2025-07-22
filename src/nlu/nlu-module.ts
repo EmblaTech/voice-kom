@@ -5,7 +5,17 @@ import { TranscriptionDriver } from './transcription/driver';
 import { RecognitionDriver } from './recognition/driver';
 import { DriverFactory } from './driver-factory';
 import { Logger } from '../utils/logger';
-import { fetchContent } from '../utils/resource-fetcher';
+
+// --- START: MODIFICATION ---
+// 1. REMOVED: The runtime fetcher is no longer needed for this.
+// import { fetchContent } from '../utils/resource-fetcher';
+
+// 2. ADDED: Import the JSON file directly.
+//    Webpack will bundle this file, and TypeScript will understand it
+//    because of the "resolveJsonModule": true setting in your tsconfig.json.
+//    The path is relative to this file.
+import commandRegistryData from './command-registry.json';
+// --- END: MODIFICATION ---
 
 export class NLUModule {
   private commandRegistry: CommandRegistry | null = null;
@@ -26,13 +36,12 @@ export class NLUModule {
     private readonly eventBus: EventBus,
     private readonly status: Status
   ) {
-
     this.eventBus.on(SpeechEvents.AUDIO_CAPTURED, (blob: Blob) => {
       this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
       this.processAudioChunk(blob);
     });
 
-     this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
+    this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
       this.processTranscription(transcription);
     });
 
@@ -41,11 +50,9 @@ export class NLUModule {
         this.startSingleListeningCycle();
       }
     });
-
   }
 
- // in NLUModule.ts
-public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): Promise<void> {
+  public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): Promise<void> {
     this.logger.info("NLUModule.init() starting...");
     try {
       this.language = transConfig.lang || 'en';
@@ -58,14 +65,19 @@ public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConf
       
       this.logger.info("Getting audio capturer...");
       this.audioCapturer = DriverFactory.getAudioCapturer(transConfig, this.eventBus);
-      this.logger.info("Audio capturer has been assigned.", this.audioCapturer); // Check if this logs an object
+      this.logger.info("Audio capturer has been assigned.", this.audioCapturer);
       
-      this.commandRegistry = await fetchContent('../../src/nlu/command-registry.json');
+      // --- START: MODIFICATION ---
+      // 3. REPLACED: The unreliable fetch call is replaced with a direct assignment.
+      //    The `commandRegistryData` is the parsed JSON object from the import.
+      this.commandRegistry = commandRegistryData as CommandRegistry;
+      // --- END: MODIFICATION ---
+
       this.logger.info("NLUModule.init() completed successfully.");
     } catch (error) {
       this.logger.error('CRITICAL ERROR in NLUModule init: ', error);
     }
-}
+  }
 
   /**
    * Starts the entire listening session. Called once by CoreModule.
@@ -110,15 +122,10 @@ public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConf
 
   
   private async processAudioChunk(audioBlob: Blob): Promise<void> {
-
     if (!this.transcriptionDriver) { 
       this.logger.error('Transcription or Recognition Driver not initialized');
       return; 
     }
-  // if (!this.isSessionActive) {
-  //     this.logger.info("Ignoring audio chunk because session is inactive.");
-  //     return;
-  //   }
     try {
       const transcription = await this.transcriptionDriver.transcribe(audioBlob);
       this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
@@ -134,7 +141,6 @@ public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConf
       return; 
     }
 
-    // Handle empty transcriptions
     if (!transcription || transcription.trim() === '') {
         this.logger.warn("Empty transcription received. Skipping intent detection.");
         this.eventBus.emit(SpeechEvents.ACTUATOR_COMPLETED);
@@ -156,6 +162,8 @@ public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConf
     return this.transcriptionDriver.getAvailableLanguages();
   }
 
+  // This method appears to be unused. The command registry is now loaded from the JSON file.
+  // You can likely remove this method for cleanup.
   private getCommands(): CommandRegistry {
     return {
       intents: [

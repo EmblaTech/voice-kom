@@ -7,19 +7,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // width: '188px',
     // height: '58px',
     transcription: {
-      provider: 'default',
-      apiKey: import.meta.env.VITE_SPEECHPLUG_TRANSCRIPTION_API_KEY
+      provider: 'webspeech',
+      apiKey: '' 
     },
     recognition: {
-      provider: 'default',
+      provider: 'openai',
       // provider: 'default',
-      apiKey: import.meta.env.VITE_SPEECHPLUG_RECOGNITION_API_KEY
+      apiKey: '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'
     },
     
   }).then(() => {
     console.log('Speech plug library initialized successfully');
   })
+  .then(() => {
+    console.log('111 VoiceLib initialized successfully'); })
   .catch(error => {
-    console.error('Speech plug library failed to initialize: ', error);
+    console.error('111 Failed to initialize VoiceLib:', error);
   });
 });
