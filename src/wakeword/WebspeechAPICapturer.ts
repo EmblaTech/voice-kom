@@ -1,12 +1,29 @@
+import Fuse , { IFuseOptions } from 'fuse.js'; // NEW: Import Fuse.js
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { WakewordDetector } from '../types';
 
 export class WebspeechWakewordDetector implements WakewordDetector {
   private readonly recognition: SpeechRecognition;
   private isListening = false;
+  
+  // These will be initialized later
   private wakeWords: string[] = ['hey'];
-  // Use an array to support multiple stop phrases for better UX
   private sleepWords: string[] = ['stop listening'];
+
+  // NEW: Fuse.js instances for wake and sleep word detection
+  private fuseWake?: Fuse<string>;
+  private fuseSleep?: Fuse<string>;
+
+  // NEW: Centralized Fuse.js configuration
+  private fuseOptions: IFuseOptions<string> = {
+    // A threshold of 0.0 requires a perfect match.
+    // A threshold of 1.0 would match anything.
+    // 0.4 is a good starting point for slightly imperfect matches.
+    threshold: 0.4,
+    includeScore: true, // We want to see the score for debugging
+    useExtendedSearch: true, // Allows for more complex search patterns
+    ignoreLocation: true, // Search the entire string
+  };
 
   constructor(private readonly eventBus: EventBus) {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -22,63 +39,73 @@ export class WebspeechWakewordDetector implements WakewordDetector {
   }
 
   /**
-   * Initializes the detector with the wake word and optional stop words.
-   * @param wakeWord The word or phrase to listen for.
-   * @param stopWords A single stop word or an array of stop words.
+   * MODIFIED: Initializes Fuse.js instances with the provided words.
    */
   public init(wakeWords: string[], sleepWords?: string[]): void {
     console.log(`Initializing WakeWordDetector with wake words: ${wakeWords.join(', ')}`);
-    console.log(`Sleep words are ffffff: ${sleepWords ? sleepWords.join(', ') : 'none'}`);
     if (!wakeWords || wakeWords.length === 0) {
       throw new Error("A wake word must be provided for the WakeWordDetector.");
     }
-    this.wakeWords = wakeWords.map(word => word.toLowerCase());
-    console.log(`Sleep words are: ${this.sleepWords.join(', ')}`);
-    // Allow customizing the stop word(s)
+
+    this.wakeWords = wakeWords; // Store the original words
     if (sleepWords) {
-      this.sleepWords = sleepWords.map(sw => sw.toLowerCase());
+      this.sleepWords = sleepWords;
     }
+    
+    // Create a Fuse instance for wake words.
+    // We pass the words directly. Fuse.js handles normalization.
+    this.fuseWake = new Fuse(this.wakeWords, this.fuseOptions);
+
+    // Create a Fuse instance for sleep words.
+    this.fuseSleep = new Fuse(this.sleepWords, this.fuseOptions);
+
+    console.log(`Fuse.js initialized for wake and sleep words.`);
   }
 
   /**
-   * Checks if a given transcription is a direct match for any of the configured stop words.
-   * If a match is found, it emits the STOP_WORD_DETECTED event.
+   * MODIFIED: Uses Fuse.js to check for a stop word match.
    * @param transcription The text transcribed from the user's command.
    */
   public checkForStopWord(transcription: string): void {
-    const normalizedTranscription = this.normalizeText(transcription);
-    console.log(`Sleep words are: ${this.sleepWords.join(', ')}`);
-    // Check if the normalized text is an exact match for any of the stop words
-    if (this.sleepWords.some(stopWord => normalizedTranscription === stopWord)) {
-      console.log(`WakeWordDetector: Detected exact stop phrase! Emitting event.`);
+    if (!this.fuseSleep) return;
+
+    // The `search` method returns an array of results that meet the threshold.
+    // If the array is not empty, we have a match.
+    const results = this.fuseSleep.search(transcription);
+
+    if (results.length > 0) {
+      // The first result is the best match.
+      const bestMatch = results[0];
+      console.log(`WakeWordDetector: Detected stop phrase "${transcription}" (matched "${bestMatch.item}" with score: ${bestMatch.score}). Emitting event.`);
       this.eventBus.emit(SpeechEvents.STOP_WORD_DETECTED);
     }
   }
   
-  /**
-   * Cleans text by converting to lowercase, removing common punctuation, and trimming whitespace.
-   */
-  private normalizeText(text: string): string {
-    return text
-      .toLowerCase()
-      .replace(/[.,!?;]/g, '') // Remove common punctuation marks
-      .trim();
-  }
+  // REMOVED: normalizeText is no longer needed as Fuse.js handles variations.
+  // REMOVED: levenshteinDistance is no longer needed.
 
   private setupListeners(): void {
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-      // This part is for PASSIVE listening only
-      const fullHistory = Array.from(event.results)
-        .map(r => r[0].transcript)
-        .join('').toLowerCase();
-        
-      if (this.wakeWords.some(wakeWord => fullHistory.includes(wakeWord))) {
+      if (!this.fuseWake) return;
+      
+      const lastResult = event.results[event.results.length - 1];
+      if (!lastResult || !lastResult[0]) return;
+      
+      const latestTranscript = lastResult[0].transcript;
+
+      // MODIFIED: Use Fuse.js to check the latest transcript for a wake word.
+      const results = this.fuseWake.search(latestTranscript);
+
+      if (results.length > 0) {
+        const bestMatch = results[0];
+        console.log(`WakeWordDetector: Detected wake word in "${latestTranscript}" (matched "${bestMatch.item}" with score: ${bestMatch.score}).`);
         this.eventBus.emit(SpeechEvents.WAKE_WORD_DETECTED);
+        // We can stop listening for the wake word in this cycle
+        // to avoid multiple triggers from the same utterance.
       }
     };
 
     this.recognition.onend = () => {
-      // If listening was unexpectedly interrupted, and we are supposed to be active, restart.
       if (this.isListening) {
         console.warn("WakeWordDetector: Service ended unexpectedly, restarting...");
         this.recognition.start();
@@ -92,9 +119,6 @@ export class WebspeechWakewordDetector implements WakewordDetector {
     };
   }
 
-  /**
-   * Starts the wake word detection.
-   */
   public start(): void {
     if (this.isListening || !this.wakeWords || this.wakeWords.length === 0) {
       return;
@@ -109,9 +133,6 @@ export class WebspeechWakewordDetector implements WakewordDetector {
     }
   }
 
-  /**
-   * Stops the wake word detection.
-   */
   public stop(): void {
     if (!this.isListening) {
       return;
