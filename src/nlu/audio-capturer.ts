@@ -27,7 +27,7 @@ export class WebAudioCapturer implements AudioCapturer {
 
   // --- VAD Configuration ---
   private silenceDelay = 1500;
-  private speakingThreshold = 0.02;
+  private speakingThreshold = 0.2;
   private sampleRate = 44100; // Will be updated by AudioContext
 
   private readonly logger = Logger.getInstance();

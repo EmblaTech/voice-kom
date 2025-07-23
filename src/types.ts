@@ -4,7 +4,6 @@ export interface VoiceKomConfig {
   widgetId? :string;
   lang?: string;   
 
-  clientId: string; // Unique identifier for the client, used for tracking and analytics
   //Speech engine configs
   transcription?: TranscriptionConfig;  //Transcription options
   recognition?: RecognitionConfig; // Intent Detection options    
@@ -46,7 +45,6 @@ export interface TranscriptionConfig extends VoiceEngineConfig {
 }
 
 export interface CoreConfig {
-  clientId: string; // Unique identifier for the client, used for tracking and analytics
   transcriptionConfig: TranscriptionConfig; 
   recognitionConfig: RecognitionConfig;
   uiConfig: UIConfig
@@ -143,8 +141,9 @@ export enum TranscriptionProviders {
   DEFAULT = 'default',
   GOOGLE = 'google',
   AZURE = 'azure',
-  WEBSPEECH = 'webspeech', // New provider
-  WHISPER = 'whisper', // New provider
+  WEBSPEECH = 'webspeech', 
+  WHISPER = 'whisper',
+  VOICEKOM = 'voicekom'
 }
 
 export enum RecognitionProvider {
@@ -152,7 +151,8 @@ export enum RecognitionProvider {
   OPENAI = 'openai',
   LLM = 'llm',
   GPT = 'gpt',
-  COMPROMISE = 'compromise'
+  COMPROMISE = 'compromise',
+  VOICEKOM = 'voicekom'
 }
 
 // STT Driver interface

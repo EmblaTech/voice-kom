@@ -8,6 +8,8 @@ import { WhisperTranscriptionDriver } from "./transcription/whisper-driver";
 import { WebAudioCapturer } from './audio-capturer'; 
 import { WebSpeechAPICapturer } from './audio-transcription/web-speech-api-capturer'; 
 import { DummyTranscriptionDriver } from './transcription/dummy-driver';
+import { VoiceKomTranscriptionDriver } from "./transcription/custom-transcription-driver";
+import { VoiceKomRecognitionDriver } from "./recognition/custom-recognition-driver";
 
 import { EventBus } from "../common/eventbus";
 
@@ -23,6 +25,8 @@ export class DriverFactory {
         return new GoogleTranscriptionDriver(config);
       case TranscriptionProviders.WHISPER:
         return new WhisperTranscriptionDriver(config);
+      case TranscriptionProviders.VOICEKOM:
+        return new VoiceKomTranscriptionDriver(config);
       default:
         throw new Error(`Unsupported driver type: ${config.provider}`);
     }
@@ -30,11 +34,14 @@ export class DriverFactory {
 
   static getRecognitionDriver(config: RecognitionConfig): RecognitionDriver {
     const engine = config.provider.toLowerCase();
+    console.log(`Initializing recognition driver: ${engine}`);
     switch (engine) {
       case RecognitionProvider.LLM:
       case RecognitionProvider.GPT:
       case RecognitionProvider.OPENAI:
         return new OpenAIRecognitionDriver(config);
+      case TranscriptionProviders.VOICEKOM:
+        return new VoiceKomRecognitionDriver(config);
       case RecognitionProvider.COMPROMISE:
       case RecognitionProvider.DEFAULT:
         return new CompromiseRecognitionDriver(config);

@@ -11,12 +11,20 @@ interface BackendResponse {
 
 export class BackendDriver {
   private baseUrl: string;
-  private clientId: string;
+  private apiKey: string;
   private transTemp?: number;
   private recogTemp?: number;
 
-  constructor(transconfig: TranscriptionConfig, recogconfig: RecognitionConfig, clientId: string) {
-    this.clientId = clientId;
+  constructor(transconfig: TranscriptionConfig, recogconfig: RecognitionConfig) {
+    if (!transconfig.apiKey || !recogconfig.apiKey) {
+      throw new Error('API key is required for VoiceKom provider');
+    }
+
+    if (transconfig.apiKey === recogconfig.apiKey) {
+      this.apiKey = transconfig.apiKey;
+    } else {
+      throw new Error('API keys must match for transcription and recognition when using VoiceKom provider');
+    }
     this.baseUrl = 'http://localhost:3000/api/v1';
     this.transTemp = transconfig.temperature; 
     this.recogTemp = recogconfig.temperature; 
@@ -27,7 +35,7 @@ export class BackendDriver {
     formData.append('audio', audioFile);
 
     const headers: Record<string, string> = {
-      'X-Client-ID': this.clientId
+      'X-Client-ID': this.apiKey
     };
     
     if (this.transTemp !== undefined) {

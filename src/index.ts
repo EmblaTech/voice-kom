@@ -11,7 +11,7 @@ import { WebspeechWakewordDetector } from "./wakeword/WebspeechAPICapturer";
 
 export class VoiceKom {
   private readonly logger = Logger.getInstance();
-  private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure', 'webspeech','whisper'];
+  private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure', 'webspeech','whisper', 'voicekom'];
   private readonly VALID_UI_POSITIONS = ['bottom-left', 'bottom-right'];
   private readonly DEFAULT_WIDGET_ID = 'voice-kom-widget';
   private readonly DEFAULT_LANG = 'en';
@@ -155,7 +155,6 @@ export class VoiceKom {
                 retries: config.retries ?? this.DEFAULT_RETRY_ATTEMPTS,
                 timeout: config.timeout ?? this.DEFAULT_TIMEOUT
             },
-            clientId: config.clientId,
             wakeWords: config.wakeWords,
             sleepWords: config.sleepWords
         };

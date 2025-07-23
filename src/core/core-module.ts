@@ -22,7 +22,7 @@ export class CoreModule {
 
   public async init(config: CoreConfig): Promise<void> {
     await this.uiHandler.init(config.uiConfig);
-    await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig, config.clientId);
+    await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig);
     this.bindEvents();
 
     this.status.set(StatusType.IDLE);
