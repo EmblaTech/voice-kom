@@ -62,22 +62,27 @@ export class WebspeechWakewordDetector implements WakewordDetector {
     console.log(`Fuse.js initialized for wake and sleep words.`);
   }
 
-  /**
-   * MODIFIED: Uses Fuse.js to check for a stop word match.
+   /**
+   * MODIFIED: Iterates through known sleep words and checks if the transcription
+   * contains any of them. This is more reliable for finding stop phrases
+   * within a longer command.
+   * 
    * @param transcription The text transcribed from the user's command.
    */
   public checkForStopWord(transcription: string): void {
-    if (!this.fuseSleep) return;
+    // We don't need Fuse.js for this check. A simple `includes` is more direct.
+    // We normalize both the transcription and the sleep word to lower case for a more robust comparison.
+    const normalizedTranscription = transcription.toLowerCase();
 
-    // The `search` method returns an array of results that meet the threshold.
-    // If the array is not empty, we have a match.
-    const results = this.fuseSleep.search(transcription);
-
-    if (results.length > 0) {
-      // The first result is the best match.
-      const bestMatch = results[0];
-      console.log(`WakeWordDetector: Detected stop phrase "${transcription}" (matched "${bestMatch.item}" with score: ${bestMatch.score}). Emitting event.`);
-      this.eventBus.emit(SpeechEvents.STOP_WORD_DETECTED);
+    for (const sleepWord of this.sleepWords) {
+      // Check if the normalized transcription *contains* the sleep word.
+      if (normalizedTranscription.includes(sleepWord.toLowerCase())) {
+        console.log(`WakeWordDetector: Detected stop phrase in "${transcription}" (matched "${sleepWord}"). Emitting event.`);
+        this.eventBus.emit(SpeechEvents.STOP_WORD_DETECTED);
+        
+        // We found a match, no need to check the other sleep words.
+        return; 
+      }
     }
   }
   
