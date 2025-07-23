@@ -52,7 +52,6 @@ export class VoiceKomRecognitionDriver implements RecognitionDriver {
     }
 
     const result: IntentFromTextResponse = await response.json();
-    console.log('Backend response for intent detection:', result);
     
     if (!result.data) {
         this.logger.warn('Backend response for intent detection is missing a "data" field.');

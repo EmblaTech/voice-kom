@@ -8,8 +8,8 @@ import { WhisperTranscriptionDriver } from "./transcription/whisper-driver";
 import { WebAudioCapturer } from './audio-capturer'; 
 import { WebSpeechAPICapturer } from './audio-transcription/web-speech-api-capturer'; 
 import { DummyTranscriptionDriver } from './transcription/dummy-driver';
-import { VoiceKomTranscriptionDriver } from "./transcription/custom-transcription-driver";
-import { VoiceKomRecognitionDriver } from "./recognition/custom-recognition-driver";
+import { VoiceKomTranscriptionDriver } from "./transcription/voicekom-transcription-driver";
+import { VoiceKomRecognitionDriver } from "./recognition/voicekom-recognition-driver";
 
 import { EventBus } from "../common/eventbus";
 

@@ -6,9 +6,7 @@ import { RecognitionDriver } from './recognition/driver';
 import { DriverFactory } from './driver-factory';
 import { Logger } from '../utils/logger';
 import { fetchContent } from '../utils/resource-fetcher';
-import { BackendDriver } from './transcription-recognition/backend-driver';
-import { VoiceKomTranscriptionDriver } from './transcription/custom-transcription-driver';
-import { VoiceKomRecognitionDriver } from './recognition/custom-recognition-driver';
+import { BackendDriver } from './transcription-recognition/voicekom-driver';
 
 export class NLUModule {
   private commandRegistry: CommandRegistry | null = null;
@@ -17,8 +15,6 @@ export class NLUModule {
   private transcriptionDriver: TranscriptionDriver | null = null;
   private recognitionDriver: RecognitionDriver | null = null;
   private backendDriver: BackendDriver | null = null;
-  private voicekomTranscriptionDriver: VoiceKomTranscriptionDriver | null = null;
-  private voicekomRecognitionDriver: VoiceKomRecognitionDriver | null = null;
   private readonly logger = Logger.getInstance();
 
   // VAD Configuration with defaults

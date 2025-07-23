@@ -1,4 +1,4 @@
-import { TranscriptionDriver } from "../transcription/driver";
+import { TranscriptionDriver } from "./driver";
 import { TranscriptionConfig } from "../../types";
 import { Logger } from "../../utils/logger";
 
