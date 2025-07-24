@@ -11,8 +11,12 @@
       "fill [<target>.+] (as|with) [<value>.+]",
       "enter [<target>.+] (as|with) [<value>.+]",
       "enter [<value>.+] in [<target>.+]",
-      "fill [<target>#Noun] [<value>.+]",
-      "enter [<target>#Noun] [<value>.+]"
+      "fill [<target>(#Adjective* #Noun)] [<value>.+]",
+      "enter [<target>(#Adjective* #Noun)] [<value>.+]",
+      "enter [<target>(#Noun #Noun)] [<value>.+]",
+      "fill [<target>(#Noun #Noun)] [<value>.+]",
+      "enter [<target>#Noun] [<value>.+]",
+      "fill [<target>#Noun] [<value>.+]"
     ],
     "entities": ["target", "value"]
   },
