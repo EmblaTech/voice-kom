@@ -149,8 +149,6 @@ export enum TranscriptionProviders {
 export enum RecognitionProvider {
   DEFAULT = 'default',
   OPENAI = 'openai',
-  LLM = 'llm',
-  GPT = 'gpt',
   COMPROMISE = 'compromise',
   VOICEKOM = 'voicekom'
 }

@@ -3,6 +3,17 @@ export class Validator {
         return typeof value === 'string';
     }
 
+    static isEmpty(value: any): boolean {
+        if (value == null) {
+            return true;
+        }
+        // Check for empty string (including strings with only whitespace)
+        if (typeof value === 'string' && value.trim() === '') {
+            return true;
+        }
+        return false;
+    }
+
     static isStringOrUndefined(value: any):boolean {
         if (value !== undefined && typeof value !== 'string') {
             return false

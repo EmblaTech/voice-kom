@@ -1,14 +1,16 @@
 import { TranscriptionDriver } from "./driver";
 import { TranscriptionConfig } from "../../types";
 import { Logger } from "../../utils/logger";
+import { HeaderHandler } from '../../common/header-handler';
 
-export class VoiceKomTranscriptionDriver implements TranscriptionDriver {
+export class VoiceKomTranscriptionDriver extends HeaderHandler implements TranscriptionDriver {
   private readonly logger = Logger.getInstance();
   private baseUrl: string;
   private apiKey: string;
   private temperature?: number;
 
   constructor(config: TranscriptionConfig) {
+    super();
     if (!config.apiKey) {
         throw new Error('API key is required for VoiceKom transcription provider');
     }
@@ -21,19 +23,16 @@ export class VoiceKomTranscriptionDriver implements TranscriptionDriver {
     const formData = new FormData();
     formData.append('audio', audioFile);
 
-    const headers: Record<string, string> = {
-      'X-Client-ID': this.apiKey
-    };
-    
-    if (this.temperature !== undefined) {
-      headers['X-Transcription-Temperature'] = this.temperature.toString();
-    }
+    this.setHeaders('X-Client-ID', this.apiKey);
+    this.setHeaders('X-Transcription-Temperature', this.temperature);
 
     const response = await fetch(`${this.baseUrl}/transcribe`, {
       method: 'POST',
-      headers: headers,
+      headers: this.getHeaders(),
       body: formData
     });
+
+    this.clearHeaders();
 
     if (!response.ok) {
       const errorText = await response.text();

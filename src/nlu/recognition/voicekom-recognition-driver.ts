@@ -1,19 +1,21 @@
 import { RecognitionDriver } from './driver';
 import { RecognitionConfig, IntentResult } from '../../types';
 import { Logger } from '../../utils/logger';
+import { HeaderHandler } from '../../common/header-handler';
 
 interface IntentFromTextResponse {
   success: boolean;
   data: IntentResult[];
 }
 
-export class VoiceKomRecognitionDriver implements RecognitionDriver {
+export class VoiceKomRecognitionDriver extends HeaderHandler implements RecognitionDriver {
   private readonly logger = Logger.getInstance();
   private baseUrl: string;
   private apiKey: string;
   private temperature?: number;
 
   constructor(config: RecognitionConfig) {
+    super();
     if (!config.apiKey) {
         throw new Error('API key is required for VoiceKom transcription provider');
     }
@@ -30,21 +32,17 @@ export class VoiceKomRecognitionDriver implements RecognitionDriver {
     
     this.logger.info(`Sending text to backend for intent recognition: "${text}"`);
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-Client-ID': this.apiKey,
-    };
+    this.setHeaders('Content-Type', 'application/json');
+    this.setHeaders('X-Client-ID', this.apiKey);
+    this.setHeaders('X-Recognition-Temperature', this.temperature);
 
-    if (this.temperature !== undefined) {
-      headers['X-Recognition-Temperature'] = this.temperature.toString();
-    }
-
-    // This needs a new backend endpoint: /intent/text
     const response = await fetch(`${this.baseUrl}/intent/text`, {
       method: 'POST',
-      headers: headers,
-      body: JSON.stringify({ text: text }),
+      headers: this.getHeaders(),
+      body: JSON.stringify({ text })
     });
+
+    this.clearHeaders();
 
     if (!response.ok) {
       const errorText = await response.text();

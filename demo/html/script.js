@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
       temperature: '',
       apiKey: '123',
     },
+    speakingThreshold: 0.2, // Adjusted speaking threshold
     // Add debug logging
     debug: true
   }).then(() => {
