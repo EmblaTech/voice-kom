@@ -3,18 +3,20 @@ document.addEventListener('DOMContentLoaded', () => {
     wakeWords: ['Hello','Hi'], // Set the wake word
     sleepWords: ['Stop listening', 'Banana'], // Set the sleep words
     containerId: 'speech-container',
-    lang: 'en',
+    lang: 'si-LK', // Set the language
     // position: 'bottom-right',
     // width: '188px',
     // height: '58px',
     transcription: {
       provider: 'webspeech',
-      apiKey: '' 
+      apiKey: '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'
     },
     recognition: {
-      provider: 'default',
+      provider: 'openai',
       // provider: 'default'
-      apiKey: '' 
+      apiKey: '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'
+ 
+ 
     },
     
   }).then(() => {
