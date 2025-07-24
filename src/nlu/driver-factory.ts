@@ -12,8 +12,19 @@ import { VoiceKomTranscriptionDriver } from "./transcription/voicekom-transcript
 import { VoiceKomRecognitionDriver } from "./recognition/voicekom-recognition-driver";
 
 import { EventBus } from "../common/eventbus";
+import { VoiceKomCompoundDriver } from "./compound/voicekom-compound-driver";
 
 export class DriverFactory {
+  
+  static getCompoundDriver(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): VoiceKomCompoundDriver | null{
+    const isCompound = 
+      transConfig.provider === TranscriptionProviders.VOICEKOM &&
+      recogConfig.provider === RecognitionProvider.VOICEKOM;
+      if (isCompound) {
+        return new VoiceKomCompoundDriver(transConfig, recogConfig);
+      }  
+      return null;
+  }
   
   static getTranscriptionDriver(config: TranscriptionConfig): TranscriptionDriver {
     const engine = config.provider.toLowerCase();

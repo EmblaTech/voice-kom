@@ -6,7 +6,7 @@ import { RecognitionDriver } from './recognition/driver';
 import { DriverFactory } from './driver-factory';
 import { Logger } from '../utils/logger';
 import { fetchContent } from '../utils/resource-fetcher';
-import { BackendDriver } from './transcription-recognition/voicekom-driver';
+import { VoiceKomCompoundDriver } from './compound/voicekom-compound-driver';
 
 export class NLUModule {
   private commandRegistry: CommandRegistry | null = null;
@@ -14,7 +14,7 @@ export class NLUModule {
   private audioCapturer!: AudioCapturer;
   private transcriptionDriver: TranscriptionDriver | null = null;
   private recognitionDriver: RecognitionDriver | null = null;
-  private backendDriver: BackendDriver | null = null;
+  private compoundDriver: VoiceKomCompoundDriver | null = null;
   private readonly logger = Logger.getInstance();
 
   // VAD Configuration with defaults
@@ -31,7 +31,7 @@ export class NLUModule {
 
     this.eventBus.on(SpeechEvents.AUDIO_CAPTURED, (blob: Blob) => {
       this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
-      if(this.backendDriver) {
+      if(this.compoundDriver) {
         this.sendAudioChunk(blob);
       }
       else if(this.transcriptionDriver) {
@@ -57,16 +57,11 @@ export class NLUModule {
       this.logger.info("NLUModule.init() starting...");
       try {
         this.language = transConfig.lang || 'en';
-
-        const useBackendDriver = 
-              transConfig.provider === TranscriptionProviders.VOICEKOM && 
-              recogConfig.provider === RecognitionProvider.VOICEKOM;
-
-        if (useBackendDriver) {
+        this.compoundDriver = DriverFactory.getCompoundDriver(transConfig, recogConfig);
+        if (this.compoundDriver != null) {
               // SCENARIO 1: Both transcription and recognition use the 'voicekom' backend.
               // Use the unified driver that sends audio and gets back transcription + intent.
-              this.logger.info("Using unified BackendDriver for audio -> intent processing.");
-              this.backendDriver = new BackendDriver(transConfig, recogConfig);
+              this.logger.info("Using compound voicekom for audio -> intent processing.");
           } else {
               // SCENARIO 2: Any other combination. Use separate, modular drivers.
               this.logger.info("Using separate drivers for transcription and recognition.");
@@ -130,13 +125,13 @@ export class NLUModule {
   }
 
   private async sendAudioChunk(audioBlob: Blob): Promise<void> {
-    if (!this.backendDriver) {
+    if (!this.compoundDriver) {
       this.logger.error('Backend Driver not initialized');
       return;
     }
 
     try {
-      const result = await this.backendDriver.getIntentFromAudio(audioBlob);
+      const result = await this.compoundDriver.getIntentFromAudio(audioBlob);
       
       // Emit transcription result
       if (result.transcription) {

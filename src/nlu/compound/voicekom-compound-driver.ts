@@ -9,7 +9,11 @@ interface BackendResponse {
   }
 }
 
-export class BackendDriver {
+//This driver is using combined API call which accepts audio and returns the intention 
+//in one API call, instead of separate transcription and recognition steps.
+// In order to reduce unnecessary API calls and improve performance,
+// we are using this compound driver for VoiceKom provider.
+export class VoiceKomCompoundDriver {
   private baseUrl: string;
   private apiKey: string;
   private transTemp?: number;
