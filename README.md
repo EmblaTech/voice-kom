@@ -1,14 +1,8 @@
-# SpeechPlug Voice Control Library
+# VoiceKom Library
 
-![npm version](https://img.shields.io/npm/v/speech-plug.svg)
-![build status](https://img.shields.io/travis/com/your-username/speech-plug.svg)
-![license](https://img.shields.io/npm/l/speech-plug.svg)
-
-SpeechPlug is a powerful, client-side JavaScript library that enables developers to integrate conversational voice control into any web application. It uses advanced Speech-to-Text (STT) and a Large Language Model (LLM) for Natural Language Understanding (NLU) to interpret user commands and interact with web page elements.
+VoiceKom is a powerful, client-side JavaScript library that enables developers to integrate conversational voice control into any web application. It uses advanced Speech-to-Text (STT) and a Large Language Model (LLM) for Natural Language Understanding (NLU) to interpret user commands and interact with web page elements.
 
 Turn "fill the name field with John Doe and click submit" from a user's voice into a real action on your website, with just a few lines of code.
-
-[View Live Demo](#) <!-- Add a link to your live demo here -->
 
 ## ✨ Features
 
@@ -23,37 +17,35 @@ Turn "fill the name field with John Doe and click submit" from a user's voice in
 
 ### 1. Installation
 
-You can add SpeechPlug to your project via NPM or by using a CDN.
+You can add VoiceKom to your project via NPM or by using a CDN.
 
 **Using NPM:**
 
 ```bash
-npm install speech-plug
+npm install voicekom
 ```
 
 Then, import it into your project:
 
 ```javascript
-import SpeechPlug from 'speech-plug';
+import VoiceKom from 'voicekom';
 ```
 
 **Using CDN:**
 Add the following script tag to your HTML file.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/speech-plug/dist/speech-plug.min.js"></script>
+<script src="https://voicekom.embla.asia/dist/voicekom.min.js"></script>
 ```
 
 ### 2. Add the Container
 
-Add a div element to your HTML where the SpeechPlug UI widget will be mounted.
+Add a div element to your HTML where the VoiceKom UI widget will be mounted.
 
 ```html
 <body>
-  <!-- Your website content -->
-  
-  <div id="voice-lib-container"></div>
-  
+  <!-- Your website content -->  
+  <div id="voicekom-widget"></div>  
   <!-- Your other scripts -->
 </body>
 ```
@@ -64,54 +56,47 @@ Initialize the library once the DOM is loaded. You will need API keys for the ST
 
 ```javascript
 document.addEventListener('DOMContentLoaded', () => {
-  SpeechPlug.init({
+  VoiceKom.init({
     // Required: The ID of the element to host the UI
-    containerId: 'voice-lib-container', 
-
+    widgetId: 'voicekom-widget', 
     // Required: Language code (e.g., 'en' for English, 'no' for Norwegian)
     lang: 'en', 
-
     // --- Speech-to-Text (STT) Configuration ---
-    sttEngine: 'default', // Currently supports 'default' (Whisper)
-    sttApiKey: 'YOUR_STT_API_KEY', // e.g., Your OpenAI API Key
+    transcription: { "provider": "default" }, // Supports WebSpeech API(default), Whisper
+    recognition: { "provider": "default" }, // Supports Compromise(default), OpenAI
 
-    // --- Natural Language Understanding (NLU) Configuration ---
-    nluEngine: 'llm', // Currently supports 'llm'
-    nluApiKey: 'YOUR_NLU_API_KEY', // e.g., Your OpenAI API Key
-
-    // --- Optional UI Customization ---
+// --- Optional UI Customization ---
     autoStart: false, // Set to true to start listening automatically
-    position: 'bottom-right' // 'bottom-right', 'bottom-left', 'top-right', 'top-left'
+    position: 'bottom-right' // 'bottom-right', 'bottom-left'
   })
   .then(() => {
-    console.log('SpeechPlug initialized successfully!');
+    console.log('VoiceKom initialized successfully!');
   })
   .catch(error => {
-    console.error('Failed to initialize SpeechPlug:', error);
+    console.error('Failed to initialize VoiceKom:', error);
   });
 });
 ```
 
 ## ⚙️ API & Configuration
 
-The `SpeechPlug.init(config)` method accepts a single configuration object.
+The `VoiceKom.init(config)` method accepts a single configuration object.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `containerId` | string | Yes | The ID of the HTML element where the UI widget will be rendered. |
+| `widgetId` | string | Yes | The ID of the HTML element where the UI widget will be rendered. |
 | `lang` | string | Yes | The BCP 47 language code for speech recognition (e.g., en-US, es, no). |
-| `sttEngine` | string | No | The STT engine to use. Defaults to `default` (Whisper). |
-| `sttApiKey` | string | Yes | The API key for your chosen STT service. |
-| `nluEngine` | string | No | The NLU engine to use. Defaults to `llm`. |
-| `nluApiKey` | string | Yes | The API key for your chosen NLU service. |
+| `transcription` | object | No | The Speech-to-Text engine to use. Defaults to `default` (WebSpeechAPI). |
+| `transcription.provider` | string | No | Specifies which STT provider to use. E.g., openai, google, default.. |
+| `transcription.language` | string | No | Language code (e.g., en, no). |
+| `transcription.temperature` | string | No | Controls randomness of AI responses (if applicable). Range: 0–1. |
 | `autoStart` | boolean | No | If true, the microphone will start listening as soon as the library is initialized. Defaults to `false`. |
 | `position` | string | No | The position of the UI widget. Can be `bottom-right`, `bottom-left`, etc. |
-| `theme` | object | No | An object to customize colors and styles. |
 | `showTranscription` | boolean | No | If true, displays the live transcription in the UI. Defaults to `true`. |
 
 ## 🗣️ Supported Commands
 
-SpeechPlug is designed to understand natural language. Below are the core intents it can handle and example phrases.
+VoiceKom is designed to understand natural language. Below are the core intents it can handle and example phrases.
 
 | Command (Intent) | Example Utterances | Description |
 |------------------|-------------------|-------------|
@@ -124,11 +109,11 @@ SpeechPlug is designed to understand natural language. Below are the core intent
 | Scroll to Element | "Scroll to the footer", "Go to the contact section" | Scrolls a specific element into the view. |
 | Go Back | "Go back" | Navigates to the previous page in history. |
 
-The terms in *italics* are entities that SpeechPlug identifies, such as the target element's name or the value to be entered. It intelligently finds elements based on their `aria-label`, `placeholder`, associated `<label>` text, or button text.
+The terms in *italics* are entities that VoiceKom identifies, such as the target element's name or the value to be entered. It intelligently finds elements based on their `aria-label`, `placeholder`, associated `<label>` text, or button text.
 
 ## 🛠️ How It Works (Architecture)
 
-SpeechPlug is built on a modular, dependency-injected architecture that separates concerns for maximum maintainability and extensibility.
+VoiceKom is built on a modular, with an expandable driver-based structure, allowing key components to be easily swapped or extended. separates concerns for maximum maintainability and extensibility.
 
 The core flow is as follows:
 
@@ -136,19 +121,17 @@ The core flow is as follows:
 
 2. **Audio Capturer**: Uses the browser's MediaDevices API to capture audio from the user's microphone.
 
-3. **STT Driver (Whisper)**: Sends the captured audio to an external Speech-to-Text service (like OpenAI's Whisper API) and receives a text transcription.
+3. **Transcription Driver (Whisper)**: Sends the captured audio to Speech-to-Text service (e.g: Whisper API) and receives a text transcription.
 
-4. **NLP Module (LLM Driver)**: Sends the transcription to an NLU service (like an LLM via the OpenAI API). It provides the LLM with the transcription, the list of possible commands (from the CommandRegistry), and a simplified representation of the page's interactive elements.
+4. **Intent Recognition Driver (OpenAI)**: Sends the transcripted text to an AI service (e.g: OpenAI API) which processes and returns a structured JSON object identifying the user's intent (e.g., `FILL_INPUT`) and the entities (e.g., `target: "name"`, `value: "John"`).
 
-5. **Intent Recognition**: The LLM processes this information and returns a structured JSON object identifying the user's intent (e.g., `FILL_INPUT`) and the entities (e.g., `target: "name"`, `value: "John"`).
-
-6. **Voice Actuator**: Receives the structured command and performs the corresponding action on the DOM, such as finding the correct element and dispatching a click or input event.
+5. **Voice Actuator**: Receives the structured command and performs the corresponding action on the DOM, such as finding the correct element and dispatching a click or input event.
 
 This entire process is managed by a **Core Module** that orchestrates the data flow between components.
 
 ## 🤝 Contributing
 
-Contributions are welcome! If you'd like to help improve SpeechPlug, please follow these steps:
+Contributions are welcome! If you'd like to help improve VoiceKom, please follow these steps:
 
 1. Fork the repository.
 2. Create a new branch: `git checkout -b feature/your-awesome-feature`

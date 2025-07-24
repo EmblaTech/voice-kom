@@ -1,27 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {  
-  SpeechPlug.init({   // Initialize SpeechPlug with params
-    wakeWord: 'Hello', // Set the wake word
+  VoiceKom.init({   // Initialize VoiceKom with params
+    wakeWords: ['Hello','Hi'], // Set the wake word
+    sleepWords: ['Stop listening'], // Set the sleep words
     containerId: 'speech-container',
     lang: 'en',
     // position: 'bottom-right',
     // width: '188px',
     // height: '58px',
     transcription: {
-      provider: 'webspeech',
+      provider: 'default',
       apiKey: '' 
     },
     recognition: {
       provider: 'openai',
-      // provider: 'default',
-      apiKey: ''
+      // provider: 'default'
+      apiKey: '' 
     },
     
   }).then(() => {
-    console.log('Speech plug library initialized successfully');
+    console.log('VoiceKom has been initialized successfully');
   })
-  .then(() => {
-    console.log('111 VoiceLib initialized successfully'); })
   .catch(error => {
-    console.error('111 Failed to initialize VoiceLib:', error);
+    console.error('VoiceKom fails to initialize due to: ', error);
   });
 });

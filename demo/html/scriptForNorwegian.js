@@ -69,9 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     alert('FAQ section would open here in a real application.');
   });
-  
-  // Initialize VoiceLib with just the ID string
-  SpeechPlug.init({
+
+  // Initialize VoiceKom with just the ID string
+  VoiceKom.init({
 
     // containerId: 'voice-lib-container', // Changed from container element to containerId string
     //lang: 'en',

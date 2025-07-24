@@ -22,15 +22,16 @@ export class CoreModule {
   public async init(config: CoreConfig): Promise<void> {
     await this.uiHandler.init(config.uiConfig);
     await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig);
-    const key = 'KECjnDldxPbxJXTOu3XiY5rF0vB1IqNlEPC83MBJjNgDFvqhlnXovg=='
     this.bindEvents();
 
     this.status.set(StatusType.IDLE);
     this.uiHandler.updateUIStatus();
-
+    console.log('CoreModule initialized with config:', config);
     // --- INITIALIZE AND START THE WAKE WORD DETECTOR ---
-    if (config.wakeWord) {
-      this.wakeWordDetector.init(config.wakeWord);
+    if (config.wakeWords) {
+      console.log(`Initializing wake word detector with: ${config.wakeWords.join(', ')}`);
+      console.log(`Sleep words are: ${config.sleepWords ? config.sleepWords.join(', ') : 'none'}`);
+      this.wakeWordDetector.init(config.wakeWords, config.sleepWords);
       this.wakeWordDetector.start();
     }
   }
@@ -98,11 +99,19 @@ export class CoreModule {
     });
 
     this.eventBus.on(SpeechEvents.RECORDING_STOPPED, () => {
-      this.isRecordingModeActive = false;
-      if (this.isListeningModeActive) {
-        this.status.set(StatusType.PROCESSING);
-        this.uiHandler.updateUIStatus();
-      }
+        this.isRecordingModeActive = false;
+        // If we are still in listening mode, we should not change the status.
+        // The VAD will continue to run and listen for wake words.
+        if (this.isListeningModeActive) {
+            this.status.set(StatusType.LISTENING);
+        } else {
+            this.status.set(StatusType.IDLE);
+        }
+        this.uiHandler.updateUIStatus();  
+      // if (this.isListeningModeActive) {
+      //   this.status.set(StatusType.PROCESSING);
+      //   this.uiHandler.updateUIStatus();
+      // }
     });
 
     this.eventBus.on(SpeechEvents.LISTENING_STOPPED, () => {
@@ -114,7 +123,7 @@ export class CoreModule {
     // This handler is the key to the continuous loop.
     const onActionFinished = () => {
       // After processing a command, check if we should continue listening.
-      if (this.isListeningModeActive && !this.isRecordingModeActive) {
+      if (this.isListeningModeActive && !this.isRecordingModeActive)  {
         // If so, just reset the status. The VAD is still running.
         console.log('[INTERRUPT] Continuing listening mode after action completion.');
         this.status.set(StatusType.LISTENING);
@@ -144,7 +153,7 @@ export class CoreModule {
     this.eventBus.on(SpeechEvents.NLU_COMPLETED, async (intents: IntentResult[]) => {
       console.log('Going to execute intents:');
       // Status is already PROCESSING, can simplify by removing EXECUTING state
-      if (this.isListeningModeActive && !this.isRecordingModeActive) {
+      if (this.isListeningModeActive && !this.isRecordingModeActive)  {
         this.status.set(StatusType.EXECUTING);
         this.uiHandler.updateUIStatus();
       }

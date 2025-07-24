@@ -100,4 +100,8 @@ export class Validator {
             return false;
         }
     }
+
+    static validateOptional(value: any, validator: (v: any) => boolean, message: string, errors: string[]): void {
+        if (value !== undefined && !validator(value)) errors.push(message);
+    }
 }

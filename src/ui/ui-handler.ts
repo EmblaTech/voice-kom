@@ -27,9 +27,9 @@ export class UIHandler {
   // --- END: MODIFICATION ---
 
   // UI Elements
-  private container: HTMLElement | null = null;
+  private widget: HTMLElement | null = null;
   private actionButton: HTMLButtonElement | null = null;
-  private buttonContainer: HTMLElement | null = null;
+  private buttonWidget: HTMLElement | null = null;
   private statusDisplay: HTMLDivElement | null = null;
   private transcriptionDisplay: HTMLDivElement | null = null;
   private recordingIndicator: HTMLSpanElement | null = null;
@@ -46,11 +46,74 @@ export class UIHandler {
 
   // CSS Class Selectors
   private readonly ACTION_BUTTON_SELECTOR = '.action-button';
-  private readonly BUTTON_CONTAINER_SELECTOR = '.button-container';
+  private readonly BUTTON_WIDGET_SELECTOR = '.button-widget';
   private readonly STATUS_DISPLAY_SELECTOR = '.status-display';
   private readonly TRANSCRIPTION_DISPLAY_SELECTOR = '.transcription-display';
 
   private readonly STATUS_CONFIG: Record<StatusType, StatusMeta> = {
+    [StatusType.IDLE]: {
+      code: StatusType.IDLE,
+      text: 'VoiceKom ready',
+      buttonMode: ButtonMode.RECORD,
+      icon: 'mic',
+      cssClass: 'record-mode',
+      dataAction: ButtonMode.RECORD,   
+      innerHTML: this.SVG_ICONS.RECORD
+    },
+    
+    [StatusType.RECORDING]: {
+      code: StatusType.RECORDING,
+      text: 'Recording...',
+      buttonMode: ButtonMode.STOP,
+      icon: 'mic_off',
+      cssClass: 'recording-mode',
+      dataAction: ButtonMode.STOP,     
+      innerHTML: this.SVG_ICONS.STOP
+    },
+    [StatusType.PROCESSING]: {
+      code: StatusType.PROCESSING,
+      text: 'Processing...',
+      buttonMode: ButtonMode.PROCESSING,
+      icon: 'hourglass',
+      cssClass: 'processing-mode',    
+      innerHTML: this.SVG_ICONS.PROCESSING
+    },
+    [StatusType.ERROR]: {
+      code: StatusType.ERROR,
+      text: '', // The specific error message is handled by onError -> showError
+      buttonMode: ButtonMode.RECORD,
+      icon: 'error',
+      cssClass: 'record-mode',
+      dataAction: ButtonMode.RECORD,    
+      innerHTML: this.SVG_ICONS.RECORD
+    },
+    [StatusType.WAITING]: {
+    code: StatusType.WAITING,
+    text: "Say 'Hey VoiceKom'", // Example text
+    buttonMode: ButtonMode.RECORD,
+    icon: 'hearing',
+    cssClass: 'record-mode', // Can reuse an existing style
+    dataAction: ButtonMode.RECORD,   
+    innerHTML: this.SVG_ICONS.RECORD
+  },
+
+    [StatusType.EXECUTING]: {
+      code: StatusType.EXECUTING,
+      text: 'Executing...',
+      buttonMode: ButtonMode.PROCESSING,
+      icon: 'play_arrow',
+      cssClass: 'processing-mode',    
+      innerHTML: this.SVG_ICONS.RECORD
+    },
+    [StatusType.LISTENING]: {
+      code: StatusType.LISTENING,
+      text: 'Listening...',
+      buttonMode: ButtonMode.STOP,
+      icon: 'hearing',
+      cssClass: 'listening-mode',
+      dataAction: ButtonMode.STOP,
+      innerHTML: this.SVG_ICONS.STOP
+    }
     [StatusType.IDLE]: { code: StatusType.IDLE, text: 'SpeechPlug', buttonMode: ButtonMode.RECORD, icon: 'mic', cssClass: 'record-mode', dataAction: ButtonMode.RECORD, innerHTML: this.SVG_ICONS.RECORD },
     [StatusType.RECORDING]: { code: StatusType.RECORDING, text: 'Recording...', buttonMode: ButtonMode.STOP, icon: 'mic_off', cssClass: 'recording-mode', dataAction: ButtonMode.STOP, innerHTML: this.SVG_ICONS.STOP },
     [StatusType.PROCESSING]: { code: StatusType.PROCESSING, text: 'Processing...', buttonMode: ButtonMode.PROCESSING, icon: 'hourglass', cssClass: 'processing-mode', innerHTML: this.SVG_ICONS.PROCESSING },
@@ -76,17 +139,17 @@ export class UIHandler {
 
   public async init(config: UIConfig): Promise<void> {
     this.config = config;
-    const containerId = this.config.containerId;
-    this.container = containerId ? document.getElementById(containerId) : null;
-    this.container ??= await this.createDefaultUI(containerId!);
+    const widgetId = this.config.widgetId;
+    this.widget = widgetId ? document.getElementById(widgetId) : null;
+    this.widget ??= await this.createDefaultUI(widgetId!);
     this.updateUIStatus();
   }
 
-  private async createDefaultUI(containerId: string): Promise<HTMLElement> { 
-    this.container = this.createContainer(containerId);
+  private async createDefaultUI(widgetId: string): Promise<HTMLElement> { 
+    this.widget = this.createWidget(widgetId);
     // Use optional chaining to safely pass potentially undefined config values
     await this.setUI(this.config?.position, this.config?.width, this.config?.height);
-    return this.container;
+    return this.widget;
   }
 
   // --- START: MODIFICATION ---
@@ -205,7 +268,7 @@ export class UIHandler {
   }
   
   public updateUIStatus(): void {
-    if (!this.container) return;
+    if (!this.widget) return;
     const status = this.status.get().value;
     this.showStatus(status);
     this.setActionButton(status);
@@ -285,11 +348,11 @@ export class UIHandler {
   }
 
   private setButtonAnimation(status: StatusType): void {
-    if (!this.buttonContainer) return;
-    this.buttonContainer.classList.remove('listening', 'recording');
+    if (!this.buttonWidget) return;
+    this.buttonWidget.classList.remove('listening', 'recording');
     switch (status) {
-      case StatusType.LISTENING: this.buttonContainer.classList.add('listening'); break;
-      case StatusType.RECORDING: this.buttonContainer.classList.add('recording'); break;
+      case StatusType.LISTENING: this.buttonWidget.classList.add('listening'); break;
+      case StatusType.RECORDING: this.buttonWidget.classList.add('recording'); break;
     }
   }
 
@@ -304,11 +367,11 @@ export class UIHandler {
       this.transcriptionDisplay.textContent = trimmed;
       this.transcriptionDisplay.style.display = 'block';
       this.restoreTranscriptionOpacity();
-      this.expandContainer();
+      this.expandWidget();
     } else {
       this.transcriptionDisplay.textContent = '';
       this.transcriptionDisplay.style.display = 'none';
-      this.resetContainerSize();
+      this.resetWidgetSize();
     }
   }
 
@@ -326,16 +389,16 @@ export class UIHandler {
     this.transcriptionDisplay.style.transition = 'opacity 0.3s ease';
   }
 
-  private expandContainer(): void {
-    if (!this.container) return;
-    this.container.style.maxHeight = '200px'; // Allow more room
-    this.container.style.height = 'auto';
+  private expandWidget(): void {
+    if (!this.widget) return;
+    this.widget.style.maxHeight = '200px'; // Allow more room
+    this.widget.style.height = 'auto';
   }
 
-  private resetContainerSize(): void {
-    if (!this.container) return;
-    this.container.style.maxHeight = '75px';
-    this.container.style.height = 'auto';
+  private resetWidgetSize(): void {
+    if (!this.widget) return;
+    this.widget.style.maxHeight = '75px';
+    this.widget.style.height = 'auto';
   }
   
   private showError(message: string): void {
