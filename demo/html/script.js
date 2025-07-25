@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wakeWords: ['Hello','Hi'], // Set the wake word
     sleepWords: ['Stop listening'], // Set the sleep words
     // widgetId: 'speech-container',
-    lang: 'si-LK', // Set the language
+    lang: 'en-US', // Set the language
     // position: 'bottom-right',
     // width: '188px',
     // height: '58px',

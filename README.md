@@ -70,8 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 The `VoiceKom.init(config)` method accepts a single configuration object. All parameters are optional and have sensible defaults unless stated otherwise.
 
-### General Configuration
-
 | Parameter | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `lang` | `string` | No | The primary BCP 47 language code (e.g., `'en-US'`, `'es-MX'`) to be used for both transcription and recognition. **Default:** `'en'`. |
@@ -82,7 +80,6 @@ The `VoiceKom.init(config)` method accepts a single configuration object. All pa
 | `height` | `string` | No | The CSS initial height of the widget container (e.g., `'75px'`). **Default:** `'75px'`. |
 | `showTranscription`| `boolean`| No | If `true`, the transcribed text is displayed in the widget. **Default:** `true`. |
 
-### Transcription (Speech-to-Text) Configuration
 These parameters are passed within a `transcription` object: `transcription: { ... }`.
 
 | Parameter | Type | Required | Description |
@@ -90,7 +87,6 @@ These parameters are passed within a `transcription` object: `transcription: { .
 | `provider` | `string` | No | The speech-to-text engine to use. Options include `'default'` (Web Speech API), `'openai'`, `'google'`, etc. **Default:** `'default'`. |
 | `apiKey` | `string` | **Conditionally** | Your API key, required if using a provider other than `'default'`. |
 
-### Recognition (NLU) Configuration
 These parameters are passed within a `recognition` object: `recognition: { ... }`.
 
 | Parameter | Type | Required | Description |
@@ -100,29 +96,27 @@ These parameters are passed within a `recognition` object: `recognition: { ... }
 | `confidence`| `number`| No | The confidence threshold (0 to 1) required for a recognized intent. |
 
 
+
 ## 🗣️ Supported Commands
 
 VoiceKom's command recognition capability depends on the `recognition.provider` you select in your configuration. Each provider offers a different balance of speed, flexibility, and intelligence.
-
----
 
 ### Default Provider
 *(**Config:** `recognition: { provider: 'default' }`)*
 
 The `default` provider is a fast, lightweight, and offline-first engine. It operates on a strict set of command patterns and is designed for simple, direct instructions. It is not conversational and expects commands to be given one at a time in a specific format.
 
-| Intent | Command Structure | Alternative Verbs |
-| :--- | :--- | :--- |
-| **Clicking Elements** | `Click <element name>` | `Press` |
-| **Filling Text Fields** | `Fill <field name> with <text to enter>`| `Enter`, `As` |
-| **Typing in Text Areas**| `Type in <field name> as <text>` | `In` |
-| **Checking/Unchecking** | `Check <checkbox name>` <br> `Uncheck <checkbox name>` <br> `Check all <group name>` <br> `Uncheck all <group name>` | - |
-| **Selecting from Lists** | `Select <option name> in <list name>` <br> `Open <dropdown name>` | `Choose` |
-| **Scrolling** | `Scroll <direction>` <br> `Scroll to <element name>` <br> `Scroll to the <position>` | `Go to` |
+| Intent | Command Structure | Alternative Verbs | Examples |
+| :--- | :--- | :--- | :--- |
+| Clicking Elements | `Click <element name>` | `Press` | `"Click submit"`<br>`"Press the login button"` |
+| Filling Text Fields | `Fill <field name> with <text to enter>`| `Enter`, `As` | `"Fill username with John Doe"`<br>`"Enter password as 123456"` |
+| Typing in Text Areas | `Type in <field name> as <text>` | `In` | `"Type in message as this is a great product"` |
+| Checking/Unchecking | `Check <checkbox name>` <br> `Uncheck <checkbox name>` <br> `Check all <group name>` <br> `Uncheck all <group name>` | - | `"Check agree to terms"`<br>`"Uncheck newsletter"`<br>`"Check all interests"` |
+| Selecting from Lists | `Select <option name> in <list name>` <br> `Open <dropdown name>` | `Choose` | `"Select Norway in country"`<br>`"Open the state dropdown"` |
+| Navigating | `Scroll <direction>` <br> `Scroll to <element name>` <br> `Scroll to the <position>` | `Go to` | `"Scroll down"`<br>`"Scroll to the footer"`<br>`"Go to the top"` |
 
 **Note:** The terms in `<...>` are placeholders for the name of the UI element (e.g., its label, placeholder) or the value you want to use.
 
----
 
 ### OpenAI Provider
 *(**Config:** `recognition: { provider: 'openai', apiKey: '...' }`)*
@@ -146,9 +140,9 @@ You can be as natural as you want, as long as your intent is clear.
 *   **Be Clear with Your Intent:** If you want to select from a list, use a verb like "select" or "choose". Saying "country is Sri Lanka" might be interpreted as typing into an input field named "country". A clearer command would be "**Select** country Sri Lanka".
 *   **Checkboxes vs. Selections:** Checking a checkbox within a group is a distinct action. For a group of radio buttons, use "select" or "choose". For checkboxes, use "check" or "uncheck".
 
----
 ### How VoiceKom Finds Elements
 For both providers, VoiceKom intelligently finds UI elements on the page based on their `aria-label`, `placeholder` text, the text content of an associated `<label>`, or the text inside a button.
+
 
 ## 🛠️ How It Works (Architecture)
 
