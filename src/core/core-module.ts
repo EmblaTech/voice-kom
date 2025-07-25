@@ -9,6 +9,7 @@ import {WebspeechWakewordDetector} from '../wakeword/WebspeechAPICapturer';
 export class CoreModule {
   private isListeningModeActive = false;
   private isRecordingModeActive = false;
+
   constructor(
     private readonly nluModule: NLUModule,
     private readonly uiHandler: UIHandler,

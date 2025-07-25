@@ -1,4 +1,4 @@
-.voice-recorder-container {
+.voice-recorder-widget {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 300px;
     max-height: none; /* Allow expansion */
@@ -33,7 +33,7 @@
     gap: 8px;
   }
   
-  .button-container {
+  .button-widget {
     width: 40px;
     height: 40px;
     background-color: #fff;
@@ -47,7 +47,7 @@
   }
 
   /* Loader animation for listening state */
-  /* .button-container.listening::before {
+  /* .button-widget.listening::before {
     content: '';
     position: absolute;
     top: -4px;
@@ -63,7 +63,7 @@
   } */
 
   /* Loader animation for recording state */
-  /* .button-container.recording::before {
+  /* .button-widget.recording::before {
     content: '';
     position: absolute;
     top: -4px;
@@ -185,12 +185,12 @@
   }
     
   @media (max-width: 480px) {
-    .voice-recorder-container {
+    .voice-recorder-widget {
       max-width: 100%;
       border-radius: 0;
     }
     
-    .voice-floating-container {
+    .voice-floating-widget {
       width: calc(100% - 20px);
       right: 10px;
       left: 10px;
@@ -198,7 +198,7 @@
     }
   }
   
-  .voice-recorder-container button:focus {
+  .voice-recorder-widget button:focus {
     outline: none;
     box-shadow: none;
   }

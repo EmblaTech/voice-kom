@@ -21,7 +21,7 @@ export class DriverFactory {
       case TranscriptionProviders.GOOGLE:
         return new GoogleTranscriptionDriver(config);
       case TranscriptionProviders.WEBSPEECH:
-        return new DummyTranscriptionDriver();
+        return new DummyTranscriptionDriver(config);
       default:
         throw new Error(`Unsupported driver type: ${config.provider}`);
     }

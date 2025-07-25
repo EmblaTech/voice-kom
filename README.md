@@ -38,19 +38,8 @@ Add the following script tag to your HTML file.
 <script src="https://voicekom.embla.asia/dist/voicekom.min.js"></script>
 ```
 
-### 2. Add the Container
 
-Add a div element to your HTML where the VoiceKom UI widget will be mounted.
-
-```html
-<body>
-  <!-- Your website content -->  
-  <div id="voicekom-widget"></div>  
-  <!-- Your other scripts -->
-</body>
-```
-
-### 3. Initialization
+### 2. Initialization
 
 Initialize the library once the DOM is loaded. You will need API keys for the STT and NLU services you choose to use (e.g., OpenAI).
 
@@ -58,7 +47,6 @@ Initialize the library once the DOM is loaded. You will need API keys for the ST
 document.addEventListener('DOMContentLoaded', () => {
   VoiceKom.init({
     // Required: The ID of the element to host the UI
-    widgetId: 'voicekom-widget', 
     // Required: Language code (e.g., 'en' for English, 'no' for Norwegian)
     lang: 'en', 
     // --- Speech-to-Text (STT) Configuration ---
@@ -80,36 +68,87 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ## ⚙️ API & Configuration
 
-The `VoiceKom.init(config)` method accepts a single configuration object.
+The `VoiceKom.init(config)` method accepts a single configuration object. All parameters are optional and have sensible defaults unless stated otherwise.
+
+### General Configuration
 
 | Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `widgetId` | string | Yes | The ID of the HTML element where the UI widget will be rendered. |
-| `lang` | string | Yes | The BCP 47 language code for speech recognition (e.g., en-US, es, no). |
-| `transcription` | object | No | The Speech-to-Text engine to use. Defaults to `default` (WebSpeechAPI). |
-| `transcription.provider` | string | No | Specifies which STT provider to use. E.g., openai, google, default.. |
-| `transcription.language` | string | No | Language code (e.g., en, no). |
-| `transcription.temperature` | string | No | Controls randomness of AI responses (if applicable). Range: 0–1. |
-| `autoStart` | boolean | No | If true, the microphone will start listening as soon as the library is initialized. Defaults to `false`. |
-| `position` | string | No | The position of the UI widget. Can be `bottom-right`, `bottom-left`, etc. |
-| `showTranscription` | boolean | No | If true, displays the live transcription in the UI. Defaults to `true`. |
+| :--- | :--- | :--- | :--- |
+| `lang` | `string` | No | The primary BCP 47 language code (e.g., `'en-US'`, `'es-MX'`) to be used for both transcription and recognition. **Default:** `'en'`. |
+| `wakeWords` | `string[]` | No | An array of words or phrases that will activate the microphone from an idle or waiting state. Example: `['Hey VoiceKom']`. |
+| `sleepWords` | `string[]` | No | An array of words or phrases that will stop the microphone from listening. Example: `['Stop listening']`. |
+| `position` | `string` | No | Position of the floating widget. Options: `'bottom-right'`, `'bottom-left'`. **Default:** `'bottom-right'`. |
+| `width` | `string` | No | The CSS width of the widget container (e.g., `'350px'`). **Default:** `'300px'`. |
+| `height` | `string` | No | The CSS initial height of the widget container (e.g., `'75px'`). **Default:** `'75px'`. |
+| `showTranscription`| `boolean`| No | If `true`, the transcribed text is displayed in the widget. **Default:** `true`. |
+
+### Transcription (Speech-to-Text) Configuration
+These parameters are passed within a `transcription` object: `transcription: { ... }`.
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `provider` | `string` | No | The speech-to-text engine to use. Options include `'default'` (Web Speech API), `'openai'`, `'google'`, etc. **Default:** `'default'`. |
+| `apiKey` | `string` | **Conditionally** | Your API key, required if using a provider other than `'default'`. |
+
+### Recognition (NLU) Configuration
+These parameters are passed within a `recognition` object: `recognition: { ... }`.
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `provider` | `string` | No | The Natural Language Understanding engine to use for interpreting commands. Options include `'default'` (Compromise js), `'whisper'`, etc.  **Default:** `'default'`. |
+| `apiKey` | `string` | **Conditionally** | Your API key, required if using a provider other than `'default'`. |
+| `confidence`| `number`| No | The confidence threshold (0 to 1) required for a recognized intent. |
+
 
 ## 🗣️ Supported Commands
 
-VoiceKom is designed to understand natural language. Below are the core intents it can handle and example phrases.
+VoiceKom's command recognition capability depends on the `recognition.provider` you select in your configuration. Each provider offers a different balance of speed, flexibility, and intelligence.
 
-| Command (Intent) | Example Utterances | Description |
-|------------------|-------------------|-------------|
-| Click Element | "Click submit", "Press the login button" | Clicks a button, link, or other clickable element. |
-| Fill Input | "Fill username with John", "Enter password as 1234" | Fills a text input, textarea, or search field. |
-| Check Checkbox | "Check agree to terms", "Tick the newsletter box" | Checks a specific checkbox. |
-| Uncheck Checkbox | "Uncheck agree to terms" | Unchecks a specific checkbox. |
-| Select Option | "Select Email in contact preference", "Choose Norway" | Selects an option in a radio group or dropdown. |
-| Scroll | "Scroll down", "Go to the bottom" | Scrolls the page up, down, to the top, or bottom. |
-| Scroll to Element | "Scroll to the footer", "Go to the contact section" | Scrolls a specific element into the view. |
-| Go Back | "Go back" | Navigates to the previous page in history. |
+---
 
-The terms in *italics* are entities that VoiceKom identifies, such as the target element's name or the value to be entered. It intelligently finds elements based on their `aria-label`, `placeholder`, associated `<label>` text, or button text.
+### Default Provider
+*(**Config:** `recognition: { provider: 'default' }`)*
+
+The `default` provider is a fast, lightweight, and offline-first engine. It operates on a strict set of command patterns and is designed for simple, direct instructions. It is not conversational and expects commands to be given one at a time in a specific format.
+
+| Intent | Command Structure | Alternative Verbs |
+| :--- | :--- | :--- |
+| **Clicking Elements** | `Click <element name>` | `Press` |
+| **Filling Text Fields** | `Fill <field name> with <text to enter>`| `Enter`, `As` |
+| **Typing in Text Areas**| `Type in <field name> as <text>` | `In` |
+| **Checking/Unchecking** | `Check <checkbox name>` <br> `Uncheck <checkbox name>` <br> `Check all <group name>` <br> `Uncheck all <group name>` | - |
+| **Selecting from Lists** | `Select <option name> in <list name>` <br> `Open <dropdown name>` | `Choose` |
+| **Scrolling** | `Scroll <direction>` <br> `Scroll to <element name>` <br> `Scroll to the <position>` | `Go to` |
+
+**Note:** The terms in `<...>` are placeholders for the name of the UI element (e.g., its label, placeholder) or the value you want to use.
+
+---
+
+### OpenAI Provider
+*(**Config:** `recognition: { provider: 'openai', apiKey: '...' }`)*
+
+When using the `openai` provider, VoiceKom becomes a powerful conversational assistant. This provider is slower as it requires an internet connection, but it can understand natural language, context, and even multiple commands in a single, continuous utterance.
+
+You can be as natural as you want, as long as your intent is clear.
+
+*   **Filling Multiple Fields:** "my name is Alex and the email is alex@gmail.com"
+*   **Checking & Unchecking:** "check the box for terms and conditions", "uncheck everything except upcoming events"
+*   **Selecting from Lists:** "select feedback for the subject"
+*   **Relative Dates & Times:** "set the preferred date to tomorrow", "preferred time is 3 hours from now"
+*   **Combining Everything:** You can chain multiple commands together seamlessly.
+
+#### **Example of a Multi-Command Utterance:**
+
+> “Name is Alex, email is alex@gmail.com, phone number 071662, preferred date tomorrow, preferred time is 3 hrs from now. Select phone in preferred contact method. Check everything except upcoming events in interests. Select feedback in subject. Type Good morning Alex in message. I agree to terms and conditions. Finally, submit.”
+
+#### 💡 Best Practices for the OpenAI Provider:
+
+*   **Be Clear with Your Intent:** If you want to select from a list, use a verb like "select" or "choose". Saying "country is Sri Lanka" might be interpreted as typing into an input field named "country". A clearer command would be "**Select** country Sri Lanka".
+*   **Checkboxes vs. Selections:** Checking a checkbox within a group is a distinct action. For a group of radio buttons, use "select" or "choose". For checkboxes, use "check" or "uncheck".
+
+---
+### How VoiceKom Finds Elements
+For both providers, VoiceKom intelligently finds UI elements on the page based on their `aria-label`, `placeholder` text, the text content of an associated `<label>`, or the text inside a button.
 
 ## 🛠️ How It Works (Architecture)
 

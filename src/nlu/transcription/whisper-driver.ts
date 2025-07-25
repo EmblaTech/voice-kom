@@ -13,25 +13,18 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
     private readonly DEFAULT_MODEL = 'whisper-1';
     private readonly DEFAULT_TEMPERATURE = '0.0';
 
-    private readonly AVAILABLE_LANGUAGES: string[] = [
-        'en', 'zh', 'de', 'es', 'ru', 'ko', 'fr', 'ja',
-        'pt', 'tr', 'pl', 'ca', 'nl', 'ar', 'sv', 'it',
-        'id', 'hi', 'fi', 'vi', 'he', 'uk', 'el', 'ms',
-        'cs', 'ro', 'da', 'hu', 'ta', 'no', 'th', 'ur',
-        'hr', 'bg', 'lt', 'la', 'mi', 'ml', 'cy', 'sk',
-        'te', 'fa', 'lv', 'bn', 'sr', 'az', 'sl', 'kn',
-        'et', 'mk', 'br', 'eu', 'is', 'hy', 'ne', 'mn',
-        'bs', 'kk', 'sq', 'sw', 'gl', 'mr', 'pa', 'si',
-        'km', 'sn', 'yo', 'so', 'af', 'oc', 'ka', 'be',
-        'tg', 'sd', 'gu', 'am', 'yi', 'lo', 'uz', 'fo',
-        'ht', 'ps', 'tk', 'nn', 'mt', 'sa', 'lb', 'my',
-        'bo', 'tl', 'mg', 'as', 'tt', 'haw', 'ln', 'ha',
-        'ba', 'jw', 'su'
-    ];
+    private readonly AVAILABLE_LANGUAGES: string[] = 
+    ['af','ar','hy','az','be','bs','bg','ca',
+        'zh','hr','cs','da','nl','en','et','fi',
+        'fr','gl','de','el','he','hi','hu','is',
+        'id','it','ja','kn','kk','ko','lv','lt',
+        'mk','ms','mi','mr','ne','no','fa','pl',
+        'pt','ro','ru','sr','sk','sl','es','sw',
+    'sv','tl','ta','th','tr','uk','ur','vi','cy'];
 
     constructor(config: TranscriptionConfig) {
         this.validateConfig(config);
-        this.language = config.lang || this.DEFAULT_LANGUAGE;
+        this.language = config.lang? config.lang.split(/[-_]/)[0].toLowerCase() : this.DEFAULT_LANGUAGE;
         this.apiKey = config.apiKey!;
         this.apiEndpoint = config.apiUrl || this.apiEndpoint;
         this.logger.info(`WhisperTranscriptionDriver initialized with config: ${JSON.stringify(config)}`);
@@ -93,6 +86,9 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
     private validateConfig(config: TranscriptionConfig): void {
         if (config.apiUrl && !Validator.isValidUrl(config.apiUrl)) {
             throw new Error('Invalid API URL provided in configuration');
+        }
+        if (config.lang && !this.AVAILABLE_LANGUAGES.includes(config.lang.split(/[-_]/)[0].toLowerCase())) {
+            throw new Error(`Unsupported language provided in configuration: ${config.lang}`);
         }
     }
 

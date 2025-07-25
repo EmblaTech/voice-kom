@@ -8,8 +8,8 @@ import { UIConfig } from '../../src/types';
 //    Webpack (with the config from the previous step) will replace these
 //    with the raw text content of the files at build time.
 //    The path is relative to this file.
-import htmlTemplate from './speech-container.html';
-import defaultStyles from './speech-container.css';
+import htmlTemplate from './assets/widget.html';
+import defaultStyles from './assets/style.css';
 
 // 2. REMOVED: The runtime fetcher is no longer needed for internal assets.
 // import { fetchContent } from '../utils/resource-fetcher';
@@ -23,7 +23,7 @@ export class UIHandler {
   // 3. REMOVED: These path constants are no longer needed.
   // private readonly TEMPLATE_PATH = ...
   // private readonly STYLE_PATH = ...
-  private readonly STYLE_ELEMENT_ID = 'speech-container-style';
+  private readonly STYLE_ELEMENT_ID = 'speech-widget-style';
   // --- END: MODIFICATION ---
 
   // UI Elements
@@ -51,74 +51,11 @@ export class UIHandler {
   private readonly TRANSCRIPTION_DISPLAY_SELECTOR = '.transcription-display';
 
   private readonly STATUS_CONFIG: Record<StatusType, StatusMeta> = {
-    [StatusType.IDLE]: {
-      code: StatusType.IDLE,
-      text: 'VoiceKom ready',
-      buttonMode: ButtonMode.RECORD,
-      icon: 'mic',
-      cssClass: 'record-mode',
-      dataAction: ButtonMode.RECORD,   
-      innerHTML: this.SVG_ICONS.RECORD
-    },
-    
-    [StatusType.RECORDING]: {
-      code: StatusType.RECORDING,
-      text: 'Recording...',
-      buttonMode: ButtonMode.STOP,
-      icon: 'mic_off',
-      cssClass: 'recording-mode',
-      dataAction: ButtonMode.STOP,     
-      innerHTML: this.SVG_ICONS.STOP
-    },
-    [StatusType.PROCESSING]: {
-      code: StatusType.PROCESSING,
-      text: 'Processing...',
-      buttonMode: ButtonMode.PROCESSING,
-      icon: 'hourglass',
-      cssClass: 'processing-mode',    
-      innerHTML: this.SVG_ICONS.PROCESSING
-    },
-    [StatusType.ERROR]: {
-      code: StatusType.ERROR,
-      text: '', // The specific error message is handled by onError -> showError
-      buttonMode: ButtonMode.RECORD,
-      icon: 'error',
-      cssClass: 'record-mode',
-      dataAction: ButtonMode.RECORD,    
-      innerHTML: this.SVG_ICONS.RECORD
-    },
-    [StatusType.WAITING]: {
-    code: StatusType.WAITING,
-    text: "Say 'Hey VoiceKom'", // Example text
-    buttonMode: ButtonMode.RECORD,
-    icon: 'hearing',
-    cssClass: 'record-mode', // Can reuse an existing style
-    dataAction: ButtonMode.RECORD,   
-    innerHTML: this.SVG_ICONS.RECORD
-  },
-
-    [StatusType.EXECUTING]: {
-      code: StatusType.EXECUTING,
-      text: 'Executing...',
-      buttonMode: ButtonMode.PROCESSING,
-      icon: 'play_arrow',
-      cssClass: 'processing-mode',    
-      innerHTML: this.SVG_ICONS.RECORD
-    },
-    [StatusType.LISTENING]: {
-      code: StatusType.LISTENING,
-      text: 'Listening...',
-      buttonMode: ButtonMode.STOP,
-      icon: 'hearing',
-      cssClass: 'listening-mode',
-      dataAction: ButtonMode.STOP,
-      innerHTML: this.SVG_ICONS.STOP
-    }
-    [StatusType.IDLE]: { code: StatusType.IDLE, text: 'SpeechPlug', buttonMode: ButtonMode.RECORD, icon: 'mic', cssClass: 'record-mode', dataAction: ButtonMode.RECORD, innerHTML: this.SVG_ICONS.RECORD },
+    [StatusType.IDLE]: { code: StatusType.IDLE, text: 'Voice Kom', buttonMode: ButtonMode.RECORD, icon: 'mic', cssClass: 'record-mode', dataAction: ButtonMode.RECORD, innerHTML: this.SVG_ICONS.RECORD },
     [StatusType.RECORDING]: { code: StatusType.RECORDING, text: 'Recording...', buttonMode: ButtonMode.STOP, icon: 'mic_off', cssClass: 'recording-mode', dataAction: ButtonMode.STOP, innerHTML: this.SVG_ICONS.STOP },
     [StatusType.PROCESSING]: { code: StatusType.PROCESSING, text: 'Processing...', buttonMode: ButtonMode.PROCESSING, icon: 'hourglass', cssClass: 'processing-mode', innerHTML: this.SVG_ICONS.PROCESSING },
     [StatusType.ERROR]: { code: StatusType.ERROR, text: '', buttonMode: ButtonMode.RECORD, icon: 'error', cssClass: 'record-mode', dataAction: ButtonMode.RECORD, innerHTML: this.SVG_ICONS.RECORD },
-    [StatusType.WAITING]: { code: StatusType.WAITING, text: "Say 'Hey SpeechPlug'", buttonMode: ButtonMode.RECORD, icon: 'hearing', cssClass: 'record-mode', dataAction: ButtonMode.RECORD, innerHTML: this.SVG_ICONS.RECORD },
+    [StatusType.WAITING]: { code: StatusType.WAITING, text: "Say 'Hey VoiceKom'", buttonMode: ButtonMode.RECORD, icon: 'hearing', cssClass: 'record-mode', dataAction: ButtonMode.RECORD, innerHTML: this.SVG_ICONS.RECORD },
     [StatusType.EXECUTING]: { code: StatusType.EXECUTING, text: 'Executing...', buttonMode: ButtonMode.PROCESSING, icon: 'play_arrow', cssClass: 'processing-mode', innerHTML: this.SVG_ICONS.RECORD },
     [StatusType.LISTENING]: { code: StatusType.LISTENING, text: 'Listening...', buttonMode: ButtonMode.STOP, icon: 'hearing', cssClass: 'listening-mode', dataAction: ButtonMode.STOP, innerHTML: this.SVG_ICONS.STOP }
   };
@@ -156,38 +93,38 @@ export class UIHandler {
   // 4. Make parameters optional and provide sensible defaults.
   //    This fixes the "undefined must be a string" errors from your logs.
   private async setUI(position?: string, width?: string, height?: string): Promise<void> {
-    if (!this.container) return;
+    if (!this.widget) return;
 
     // Define defaults to make the component robust
     const finalPosition = position ?? 'bottom-right';
     const finalWidth = width ?? '350px';
     const finalHeight = height ?? 'auto';
 
-    this.container.classList.add('voice-recorder-container', `voice-${finalPosition}`);
-    this.container.style.width = finalWidth;
-    this.container.style.height = finalHeight;
+    this.widget.classList.add('voice-recorder-widget', `voice-${finalPosition}`);
+    this.widget.style.width = finalWidth;
+    this.widget.style.height = finalHeight;
 
     // The methods below will now use the bundled assets.
     await this.createUIElements();
-    await this.injectStyles(this.container, this.config?.styleUrl, this.config?.styles);
+    await this.injectStyles(this.widget, this.config?.styleUrl, this.config?.styles);
   }
   // --- END: MODIFICATION ---
 
-  private createContainer(id: string): HTMLElement {
-    const container = document.createElement('div');
-    container.id = id;
+  private createWidget(id: string): HTMLElement {
+    const widget = document.createElement('div');
+    widget.id = id;
     // Safely access config
     if (this.config) {
-      this.config.containerId = id;
+      this.config.widgetId = id;
     }
-    document.body.appendChild(container);
-    return container;
+    document.body.appendChild(widget);
+    return widget;
   }
   
   // --- START: MODIFICATION ---
   // 5. This method now uses the imported 'defaultStyles' variable.
   //    It no longer fetches any internal assets at runtime.
-  private async injectStyles(container: any, fileStyles: string | undefined, inlineStyles: any): Promise<void> {
+  private async injectStyles(widget: any, fileStyles: string | undefined, inlineStyles: any): Promise<void> {
     if (document.getElementById(this.STYLE_ELEMENT_ID)) return;
 
     const styleElement = document.createElement('style');
@@ -198,19 +135,32 @@ export class UIHandler {
 
     // Append dynamic animation styles
     const customAnimationStyles = `
-      .action-button.recording-mode { background-color: #dc3545 !important; border-color: #dc3545 !important; color: white !important; }
-      .action-button.recording-mode:hover { background-color: #c82333 !important; border-color: #bd2130 !important; }
-      .button-container.listening .action-button { position: relative; overflow: visible; }
-      .button-container.listening .action-button::before { content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border: 2px solid #007bff; border-radius: 50%; transform: translate(-50%, -50%); animation: wave-pulse 2s infinite; opacity: 0.6; }
-      @keyframes wave-pulse { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.3; } 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } }
-    `;
-    styleElement.textContent = cssContent + customAnimationStyles;
-    document.head.appendChild(styleElement);
+    .action-button.recording-mode { background-color: #dc3545 !important; border-color: #dc3545 !important; color: white !important; }
+    .action-button.recording-mode:hover { background-color: #c82333 !important; border-color: #bd2130 !important; }
+    .button-widget.listening .action-button { position: relative; overflow: visible; }
+    .button-widget.listening .action-button::before { 
+      content: ''; 
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      width: 100%; 
+      height: 100%; 
+      border: 2px solid #007bff; 
+      border-radius: 50%; 
+      transform: translate(-50%, -50%); 
+      animation: wave-pulse 2s infinite; 
+      opacity: 0.6; 
+      pointer-events: none; /* <-- ADD THIS LINE */
+    }
+    @keyframes wave-pulse { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.3; } 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } }
+  `;
+  styleElement.textContent = cssContent + customAnimationStyles;
+  document.head.appendChild(styleElement);
 
     // The logic for user-provided styles can remain, but it should not handle internal files.
     // The finalizeStyles, parse, toCamelCase, and mergeStyles methods can likely be removed
     // unless you need to support a user-provided `styleUrl`.
-    Object.assign(container.style, inlineStyles || {});
+    Object.assign(widget.style, inlineStyles || {});
   }
   // --- END: MODIFICATION ---
 
@@ -234,18 +184,18 @@ export class UIHandler {
   // --- START: MODIFICATION ---
   // 6. This method now uses the imported 'htmlTemplate' variable.
   private async createUIElements(): Promise<void> {
-    if (!this.container) return;
-    this.container.innerHTML = '';  
+    if (!this.widget) return;
+    this.widget.innerHTML = '';  
 
     // No try/catch needed for fetching. The HTML is guaranteed to be here.
-    this.container.innerHTML = htmlTemplate;
+    this.widget.innerHTML = htmlTemplate;
     
-    this.actionButton = this.container.querySelector(this.ACTION_BUTTON_SELECTOR);
-    this.buttonContainer = this.container.querySelector(this.BUTTON_CONTAINER_SELECTOR);
-    this.statusDisplay = this.container.querySelector(this.STATUS_DISPLAY_SELECTOR);
-    this.transcriptionDisplay = this.container.querySelector(this.TRANSCRIPTION_DISPLAY_SELECTOR);
+    this.actionButton = this.widget.querySelector(this.ACTION_BUTTON_SELECTOR);
+    this.buttonWidget = this.widget.querySelector(this.BUTTON_WIDGET_SELECTOR);
+    this.statusDisplay = this.widget.querySelector(this.STATUS_DISPLAY_SELECTOR);
+    this.transcriptionDisplay = this.widget.querySelector(this.TRANSCRIPTION_DISPLAY_SELECTOR);
     
-    this.logger.info('UI Elements found:', { actionButton: !!this.actionButton, buttonContainer: !!this.buttonContainer, statusDisplay: !!this.statusDisplay, transcriptionDisplay: !!this.transcriptionDisplay });
+    this.logger.info('UI Elements found:', { actionButton: !!this.actionButton, buttonWidget: !!this.buttonWidget, statusDisplay: !!this.statusDisplay, transcriptionDisplay: !!this.transcriptionDisplay });
     
     if (this.actionButton) {
       this.bindEventListeners();
