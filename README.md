@@ -118,25 +118,16 @@ The `default` provider is a fast, lightweight, and offline-first engine. It oper
 **Note:** The terms in `<...>` are placeholders for the name of the UI element (e.g., its label, placeholder) or the value you want to use.
 
 
+
 ### OpenAI Provider
 *(**Config:** `recognition: { provider: 'openai', apiKey: '...' }`)*
 
 When using the `openai` provider, VoiceKom becomes a powerful conversational assistant. This provider is slower as it requires an internet connection, but it can understand natural language, context, and even multiple commands in a single, continuous utterance.
 
 You can be as natural as you want, as long as your intent is clear.
-
-*   **Filling Multiple Fields:** "my name is Alex and the email is alex@gmail.com"
-*   **Checking & Unchecking:** "check the box for terms and conditions", "uncheck everything except upcoming events"
-*   **Selecting from Lists:** "select feedback for the subject"
-*   **Relative Dates & Times:** "set the preferred date to tomorrow", "preferred time is 3 hours from now"
-*   **Combining Everything:** You can chain multiple commands together seamlessly.
-
-#### **Example of a Multi-Command Utterance:**
-
 > “Name is Alex, email is alex@gmail.com, phone number 071662, preferred date tomorrow, preferred time is 3 hrs from now. Select phone in preferred contact method. Check everything except upcoming events in interests. Select feedback in subject. Type Good morning Alex in message. I agree to terms and conditions. Finally, submit.”
 
 #### 💡 Best Practices for the OpenAI Provider:
-
 *   **Be Clear with Your Intent:** If you want to select from a list, use a verb like "select" or "choose". Saying "country is Sri Lanka" might be interpreted as typing into an input field named "country". A clearer command would be "**Select** country Sri Lanka".
 *   **Checkboxes vs. Selections:** Checking a checkbox within a group is a distinct action. For a group of radio buttons, use "select" or "choose". For checkboxes, use "check" or "uncheck".
 
