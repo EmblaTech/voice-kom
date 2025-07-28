@@ -30,7 +30,7 @@ export class WebSpeechAPICapturer implements AudioCapturer {
   'lt', 'lv', 'mi', 'mk', 'ml', 'mr', 'ms', 'nb', 'ne', 'nl', 
   'no', 'pl', 'pt', 'ro', 'ru', 'si', 'sk', 'sl', 'sq', 'sr', 
   'su', 'sv', 'sw', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'vi', 
-  'zh', 'zu'
+  'zh', 'zu', 'nb'
 ];
 
 
