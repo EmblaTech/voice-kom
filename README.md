@@ -70,31 +70,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 The `VoiceKom.init(config)` method accepts a single configuration object. All parameters are optional and have sensible defaults unless stated otherwise.
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `lang` | `string` | No | The primary BCP 47 language code (e.g., `'en-US'`, `'es-MX'`) to be used for both transcription and recognition. **Default:** `'en'`. |
-| `wakeWords` | `string[]` | No | An array of words or phrases that will activate the microphone from an idle or waiting state. Example: `['Hey VoiceKom']`. |
-| `sleepWords` | `string[]` | No | An array of words or phrases that will stop the microphone from listening. Example: `['Stop listening']`. |
-| `position` | `string` | No | Position of the floating widget. Options: `'bottom-right'`, `'bottom-left'`. **Default:** `'bottom-right'`. |
-| `width` | `string` | No | The CSS width of the widget container (e.g., `'350px'`). **Default:** `'300px'`. |
-| `height` | `string` | No | The CSS initial height of the widget container (e.g., `'75px'`). **Default:** `'75px'`. |
-| `showTranscription`| `boolean`| No | If `true`, the transcribed text is displayed in the widget. **Default:** `true`. |
+| Parameter | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `lang` | `string` | No | `'en'` | The primary BCP 47 language code (e.g., `'en-US'`) for transcription and recognition. |
+| `wakeWords` | `string[]` | No | `[]` | An array of phrases that will activate the microphone from an idle state. Example: `['Hey VoiceKom']`. |
+| `sleepWords` | `string[]` | No | `[]` | An array of phrases that will stop the microphone from listening. Example: `['Stop listening']`. |
+| `position` | `string` | No | `'bottom-right'` | Position of the floating widget. Options: `'bottom-right'`, `'bottom-left'`. |
+| `width` | `string` | No | `'300px'` | The CSS width of the widget container (e.g., `'350px'`). |
+| `height` | `string` | No | `'75px'` | The CSS initial height of the widget container (e.g., `'75px'`). |
+| `showTranscription`| `boolean`| No | `true` | If `true`, the transcribed text is displayed in the widget. |
 
 These parameters are passed within a `transcription` object: `transcription: { ... }`.
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `provider` | `string` | No | The speech-to-text engine to use. Options include `'default'` (Web Speech API), `'openai'`, `'google'`, etc. **Default:** `'default'`. |
-| `apiKey` | `string` | **Conditionally** | Your API key, required if using a provider other than `'default'`. |
+| Parameter | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `provider` | `string` | No | `'default'` | The speech-to-text engine. Options: `'default'` (Web Speech API), `'openai'`, etc. |
+| `apiKey` | `string` | **Conditionally** | `N/A` | Your API key, required if using a provider other than `'default'`. |
 
 These parameters are passed within a `recognition` object: `recognition: { ... }`.
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `provider` | `string` | No | The Natural Language Understanding engine to use for interpreting commands. Options include `'default'` (Compromise js), `'whisper'`, etc.  **Default:** `'default'`. |
-| `apiKey` | `string` | **Conditionally** | Your API key, required if using a provider other than `'default'`. |
-| `confidence`| `number`| No | The confidence threshold (0 to 1) required for a recognized intent. |
-
+| Parameter | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `provider` | `string` | No | `'default'` | The NLU engine for interpreting commands. Options: `'default'` (Compromise.js), `'openai'`, etc. |
+| `apiKey` | `string` | **Conditionally** | `N/A` | Your API key, required if using a provider other than `'default'`. |
+| `confidence`| `number`| No | `0.8` | The confidence threshold (0 to 1) required for a recognized intent. |
 
 
 ## 🗣️ Supported Commands

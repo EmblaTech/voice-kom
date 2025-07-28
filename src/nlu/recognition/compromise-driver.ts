@@ -40,7 +40,7 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
 
     constructor(config: RecognitionConfig) {
         this.config = config;
-        this.language = config.lang || this.language;
+        this.language = config.lang? config.lang.split(/[-_]/)[0].toLowerCase() : this.language;
         this.loadCommandRegistry(commands);
 
     }
