@@ -4,14 +4,17 @@ import { TranscriptionDriver } from './driver';
 export class DummyTranscriptionDriver implements TranscriptionDriver {
   
   private readonly AVAILABLE_LANGUAGES: string[] = 
-    ['af','ar','hy','az','be','bs','bg','ca',
-        'zh','hr','cs','da','nl','en','et','fi',
-        'fr','gl','de','el','he','hi','hu','is',
-        'id','it','ja','kn','kk','ko','lv','lt',
-        'mk','ms','mi','mr','ne','no','fa','pl',
-        'pt','ro','ru','sr','sk','sl','es','sw',
-    'sv','tl','ta','th','tr','uk','ur','vi','cy'];
-  
+  [
+  'af', 'am', 'ar', 'az', 'be', 'bg', 'bn', 'bs', 'ca', 'cs', 
+  'cy', 'da', 'de', 'el', 'en', 'es', 'et', 'eu', 'fa', 'fi', 
+  'fil', 'fr', 'gl', 'gu', 'he', 'hi', 'hr', 'hu', 'hy', 'id', 
+  'is', 'it', 'ja', 'jv', 'ka', 'kk', 'km', 'kn', 'ko', 'lo', 
+  'lt', 'lv', 'mi', 'mk', 'ml', 'mr', 'ms', 'nb', 'ne', 'nl', 
+  'no', 'pl', 'pt', 'ro', 'ru', 'si', 'sk', 'sl', 'sq', 'sr', 
+  'su', 'sv', 'sw', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'vi', 
+  'zh', 'zu', 'nb', 'nn'
+];
+
   
     constructor(private readonly config: TranscriptionConfig) {
       this.validateConfig(config);

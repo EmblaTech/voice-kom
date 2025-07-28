@@ -53,11 +53,12 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
 
     public async detectIntent(text: string): Promise<IntentResult[]> {
     if (this.language !== 'en' || !this.commandRegistry) {
-        // Because the function is async, this is automatically wrapped in a Promise
         return [this.createUnknownResult()];
     }
 
-    const preprocessedText = this.preprocessInputText(text);
+    // Keep the original text safe!
+    const originalText = text; 
+    const preprocessedText = this.preprocessInputText(originalText);
     const doc: CompromiseDoc = nlp(preprocessedText);
 
     let bestMatch: IntentResult = this.createUnknownResult();
@@ -67,14 +68,14 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         if (!commandConfig) continue;
 
         for (const pattern of commandConfig.utterances) {
-            // Use the more robust capture syntax
             const matches: CompromiseDoc = doc.match(pattern);
 
             if (matches.found) {
                 const confidence = this.calculateConfidence(matches, doc);
 
                 if (confidence > bestMatch.confidence) {
-                    const entities = this.extractEntitiesFromMatch(matches, doc, commandConfig);
+                    // *** CHANGE HERE: Pass the 'originalText' to the function ***
+                    const entities = this.extractEntitiesFromMatch(matches, commandConfig, originalText);
 
                     bestMatch = {
                         intent: intentName as IntentTypes,
@@ -145,43 +146,49 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
 //     return entities;
 // }
 
-    private extractEntitiesFromMatch(matches: CompromiseDoc, doc: any, config: CommandConfig): Entities {
+    /**
+ * Extracts entities from a match using precise character offsets to get the original, raw text.
+ * @param matches The CompromiseDoc object for the matched pattern.
+ * @param config The configuration for the matched command.
+ * @param originalText The original, unprocessed user input string.
+ * @returns An Entities object with raw text values.
+ */
+private extractEntitiesFromMatch(matches: CompromiseDoc, config: CommandConfig, originalText: string): Entities {
     const groups = matches.groups();
     const entities: Entities = {};
 
-    // Get the raw text of the match to check for it later.
-    const matchText = matches.text();
-    let matchSentenceIndex = -1;
-
-    // Cast the full document to `any` to access Compromise's full API without compiler errors.
-    // This is a safe and common practice when a library's types are complex.
-    const anyDoc = doc as any;
-    const allSentences = anyDoc.sentences().out('array'); // Get a plain JavaScript array of sentence strings
-
-    // Find the index of the sentence that contains our match
-    for (let i = 0; i < allSentences.length; i++) {
-        if (allSentences[i].includes(matchText)) {
-            matchSentenceIndex = i;
-            break; // Stop once we find the first occurrence
-        }
-    }
-
     for (const groupName in groups) {
-        const entityDoc = groups[groupName];
-        let extractedValue = entityDoc.text('clean');
-
-        if (config.rawEntities?.includes(groupName)) {
-            extractedValue = entityDoc.text();
-
-            // If we found the sentence and it's not the last one...
-            if (matchSentenceIndex > -1 && matchSentenceIndex < allSentences.length - 1) {
-                // Get the rest of the sentences as a simple array and join them.
-                const restOfText = allSentences.slice(matchSentenceIndex + 1).join(' ');
-                extractedValue += ' ' + restOfText;
-            }
+        if (!Object.prototype.hasOwnProperty.call(groups, groupName)) {
+            continue;
         }
         
-        entities[groupName] = extractedValue.trim();
+        const entityDoc = groups[groupName];
+
+        // Use compromise's json output with offsets to get the exact location.
+        // We cast to `any` because our custom interface doesn't include the `json` method.
+        const jsonData = (entityDoc as any).json({ offset: true });
+
+        // Ensure we have valid data to work with
+        if (!jsonData || !jsonData[0] || !jsonData[0].terms || jsonData[0].terms.length === 0) {
+            // Fallback to the previous method if offsets aren't available for some reason
+            entities[groupName] = entityDoc.text(); 
+            continue;
+        }
+
+        const terms = jsonData[0].terms;
+        const firstTerm = terms[0];
+        const lastTerm = terms[terms.length - 1];
+
+        // Calculate the start and end positions from the offsets.
+        const start = firstTerm.offset.start;
+        const end = lastTerm.offset.start + lastTerm.offset.length;
+
+        // Slice the *original, unprocessed text* to get the true raw entity.
+        const rawEntityText = originalText.slice(start, end);
+        
+        // This is exactly what you asked for: setting the entity to the raw text.
+        // The special logic for `rawEntities` is no longer needed because this method is superior.
+        entities[groupName] = rawEntityText;
     }
 
     return entities;
