@@ -35,7 +35,7 @@ export class VoiceKomCompoundDriver {
     } else {
       throw new Error('API keys must match for transcription and recognition when using VoiceKom provider');
     }
-    this.baseUrl = 'http://localhost:3000/api/v1';
+    this.baseUrl = process.env.VOICEKOM_API_BASE_URL;
     this.transTemp = transconfig.temperature; 
     this.recogTemp = recogconfig.temperature; 
     this.headerHandler = new HeaderHandler();
