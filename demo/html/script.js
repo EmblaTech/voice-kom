@@ -7,14 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
     containerId: 'speech-container',
     lang: 'en',
     transcription: {
-      provider: 'default',
+      provider: 'webspeech',
       temperature: '',
-      apiKey: '123',
+      apiKey: '',
     },
     recognition: {
-      provider: 'voicekom',
+      provider: 'default',
       temperature: '',
-      apiKey: '123',
+      apiKey: '',
     },
     speakingThreshold: 0.2, 
     

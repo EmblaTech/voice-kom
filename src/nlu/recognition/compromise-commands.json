@@ -11,14 +11,19 @@
       "fill [<target>.+] (as|with) [<value>.+]",
       "enter [<target>.+] (as|with) [<value>.+]",
       "enter [<value>.+] in [<target>.+]",
-      "fill [<target>] [<value>.+]",  
-      "enter [<target>] [<value>.+]"
+      "fill [<target>(#Adjective* #Noun)] [<value>.+]",
+      "enter [<target>(#Adjective* #Noun)] [<value>.+]",
+      "enter [<target>(#Noun #Noun)] [<value>.+]",
+      "fill [<target>(#Noun #Noun)] [<value>.+]",
+      "enter [<target>#Noun] [<value>.+]",
+      "fill [<target>#Noun] [<value>.+]"
     ],
     "entities": ["target", "value"]
   },
   "type_text": {
     "utterances": [
-      "type [<target>.+] (in|as) [<value>.+]"
+      "type [<target>.+] (in|as) [<value>.+]",
+      "type [<target>#Noun] [<value>.+]"
     ],
     "entities": ["target", "value"],
     "rawEntities": ["value"]

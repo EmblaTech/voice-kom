@@ -37,11 +37,14 @@
     "@picovoice/porcupine-web": "^3.0.3",
     "@picovoice/web-voice-processor": "^4.0.9",
     "chrono-node": "^2.8.0",
-    "compromise": "^14.8.2"
+    "compromise": "^14.8.2",
+    "fuse.js": "^7.1.0",
+    "string-similarity": "^4.0.4"
   },
   "devDependencies": {
     "@types/dom-speech-recognition": "^0.0.6",
     "@types/jest": "^29.5.1",
+    "@types/string-similarity": "^4.0.2",
     "clean-webpack-plugin": "^4.0.0",
     "cross-env": "^7.0.3",
     "dotenv": "^17.2.1",
