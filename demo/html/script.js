@@ -1,15 +1,12 @@
-// const { cli } = require("webpack");
-
 document.addEventListener('DOMContentLoaded', () => {  
   VoiceKom.init({   
     wakeWords: ['Hello','Hi'],
     sleepWords: ['Stop listening'],
     containerId: 'speech-container',
-    lang: 'en',
+    lang: 'si-LK', // Set the language
     transcription: {
       provider: 'webspeech',
-      temperature: '',
-      apiKey: '',
+      apiKey: ''
     },
     recognition: {
       provider: 'default',

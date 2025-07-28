@@ -310,7 +310,7 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             - "english": The English, lowercase, simplified version of the entity. If user speaks it in english, keep it as it is. If not translate it to english.
             - "user_language": The entity translated/expressed in ${this.getLanguageName(this.language)} (the user's configured language). If user speaks it in english, You still need to normalize to  ${this.getLanguageName(this.language)} language. 
             
-            **IMPORTANT - Mixed Language Handling:**
+            IMPORTANT - Mixed Language Handling:
             Even if the user speaks the entity name in mixed-english or similar to english while primarily speaking ${this.getLanguageName(this.language)}, you MUST still provide the proper translation in the user_language field.
             
             Examples:
@@ -325,13 +325,33 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         2.  **Value Entities (e.g., 'value', 'direction'):**
             For entities that represent data values:
             - If the value is for typing/entering text: Return exactly as the user said it (preserve original language/form)
-            - If the value represents direction, time, or date: Normalize to English for system processing since I use english word parsing
+            - If the value represents direction, time, or date or other types: Normalize to English and proper format for system processing since I use english word parsing
+
             Examples:
             - Text to type: "mejor precio" (keep original)
             - Direction: "up", "down", "left", "right", "next", "previous" (normalize to English)
             - Position: "top", "bottom"(normalize to English)
             - Time:  "now", "3pm", "15:30" (normalize to English)
-            - Date: "today", "tomorrow", "2024-01-15" (normalize to English)
+            - Date: "today", "tomorrow", "2024-01-15" (normalize to English and standard format)
+            - Number: "10", "3.14" (normalize to digit format)
+            - Currency: "100 dollars", "50 euros" (normalize to English currency format)
+            - Percentage: "20 percent" (normalize to English percentage format)
+            - Email: "user@example.com" (normalize to English email format)
+            - Phone: "123-456-7890" (normalize to English phone format)
+            - URL: "https://example.com" (normalize to English URL format)
+            
+            IMPORTANT - Contextual Normalization:
+            - Consider the context of the command (The related UI element Entity) to determine how to normalize values.
+            Example: It the user is refering to a phone number, you should normalize it to the correct phone number format.
+
+            IMPORTANT - Transcription Issues Handling:
+            - If the value doeses not make sense in the context, it's probably a transcription issue due to accent. So fix it to the most likely correct value.
+                Example: A name "Nisal" might be transcribed as "Missle" due to accent, so correct it to "Nisal". 
+            - Value might be misstranscripted with mixed text and digits and then you should normalize it to the correct format.
+                Example: a phone number "074321" might be misstranscribed as "note seven 4 three two one" due to low accuracy transcription, so correct it to "074321".
+
+            IMPORTANT - Mixed Language Handling:
+            if value is in mixed languages you MUST normalize the entire value to the appropriate format because those are transcription issues.
 
         ### Multiple Intent Example ###
         User command: "My name is Nisal, email is nisal@gmail.com, phone number is 074321, fill those"
