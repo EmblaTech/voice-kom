@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
       temperature: '',
       apiKey: '123',
     },
-    speakingThreshold: 0.2, // Adjusted speaking threshold
-    // Add debug logging
+    speakingThreshold: 0.2, 
+    
     debug: true
   }).then(() => {
     console.log('VoiceKom has been initialized successfully');

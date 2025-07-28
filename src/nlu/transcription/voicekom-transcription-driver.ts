@@ -15,7 +15,7 @@ export class VoiceKomTranscriptionDriver extends HeaderHandler implements Transc
         throw new Error('API key is required for VoiceKom transcription provider');
     }
     this.apiKey = config.apiKey;
-    this.baseUrl = 'http://localhost:3000/api/v1';
+    this.baseUrl = process.env.VOICEKOM_API_BASE_URL;
     this.temperature = config.temperature;
   }
 

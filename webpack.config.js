@@ -1,9 +1,13 @@
+require('dotenv').config();
+
 const path = require('path');
+const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isFirstBuild = process.env.WEBPACK_FIRST_BUILD === 'true';
+
 
 const createConfig = (target, outputFile, options = {}) => {
   const config = {
@@ -44,7 +48,11 @@ const createConfig = (target, outputFile, options = {}) => {
           ]
         : [],
     },
-    plugins: [],
+    plugins: [
+      new webpack.DefinePlugin({
+        'process.env.VOICEKOM_API_BASE_URL': JSON.stringify(process.env.VOICEKOM_API_BASE_URL)
+      })
+    ],
     experiments: target === 'module' ? { outputModule: true } : {},
   };
 
