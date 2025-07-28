@@ -15,15 +15,13 @@ interface BackendResponse {
 //in one API call, instead of separate transcription and recognition steps.
 // In order to reduce unnecessary API calls and improve performance,
 // we are using this compound driver for VoiceKom provider.
-export class VoiceKomCompoundDriver extends HeaderHandler{
+export class VoiceKomCompoundDriver {
   private baseUrl: string;
   private apiKey: string;
   private transTemp?: number;
   private recogTemp?: number;
-
+  private headerHandler: HeaderHandler;
   constructor(transconfig: TranscriptionConfig, recogconfig: RecognitionConfig) {
-    super();
-
     if (!Validator.isString(transconfig.apiKey) || !Validator.isString(recogconfig.apiKey)) {
       throw new Error('A valid API key (string) is required for both transcription and recognition when using the VoiceKom provider.');
     }
@@ -40,24 +38,23 @@ export class VoiceKomCompoundDriver extends HeaderHandler{
     this.baseUrl = 'http://localhost:3000/api/v1';
     this.transTemp = transconfig.temperature; 
     this.recogTemp = recogconfig.temperature; 
+    this.headerHandler = new HeaderHandler();
   }
 
   async getIntentFromAudio(audioFile: File | Blob): Promise<BackendResponse['data']> {
     const formData = new FormData();
     formData.append('audio', audioFile);
-
-    this.setHeaders('X-Client-ID', this.apiKey);
-    this.setHeaders('X-Transcription-Temperature', this.transTemp);
-    this.setHeaders('X-Recognition-Temperature', this.recogTemp);
+    this.headerHandler.clearHeaders();
+    this.headerHandler.setHeaders('X-Client-ID', this.apiKey);
+    this.headerHandler.setHeaders('X-Transcription-Temperature', this.transTemp);
+    this.headerHandler.setHeaders('X-Recognition-Temperature', this.recogTemp);
 
     const response = await fetch(`${this.baseUrl}/intent/audio`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers: this.headerHandler.getHeaders(),
       body: formData
     });
 
-    // Clear headers after use
-    this.clearHeaders();
 
     if (!response.ok) {
       const errorText = await response.text();
