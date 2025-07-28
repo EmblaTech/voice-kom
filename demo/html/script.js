@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
       apiKey: '' 
     },
     recognition: {
-      provider: 'default',
-      // provider: 'default'
+      provider: 'openai',
+      // provider: 'default',
       apiKey: '' 
     },
     

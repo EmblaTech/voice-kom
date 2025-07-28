@@ -1,12 +1,13 @@
-<div class="voice-interface">
-  <div class="button-widget">
-    <button class="action-button record-mode" data-action="record" aria-label="Start recording" aria-pressed="false">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-        <path fill="none" d="M0 0h24v24H0z"/>
-        <path d="M12 15c2.21 0 4-1.79 4-4V5c0-2.21-1.79-4-4-4S8 2.79 8 5v6c0 2.21 1.79 4 4 4zm0-2c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2zm4 2v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1H4v1c0 3.53 2.61 6.43 6 6.92V23h4v-2.08c3.39-.49 6-3.39 6-6.92v-1h-2z" fill="currentColor"/>
-      </svg>
-    </button>
+
+<!-- Single, unified root for the entire component -->
+<div class="widget-content">
+  <div class="voice-interface">
+    <div class="button-widget">
+      <button class="action-button record-mode" data-action="record" aria-label="Start recording" aria-pressed="false">
+        <!-- SVG Icon is injected by JS -->
+      </button>
+    </div>
+    <div class="status-display" role="status">VoiceKom</div>
   </div>
-  <div class="status-display" role="status">VoiceKom</div>
+  <div class="transcription-display" style="display: none" role="region" aria-label="Speech transcription" aria-live="polite"></div>
 </div>
-<div class="transcription-display" style="display: none" role="region" aria-label="Speech transcription" aria-live="polite"></div>
