@@ -37,9 +37,11 @@ interface VoiceEngineConfig {
 }
 
 export interface RecognitionConfig extends VoiceEngineConfig {
+  temperature?: number; // Optional temperature for LLM-based recognition
 }
 
-export interface TranscriptionConfig extends VoiceEngineConfig {  
+export interface TranscriptionConfig extends VoiceEngineConfig {
+  temperature?: number; // Optional temperature for LLM-based transcription  
 }
 
 export interface CoreConfig {
@@ -139,15 +141,16 @@ export enum TranscriptionProviders {
   DEFAULT = 'default',
   GOOGLE = 'google',
   AZURE = 'azure',
-  WEBSPEECH = 'webspeech' // New provider
+  WEBSPEECH = 'webspeech', 
+  WHISPER = 'whisper',
+  VOICEKOM = 'voicekom'
 }
 
-export enum ReconitionProvider {
+export enum RecognitionProvider {
   DEFAULT = 'default',
   OPENAI = 'openai',
-  LLM = 'llm',
-  GPT = 'gpt',
-  COMPROMISE = 'compromise'
+  COMPROMISE = 'compromise',
+  VOICEKOM = 'voicekom'
 }
 
 // STT Driver interface

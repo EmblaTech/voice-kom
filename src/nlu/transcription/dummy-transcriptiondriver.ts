@@ -1,7 +1,7 @@
 import { TranscriptionConfig } from "../../types";
 import { TranscriptionDriver } from './driver';
 
-export class DummyTranscriptionDriver implements TranscriptionDriver {
+export class WebSpeechTranscriptionDriver implements TranscriptionDriver {
   
   private readonly AVAILABLE_LANGUAGES: string[] = 
   [

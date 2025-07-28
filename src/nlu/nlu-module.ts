@@ -1,21 +1,12 @@
-import { AudioCapturer, CommandRegistry, TranscriptionConfig, RecognitionConfig } from '../types';
+import { AudioCapturer, CommandRegistry, TranscriptionConfig, RecognitionConfig, TranscriptionProviders, RecognitionProvider } from '../types';
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { Status, StatusType } from '../common/status';
 import { TranscriptionDriver } from './transcription/driver';
 import { RecognitionDriver } from './recognition/driver';
 import { DriverFactory } from './driver-factory';
 import { Logger } from '../utils/logger';
-
-// --- START: MODIFICATION ---
-// 1. REMOVED: The runtime fetcher is no longer needed for this.
-// import { fetchContent } from '../utils/resource-fetcher';
-
-// 2. ADDED: Import the JSON file directly.
-//    Webpack will bundle this file, and TypeScript will understand it
-//    because of the "resolveJsonModule": true setting in your tsconfig.json.
-//    The path is relative to this file.
-import commandRegistryData from './command-registry.json';
-// --- END: MODIFICATION ---
+import { fetchContent } from '../utils/resource-fetcher';
+import { VoiceKomCompoundDriver } from './compound/voicekom-compound-driver';
 
 export class NLUModule {
   private commandRegistry: CommandRegistry | null = null;
@@ -23,6 +14,7 @@ export class NLUModule {
   private audioCapturer!: AudioCapturer;
   private transcriptionDriver: TranscriptionDriver | null = null;
   private recognitionDriver: RecognitionDriver | null = null;
+  private compoundDriver: VoiceKomCompoundDriver | null = null;
   private readonly logger = Logger.getInstance();
 
   // VAD Configuration with defaults
@@ -38,7 +30,12 @@ export class NLUModule {
   ) {
     this.eventBus.on(SpeechEvents.AUDIO_CAPTURED, (blob: Blob) => {
       this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
-      this.processAudioChunk(blob);
+      if(this.compoundDriver) {
+        this.sendAudioChunk(blob);
+      }
+      else if(this.transcriptionDriver) {
+        this.processAudioChunk(blob);
+      }
     });
 
     this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
@@ -52,31 +49,36 @@ export class NLUModule {
     });
   }
 
+
+ // in NLUModule.ts
   public async init(transConfig: TranscriptionConfig, recogConfig: RecognitionConfig): Promise<void> {
-    this.logger.info("NLUModule.init() starting...");
-    try {
-      this.language = transConfig.lang || 'en';
-      
-      this.logger.info("Getting transcription driver...");
-      this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig);
+      this.logger.info("NLUModule.init() starting...");
+      try {
+        this.language = transConfig.lang || 'en';
+        this.compoundDriver = DriverFactory.getCompoundDriver(transConfig, recogConfig);
+        if (this.compoundDriver != null) {
+              // SCENARIO 1: Both transcription and recognition use the 'voicekom' backend.
+              // Use the unified driver that sends audio and gets back transcription + intent.
+              this.logger.info("Using compound voicekom for audio -> intent processing.");
+          } else {
+              // SCENARIO 2: Any other combination. Use separate, modular drivers.
+              this.logger.info("Using separate drivers for transcription and recognition.");
+              this.transcriptionDriver = DriverFactory.getTranscriptionDriver(transConfig);
+              this.recognitionDriver = DriverFactory.getRecognitionDriver(recogConfig);
+              // this.backendDriver will remain null, which is correct for this mode.
+          }
 
-      this.logger.info("Getting recognition driver...");
-      this.recognitionDriver = DriverFactory.getRecognitionDriver(recogConfig);
-      
-      this.logger.info("Getting audio capturer...");
-      this.audioCapturer = DriverFactory.getAudioCapturer(transConfig, this.eventBus);
-      this.logger.info("Audio capturer has been assigned.", this.audioCapturer);
-      
-      // --- START: MODIFICATION ---
-      // 3. REPLACED: The unreliable fetch call is replaced with a direct assignment.
-      //    The `commandRegistryData` is the parsed JSON object from the import.
-      this.commandRegistry = commandRegistryData as CommandRegistry;
-      // --- END: MODIFICATION ---
-
-      this.logger.info("NLUModule.init() completed successfully.");
-    } catch (error) {
-      this.logger.error('CRITICAL ERROR in NLUModule init: ', error);
-    }
+        // Get audio capturer based on transcription config
+        this.audioCapturer = DriverFactory.getAudioCapturer(transConfig, this.eventBus);
+        
+        // Load command registry
+        this.commandRegistry = await fetchContent('../../src/nlu/command-registry.json');
+        
+        this.logger.info("NLUModule.init() completed successfully");
+      } catch (error) {
+        this.logger.error('CRITICAL ERROR in NLUModule init:', error);
+        throw error;
+      }
   }
 
   /**
@@ -120,9 +122,36 @@ export class NLUModule {
     this.eventBus.emit(SpeechEvents.LISTEN_STARTED);
   }
 
+  private async sendAudioChunk(audioBlob: Blob): Promise<void> {
+    if (!this.compoundDriver) {
+      this.logger.error('Backend Driver not initialized');
+      return;
+    }
+
+    try {
+      const result = await this.compoundDriver.getIntentFromAudio(audioBlob);
+      
+      // Emit transcription result
+      if (result.transcription) {
+        this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, result.transcription);
+      }
+      
+      // Emit intent results array
+      if (result.intent && result.intent.length > 0) {
+        this.eventBus.emit(SpeechEvents.NLU_COMPLETED, result.intent);
+      } else {
+        this.logger.warn('No intents detected in the response');
+      }
+    } catch (error) {
+      this.logger.error('Error during backend intent recognition: ', error);
+      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
+    }
+  }
+
   
   private async processAudioChunk(audioBlob: Blob): Promise<void> {
     if (!this.transcriptionDriver) { 
+      
       this.logger.error('Transcription or Recognition Driver not initialized');
       return; 
     }
@@ -135,25 +164,34 @@ export class NLUModule {
     }
   }
 
+  // in NLUModule.ts
   private async processTranscription(transcription: string): Promise<void> {
-    if (!this.recognitionDriver) { 
-      this.logger.error('Recognition Driver not initialized');
-      return; 
-    }
-
-    if (!transcription || transcription.trim() === '') {
-        this.logger.warn("Empty transcription received. Skipping intent detection.");
-        this.eventBus.emit(SpeechEvents.ACTUATOR_COMPLETED);
+      // This method is only called in the "separate drivers" mode.
+      // So, we only need to check for the recognitionDriver.
+      if (!this.recognitionDriver) {
+        this.logger.error('Recognition Driver not initialized for processing transcription.');
         return;
-    }
+      }
 
-    try {
-      const intentResult = await this.recognitionDriver.detectIntent(transcription);
-      this.eventBus.emit(SpeechEvents.NLU_COMPLETED, intentResult);
-    } catch (error) {
-      this.logger.error('Error during intent recognition: ', error);
-      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
-    }
+      if (!transcription || transcription.trim() === '') {
+        this.logger.warn('Skipping intent recognition for empty transcription.');
+        return;
+      }
+
+      try {
+        // Always use the dedicated recognition driver.
+        const intentResult = await this.recognitionDriver.detectIntent(transcription);
+
+        if (intentResult) {
+          this.eventBus.emit(SpeechEvents.NLU_COMPLETED, intentResult);
+        } else {
+          this.logger.warn(`No intents detected for transcription: "${transcription}"`);
+          // Optionally emit an event for "intent not found"
+        }
+      } catch (error) {
+        this.logger.error('Error during intent recognition:', error);
+        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
+      }
   }
 
   

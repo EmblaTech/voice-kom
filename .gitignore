@@ -15,13 +15,6 @@ out/
 # IDE and editor files
 .idea/
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.sublime-*
-*.swp
-*.swo
 .DS_Store
 
 # Environment variables

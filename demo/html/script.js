@@ -1,12 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {  
-  VoiceKom.init({   // Initialize VoiceKom with params
-    wakeWords: ['Hello','Hi'], // Set the wake word
-    sleepWords: ['Stop listening'], // Set the sleep words
+  VoiceKom.init({   
+    wakeWords: ['Hello','Hi'],
+    sleepWords: ['Stop listening'],
     containerId: 'speech-container',
-    lang: 'en',
-    // position: 'bottom-right',
-    // width: '188px',
-    // height: '58px',
+    lang: 'si-LK', // Set the language
     transcription: {
       provider: 'webspeech',
       apiKey: '' 
@@ -16,11 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // provider: 'default',
       apiKey: '' 
     },
+    speakingThreshold: 0.2, 
     
+    debug: true
   }).then(() => {
     console.log('VoiceKom has been initialized successfully');
-  })
-  .catch(error => {
-    console.error('VoiceKom fails to initialize due to: ', error);
   });
 });

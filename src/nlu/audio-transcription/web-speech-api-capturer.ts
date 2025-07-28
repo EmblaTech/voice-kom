@@ -36,9 +36,9 @@ export class WebSpeechAPICapturer implements AudioCapturer {
 
   constructor(
     private readonly eventBus: EventBus,
-    language: string = 'en-US'
+    private lang: string | undefined
   ) {
-    this.language = language;
+    this.language = lang || 'en-US'; // Default to English if no language is provided
   }
 
   public async startListening(config: VADConfig): Promise<void> {
