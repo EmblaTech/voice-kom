@@ -65,20 +65,35 @@ export class WebspeechWakewordDetector implements WakewordDetector {
       .trim();
   }
 
-  private setupListeners(): void {
+   private setupListeners(): void {
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-      // This part is for PASSIVE listening only
-      const fullHistory = Array.from(event.results)
+      const originalTranscription = Array.from(event.results)
         .map(r => r[0].transcript)
-        .join('').toLowerCase();
+        .join('');
+
+      if (!originalTranscription.trim()) {
+        return;
+      }
+      
+      // We will now use a regular expression to find a whole word match.
+      const detectedWakeWord = this.wakeWords.find(wakeWord => {
+        // Create a regular expression to match the wake word as a whole word.
+        // \b is a word boundary.
+        // The 'i' flag makes the search case-insensitive.
+        const wakeWordRegex = new RegExp(`\\b${wakeWord}\\b`, 'i');
         
-      if (this.wakeWords.some(wakeWord => fullHistory.includes(wakeWord))) {
-        this.eventBus.emit(SpeechEvents.WAKE_WORD_DETECTED);
+        // Test the regex against the transcription.
+        return wakeWordRegex.test(originalTranscription);
+      });
+
+      if (detectedWakeWord) {
+        // The log message is now much more reliable!
+        console.log(`WakeWordDetector: Detected wake word "${detectedWakeWord}" in transcription: "${originalTranscription}"`);
+        this.eventBus.emit(SpeechEvents.WAKE_WORD_DETECTED, detectedWakeWord);
       }
     };
 
     this.recognition.onend = () => {
-      // If listening was unexpectedly interrupted, and we are supposed to be active, restart.
       if (this.isListening) {
         console.warn("WakeWordDetector: Service ended unexpectedly, restarting...");
         this.recognition.start();
