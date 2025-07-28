@@ -3,38 +3,37 @@ import { EventBus } from "./common/eventbus";
 import { Status } from "./common/status";
 import { CoreModule } from "./core/core-module";
 import { NLUModule } from "./nlu/nlu-module";
-import { ReconitionProvider, VoiceKomConfig, TranscriptionProviders, CoreConfig } from "./types";
+import { RecognitionProvider, VoiceKomConfig, TranscriptionProviders, CoreConfig } from "./types";
 import { UIHandler } from "./ui/ui-handler";
 import { Logger, LogLevel } from "./utils/logger";
 import { Validator } from "./utils/validator";
 import { WebspeechWakewordDetector } from "./wakeword/WebspeechAPICapturer";
 
 export class VoiceKom {
-    private readonly logger = Logger.getInstance();
-    private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure', 'webspeech'];
-    private readonly VALID_UI_POSITIONS = ['bottom-left', 'bottom-right'];
-    private readonly DEFAULT_LOG_LEVEL = LogLevel.INFO;
+  private readonly logger = Logger.getInstance();
+  private readonly VALID_PROVIDERS = ['default', 'openai', 'google', 'azure', 'webspeech','whisper', 'voicekom'];
+  private readonly VALID_UI_POSITIONS = ['bottom-left', 'bottom-right'];
+  private readonly DEFAULT_WIDGET_ID = 'voice-kom-widget';
+  private readonly DEFAULT_LANG = 'en';
+  private readonly DEFAULT_TRANSCRIPTION_PROVIDER = TranscriptionProviders.DEFAULT;
+  private readonly DEFAULT_RECOGNITION_PROVIDER = RecognitionProvider.DEFAULT;
+  private readonly DEFAULT_RETRY_ATTEMPTS = 3;
+  private readonly DEFAULT_TIMEOUT = 5000;
+  private readonly DEFAULT_LOG_LEVEL = LogLevel.INFO;
+  private readonly DEFAULT_WIDGET_POSITION = 'bottom-right';
+  private readonly DEFAULT_WIDGET_WIDTH = '300px';
+  private readonly DEFAULT_WIDGET_HEIGHT = '75px';
+  private readonly DEFAULT_AUTO_START = false;
+  private readonly DEFAULT_SHOW_PROGRESS = true;
+  private readonly DEFAULT_SHOW_TRANSCRIPTION = true;
+  private eventBus!: EventBus;
+  private status!: Status;
+  private voiceActuator!: VoiceActuator;
+  private coreModule!: CoreModule; 
+  private nluModule!: NLUModule; 
+  private uiHandler!: UIHandler;
+  private wakeWordDetector!: WebspeechWakewordDetector;
 
-    private readonly DEFAULT_WIDGET_ID = 'voice-kom-widget';
-    private readonly DEFAULT_LANG = 'en';
-    private readonly DEFAULT_TRANSCRIPTION_PROVIDER = TranscriptionProviders.DEFAULT;
-    private readonly DEFAULT_RECOGNITION_PROVIDER = ReconitionProvider.DEFAULT;
-    private readonly DEFAULT_RETRY_ATTEMPTS = 3;
-    private readonly DEFAULT_TIMEOUT = 5000;
-    private readonly DEFAULT_WIDGET_POSITION = 'bottom-right';
-    private readonly DEFAULT_WIDGET_WIDTH = '300px';
-    private readonly DEFAULT_WIDGET_HEIGHT = '75px';
-    private readonly DEFAULT_AUTO_START = false;
-    private readonly DEFAULT_SHOW_PROGRESS = true;
-    private readonly DEFAULT_SHOW_TRANSCRIPTION = true;
-
-    private eventBus!: EventBus;
-    private status!: Status;
-    private voiceActuator!: VoiceActuator;
-    private coreModule!: CoreModule;
-    private nluModule!: NLUModule;
-    private uiHandler!: UIHandler;
-    private wakeWordDetector!: WebspeechWakewordDetector;
 
     constructor() {
         this.injectDependencies();

@@ -1,6 +1,6 @@
 import { TranscriptionDriver } from './driver';
 
-export class DummyTranscriptionDriver implements TranscriptionDriver {
+export class WebSpeechTranscriptionDriver implements TranscriptionDriver {
   public transcribe(rawAudio: Blob): Promise<string> {
     console.warn("DummyTranscriptionDriver.transcribe was called unexpectedly. This should not happen in the Web Speech API flow.");
     return Promise.resolve("");
