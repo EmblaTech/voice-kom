@@ -290,11 +290,22 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
 
         systemPrompt += `
 
+        ### IMPORTANT: Disambiguating Overlapping Intents ###
+        Some commands can be ambiguous. Your primary tool for disambiguation is the **main action verb** in the user's command. Prioritize the verb's meaning over the noun's common associations.
+
+        **Example of Disambiguation:**
+        -   **Ambiguous User Command:** "go to submit"
+        -   **Incorrect Reasoning:** The word "submit" is almost always a button, so the intent must be \`click_element\`. **THIS IS WRONG.**
+        -   **Correct Reasoning:** The primary action is "go to". This phrase strongly implies navigation or scrolling. The target of the navigation is "submit". Therefore, the correct intent is \`scroll_to_element\`.
+
+        -   **Your Rule:** When an action verb (like "go to", "scroll to") is present, it defines the intent. The noun that follows is simply the target of that action.
+
         ### IMPORTANT: Multiple Intent Detection ###
         A single user command can contain MULTIPLE intents. For example:
         - "Fill name with John, email with john@example.com, and phone with 123456" should return 3 separate intents
         - "Click submit and then navigate to home" should return 2 separate intents
         - "My name is Nisal, email is nisal@gmail.com, phone number is 074321, fill those" should return 3 fill intents
+
 
         ### IMPORTANT: Implied Intent / Intent Sequence Detection ###
         Sometimes a user's command describes a final goal, not the direct steps to get there. Your task is to infer the logical sequence or a single simple, atomic actions required to achieve that goal.
@@ -390,6 +401,32 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             }
         }
         ]
+
+        ### IMPORTANT: Interpreting Spelling and Formatting Corrections ###
+        The input you receive is a raw Speech-to-Text transcript. The user may see a transcription error on their screen and try to correct it by giving spelling or formatting instructions. Your first job is to correctly interpret these instructions to reconstruct the user's true intended text.
+
+        **Your Rule:** When you detect a spelling or formatting command (e.g., "with a capital letter...", "with an 'N'"), you MUST apply this correction to the immediately preceding word. Then, use the *reconstructed* word for intent and entity extraction.
+
+        **Examples of Spelling/Formatting Corrections to Resolve:**
+
+        - **User Command:** "Enter name as misal with an N"
+        - **Your Interpretation:** The user saw "misal" transcribed but meant "Nisal". The phrase "with an N" is a spelling instruction.
+        - **Correct Value to Extract:** "Nisal"
+
+        - **User Command:** "The company is realx with a capital X"
+        - **Your Interpretation:** The user wants the 'x' and only the 'x' in "realx" to be capitalized.
+        - **Correct Value to Extract:** "realX"
+
+        - **User Command:** "Set the password to password one two three with a capital P"
+        - **Your Interpretation:** The user is specifying the capitalization of the word "password".
+        - **Correct Value to Extract:** "Password123"
+
+        - **User Command:** "The city is londan, replace 'a' with 'o'"
+        - **Your Interpretation:** The user is directly correcting a character in the preceding word.
+        - **Correct Value to Extract:** "london"
+
+        Essentially, you must mentally "fix" the transcript based on these meta-instructions *before* you proceed with your main task of identifying intents and entities.
+
 
         ### Final Instruction ###
         Analyze the user's command carefully, identify ALL intents present in the command, apply these rules, and return ONLY the raw JSON array. Do not include any markdown formatting like \`\`\`json or explanations.`;
