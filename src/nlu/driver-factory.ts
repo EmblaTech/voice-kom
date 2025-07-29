@@ -7,7 +7,7 @@ import { GoogleTranscriptionDriver } from "./transcription/google-driver";
 import { WhisperTranscriptionDriver } from "./transcription/whisper-driver";
 import { WebAudioCapturer } from './audio-capturer'; 
 import { WebSpeechAPICapturer } from './audio-transcription/web-speech-api-capturer'; 
-import { WebSpeechTranscriptionDriver } from './transcription/dummy-transcriptiondriver';
+import { WebSpeechTranscriptionDriver } from './transcription/webspeech-driver';
 import { VoiceKomTranscriptionDriver } from "./transcription/voicekom-transcription-driver";
 import { VoiceKomRecognitionDriver } from "./recognition/voicekom-recognition-driver";
 
