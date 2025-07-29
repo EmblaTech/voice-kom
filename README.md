@@ -13,7 +13,6 @@ Just say “Fill name with John Smith” — VoiceKom intelligently fills the ri
 - **Privacy-First Design**: No user data sent by default. All processing stays local unless configured otherwise.
 - **Easy Integration**: Add voice capabilities to your site by including a script and initializing the library with a simple configuration object.
 - **Zero Backend Required**: The library is fully client-side (optional API integration for enhanced accuracy APIs based on the configuration).
-- **Pre-defined Commands**: Out-of-the-box support for common web interactions like clicking buttons, filling forms, checking boxes, scrolling, and more.
 - **Customizable UI**: Easily style voice widget with theming and localization support.
 - **Wake & Sleep Words**: Start or stop listening on command — useful for continuous workflows.
 - **Modular & Extensible**: Built with TypeScript, clean, extensible driver architecture.
@@ -21,13 +20,12 @@ Just say “Fill name with John Smith” — VoiceKom intelligently fills the ri
 ## 🚀 Getting Started
 
 ### 1. Installation
-```
+
 **Using CDN:**
-Add the following script tag to your HTML file.
+Add the following script tag to your HTML file:
 
 ```html
-<script src="[https://voicekom.embla.asia/dist/voicekom.min.js](https://voicekom.embla.asia/dist/voicekom.min.js)"></script>
-```
+<script src="https://voicekom.embla.asia/dist/voicekom.min.js"></script>
 
 
 ### 2. Initialization
