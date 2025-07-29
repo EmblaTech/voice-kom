@@ -34,7 +34,7 @@ export class DriverFactory {
     switch (engine) {
       case TranscriptionProviders.DEFAULT:
       case TranscriptionProviders.WEBSPEECH:
-        return new WebSpeechTranscriptionDriver();
+        return new WebSpeechTranscriptionDriver(config);
       case TranscriptionProviders.GOOGLE:
         return new GoogleTranscriptionDriver(config);
       case TranscriptionProviders.WHISPER:

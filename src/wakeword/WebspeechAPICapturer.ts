@@ -89,24 +89,31 @@ export class WebspeechWakewordDetector implements WakewordDetector {
   // REMOVED: normalizeText is no longer needed as Fuse.js handles variations.
   // REMOVED: levenshteinDistance is no longer needed.
 
-  private setupListeners(): void {
+   private setupListeners(): void {
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-      if (!this.fuseWake) return;
-      
-      const lastResult = event.results[event.results.length - 1];
-      if (!lastResult || !lastResult[0]) return;
-      
-      const latestTranscript = lastResult[0].transcript;
+      const originalTranscription = Array.from(event.results)
+        .map(r => r[0].transcript)
+        .join('');
 
-      // MODIFIED: Use Fuse.js to check the latest transcript for a wake word.
-      const results = this.fuseWake.search(latestTranscript);
+      if (!originalTranscription.trim()) {
+        return;
+      }
+      
+      // We will now use a regular expression to find a whole word match.
+      const detectedWakeWord = this.wakeWords.find(wakeWord => {
+        // Create a regular expression to match the wake word as a whole word.
+        // \b is a word boundary.
+        // The 'i' flag makes the search case-insensitive.
+        const wakeWordRegex = new RegExp(`\\b${wakeWord}\\b`, 'i');
+        
+        // Test the regex against the transcription.
+        return wakeWordRegex.test(originalTranscription);
+      });
 
-      if (results.length > 0) {
-        const bestMatch = results[0];
-        console.log(`WakeWordDetector: Detected wake word in "${latestTranscript}" (matched "${bestMatch.item}" with score: ${bestMatch.score}).`);
-        this.eventBus.emit(SpeechEvents.WAKE_WORD_DETECTED);
-        // We can stop listening for the wake word in this cycle
-        // to avoid multiple triggers from the same utterance.
+      if (detectedWakeWord) {
+        // The log message is now much more reliable!
+        console.log(`WakeWordDetector: Detected wake word "${detectedWakeWord}" in transcription: "${originalTranscription}"`);
+        this.eventBus.emit(SpeechEvents.WAKE_WORD_DETECTED, detectedWakeWord);
       }
     };
 

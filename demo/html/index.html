@@ -3,145 +3,161 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VoiceLib Form Demo</title>
-  <link rel="stylesheet" href="index.css">
+  <title>Contact Us - Embla VoiceKom</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Contact Form Demo</h1>
-  
-  <div class="form-container">
-    <form id="contact-form" voice.name="Personal Information">
-      <!-- Personal Information Section -->
-      <fieldset>
-        <legend>Personal Information</legend>
-        
-        <div class="form-group">
-          <label for="name">Full Name</label>
-          <input type="text" id="name" voice.name="name field" placeholder="Enter your full name">
+  <header>
+    <nav>
+        <div class="logo">
+            <img src="assets/images/embla-logo-2.png" alt="Embla Logo" class="embla-logo">
         </div>
-        
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" voice.name="email field" placeholder="Enter your email address">
+        <ul class="nav-menu">
+          <li><a href="#" class="nav-link" voice.name="home">Home</a></li>
+          <li><a href="#" class="nav-link" voice.name="Features">Features <span class="dropdown-arrow">▼</span></a></li>
+          <li><a href="#" class="nav-link" voice.name="Blog">Blog</a></li>
+          <li><a href="#" class="nav-link" voice.name="Shop">Shop</a></li>
+          <li><a href="about.html" class="nav-link" voice.name="About">About</a></li>
+          <li><a href="#" class="nav-link active" voice.name="Contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <div class="container">
+        <div class="contact-header">
+            <h1>Contact Us</h1>
+            <p>Any question or remarks? Just ask from VoiceKom!</p>
         </div>
-        
-        <div class="form-group">
-          <label for="phone">Phone Number</label>
-          <input type="tel" id="phone" voice.name="phone field" placeholder="Enter your phone number">
-        </div>
-        
-        <div class="form-group">
-          <label for="date">Preferred Date</label>
-          <input type="date" id="date" voice.name="Preferred date">
-        </div>
+        <form class="contact-form" voice.name="Inquiry Form">
+          <!-- SECTION 1: Client & Callback Details -->
+          <div class="form-section">
+              <h2>Personal Details</h2>
+              <div class="form-row">
+                  <div class="form-group">
+                      <label for="fullname">Name</label>
+                      <input type="text" id="fullname" name="fullname" placeholder="Enter client's full name" voice.name="name">
+                  </div>
+                  <div class="form-group">
+                      <label for="email">Email</label>
+                      <input type="email" id="email" name="email" placeholder="Enter client's corporate email" voice.name="email">
+                  </div>
+              </div>
 
-        <div class="form-group">
-          <label for="time">Preferred time</label>
-          <input type="time" id="time" voice.name="Preferred time">
-        </div>
-      </fieldset>
-      
-      <!-- Preference Section -->
-      <fieldset>
-        <legend>Preferences</legend>
-        
-        <div class="form-group" voice.name="Preferences">
-          <label>Preferred Contact Method</label>
-          <div class="radio-group" voice.name="prefered contact method" name="contact-preference">
-            <label class="radio-label">
-              <input type="radio" name="contact-preference" value="email" voice.name="email option" checked>
-              Email
-            </label>
-            <label class="radio-label">
-              <input type="radio" name="contact-preference" value="phone" voice.name="phone option">
-              Phone
-            </label>
-            <label class="radio-label">
-              <input type="radio" name="contact-preference" value="text" voice.name="text message">
-              Text Message
-            </label>
+              <div class="form-row">
+                <div class="form-group">
+                      <label for="phone">Phone</label>
+                      <input type="tel" id="phone" name="phone" placeholder="Enter client's phone number" voice.name="phone">
+                  </div>
+                  <div class="form-group">
+                      <label for="date">Callback Date</label>
+                      <input type="date" id="date" name="date" voice.name="callback date">
+                  </div>
+              </div>
+              <div class="form-row">
+                  <div class="form-group">
+                      <label for="time">Callback Time</label>
+                      <input type="time" id="time" name="time" voice.name="callback time">
+                  </div>
           </div>
-        </div>
-        
-        <div class="form-group" voice.name="interests">
-          <label>Interests (Check all that apply)</label>
-          <div class="checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" name="interests" value="product-updates" voice.name="product updates checkbox">
-              Product Updates
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="interests" value="newsletter" voice.name="newsletter checkbox">
-              Monthly Newsletter
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="interests" value="events" voice.name="events checkbox">
-              Upcoming Events
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="interests" value="promotions" voice.name="promotions checkbox">
-              Special Promotions
-            </label>
           </div>
-        </div>
-      </fieldset>
-      
-      <!-- Message Section -->
-      <fieldset>
-        <legend>Your Message</legend>
+
+          <!-- SECTION 2: Inquiry Categorization -->
+          <div class="form-section"  voice.name="inquiry category">
+              <h2>Inquiry Category</h2>
+
+              <div class="preferences-row">
+                  <div class="preferences-group">
+                      <label class="section-label">
+                          Inquiry Type <span class="subtitle">(Check all that apply)</span>
+                      </label>
+                      <div class="checkbox-group" voice.name="inquiry type">
+                          
+                          <label class="checkbox-label">
+                              <input type="checkbox" name="inquiry-type" value="technical-support" voice.name="technical support"> 
+                              <span class="checkmark"></span>
+                              Technical Support
+                          </label>
+                    
+                          <label class="checkbox-label">
+                              <input type="checkbox" name="inquiry-type" value="billing" voice.name="billing">
+                              <span class="checkmark"></span>
+                              Billing
+                          </label>
+                          <label class="checkbox-label">
+                              <input type="checkbox" name="inquiry-type" value="partnership" voice.name="partnership">
+                              <span class="checkmark"></span>
+                              Partnership
+                          </label>
+                          <label class="checkbox-label">
+                              <input type="checkbox" name="inquiry-type" value="feature-request" voice.name="feature request">
+                              <span class="checkmark"></span>
+                              Feature Request
+                          </label>
+                      </div>
+                  </div>
+
+                  <div class="preferences-group">
+                      <label class="section-label">
+                          Priority
+                      </label>
+                      <div class="radio-group" voice.name="priority" name="priority">
+                          <label class="radio-label">
+                              <input type="radio" name="priority" value="standard" voice.name="standard">
+                              <span class="radio-button"></span>
+                              Standard
+                          </label>
         
-        <div class="form-group">
-          <label for="subject">Subject</label>
-          <select id="subject" voice.name="subject dropdown">
-            <option value="">-- Select a subject --</option>
-            <option value="general" voice.name="general inquiry">General Inquiry</option>
-            <option value="support" voice.name="technical support">Technical Support</option>
-            <option value="feedback" voice.name="feedback">Feedback</option>
-            <option value="other" voice.name="other">Other</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="message">Message</label>
-          <textarea id="message" voice.name="message" rows="5" placeholder="Type your message here..."></textarea>
-        </div>
-        
-        <div class="form-group">
-          <label for="file-upload">Attach File (Optional)</label>
-          <input type="file" id="file-upload" voice.name="choose file">
-        </div>
-      </fieldset>
-      
-      <!-- Form Actions -->
-      <div class="form-actions">
-        <input type="checkbox" id="agree-terms" voice.name="terms checkbox">
-        <label for="agree-terms">I agree to the <a href="#" voice.name="terms link" id="terms-link">Terms and Conditions</a></label>
-        
-        <div class="button-group">
-          <button type="reset" voice.name="reset button" class="btn btn-secondary">Reset</button>
-          <button type="submit" id="submit-button" voice.name="submit button" class="btn btn-submit">Submit</button>
-        </div>
+                          <label class="radio-label">
+                              <input type="radio" name="priority" value="high" voice.name="high">
+                              <span class="radio-button"></span>
+                              High
+                          </label>
+                          <label class="radio-label">
+                            <input type="radio" name="priority" value="critical" voice.name="critical system down">
+                            <span class="radio-button"></span>
+                            Critical - System Down
+                        </label>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <!-- SECTION 3: Details & Summary -->
+          <div class="form-section" voice.name="inquiry details">
+              <h2>Inquiry Details</h2>
+
+              <div class="form-group">
+                  <label for="products">Products</label>
+                  <select id="products" name="products" voice.name="products">
+                      <option value="">Select product...</option>
+                      <option name="products" value="apex-crm" voice.name="apex crm">Apex CRM</option>
+                      <option name="products" value="nexus-analytics" voice.name="nexus analytics">Nexus Analytics</option>
+                      <option name="products" value="vision-db" voice.name="vision db">Vision DB</option>
+                      <option name="products" value="orbit-automation" voice.name="orbit automation">Orbit Automation</option>
+                  </select>
+              </div>
+
+              <div class="form-group">
+                  <label for="message">Inquiry Summary</label>
+                  <textarea id="message" name="message" placeholder="Log a detailed summary of the client's issue here..." rows="6"  voice.name="inquiry summary"></textarea>
+              </div>
+          </div>
+
+          <div class="bottom-form-section">
+              <div class="button-row">
+                  <button type="reset" class="btn-reset"  voice.name="reset form">Reset</button>
+                  <button type="submit" class="btn-submit" voice.name="submit inquiry">Submit Inquiry</button>
+              </div>
+          </div>
+      </form>
+
+      <div class="voice-help">
+        <p>Try a powerful command like: <strong>"Log inquiry for Ravi Perera, date tomorrow, check all types except partnership, set priority to critical..."</strong></p>
+        <p>Need assistance? <a href="#" class="help-link">Get Help</a> or view our <a href="#" class="help-link">FAQ</a></p>
       </div>
-    </form>
-  </div>
-  
-  <div class="help-text">
-    <p>Try voice commands like: <strong>"Fill name as John Smith"</strong>, <strong>"Select email option"</strong>, or <strong>"Click submit button"</strong></p>
-    <p>Need assistance? <a href="#" voice.name="help link" id="help-link">Get Help</a> or view our <a href="#" voice.name="faq link" id="faq-link">FAQ</a></p>
-  </div>
-  
-  <!-- Modal for Terms and Conditions -->
-  <div id="terms-modal" class="modal">
-    <div class="modal-content">
-      <span class="close" voice.name="close modal">&times;</span>
-      <h2>Terms and Conditions</h2>
-      <div class="modal-body">
-        <p>This is a demo of terms and conditions content. In a real application, this would contain the actual terms.</p>
-      </div>
-      <button class="btn" voice.name="accept terms">Accept</button>
     </div>
-  </div>
-  
+  </main>
   <script src="../../dist/voicekom.js"></script>
   <script src="script.js"></script>
 </body>

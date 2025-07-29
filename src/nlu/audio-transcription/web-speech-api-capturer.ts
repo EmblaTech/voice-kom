@@ -20,6 +20,20 @@ export class WebSpeechAPICapturer implements AudioCapturer {
   private language: string;
   private readonly logger = Logger.getInstance();
 
+
+  private readonly AVAILABLE_LANGUAGES: string[] = 
+  [
+  'af', 'am', 'ar', 'az', 'be', 'bg', 'bn', 'bs', 'ca', 'cs', 
+  'cy', 'da', 'de', 'el', 'en', 'es', 'et', 'eu', 'fa', 'fi', 
+  'fil', 'fr', 'gl', 'gu', 'he', 'hi', 'hr', 'hu', 'hy', 'id', 
+  'is', 'it', 'ja', 'jv', 'ka', 'kk', 'km', 'kn', 'ko', 'lo', 
+  'lt', 'lv', 'mi', 'mk', 'ml', 'mr', 'ms', 'nb', 'ne', 'nl', 
+  'no', 'pl', 'pt', 'ro', 'ru', 'si', 'sk', 'sl', 'sq', 'sr', 
+  'su', 'sv', 'sw', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'vi', 
+  'zh', 'zu', 'nb', 'nn'
+];
+
+
   constructor(
     private readonly eventBus: EventBus,
     private lang: string | undefined

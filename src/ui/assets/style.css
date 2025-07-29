@@ -1,15 +1,19 @@
-.voice-recorder-container {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    max-width: 300px;
-    max-height: none; /* Allow expansion */
-    min-height: 75px; /* Maintain minimum height */
-    margin: 0;
-    background-color: #f0f4f8;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    transition: height 0.3s ease; /* Smooth height transitions */
-  }
+.voice-recorder-widget {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 300px;
+  /* Let height be determined by content */
+  height: auto;
+  /* Control expansion with max-height */
+  max-height: 75px; 
+  margin: 0;
+  background-color: #f0f4f8;
+  border-radius: 12px; /* A slightly more modern radius */
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  transition: max-height 0.4s ease-in-out; /* Smoother transition */
+  display: flex; /* Use flexbox for robust layout */
+  flex-direction: column;
+}
 
   .voice-bottom-left,
   .voice-bottom-right {
@@ -17,7 +21,11 @@
     bottom: 20px;
     z-index: 1000;
   }
-
+  .widget-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
   .voice-bottom-left {
     left: 25px;
   }
@@ -33,7 +41,7 @@
     gap: 8px;
   }
   
-  .button-container {
+  .button-widget {
     width: 40px;
     height: 40px;
     background-color: #fff;
@@ -47,7 +55,7 @@
   }
 
   /* Loader animation for listening state */
-  /* .button-container.listening::before {
+  /* .button-widget.listening::before {
     content: '';
     position: absolute;
     top: -4px;
@@ -63,7 +71,7 @@
   } */
 
   /* Loader animation for recording state */
-  /* .button-container.recording::before {
+  /* .button-widget.recording::before {
     content: '';
     position: absolute;
     top: -4px;
@@ -185,12 +193,12 @@
   }
     
   @media (max-width: 480px) {
-    .voice-recorder-container {
+    .voice-recorder-widget {
       max-width: 100%;
       border-radius: 0;
     }
     
-    .voice-floating-container {
+    .voice-floating-widget {
       width: calc(100% - 20px);
       right: 10px;
       left: 10px;
@@ -198,7 +206,7 @@
     }
   }
   
-  .voice-recorder-container button:focus {
+  .voice-recorder-widget button:focus {
     outline: none;
     box-shadow: none;
   }

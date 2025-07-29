@@ -6,12 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
     lang: 'si-LK', // Set the language
     transcription: {
       provider: 'webspeech',
-      apiKey: ''
+      apiKey: '' 
     },
     recognition: {
       provider: 'default',
-      temperature: '',
-      apiKey: '',
+      // provider: 'default',
+      apiKey: '' 
     },
     speakingThreshold: 0.2, 
     

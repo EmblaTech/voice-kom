@@ -28,7 +28,6 @@ export class NLUModule {
     private readonly eventBus: EventBus,
     private readonly status: Status
   ) {
-
     this.eventBus.on(SpeechEvents.AUDIO_CAPTURED, (blob: Blob) => {
       this.eventBus.emit(SpeechEvents.RECORDING_STOPPED);
       if(this.compoundDriver) {
@@ -39,7 +38,7 @@ export class NLUModule {
       }
     });
 
-     this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
+    this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
       this.processTranscription(transcription);
     });
 
@@ -48,7 +47,6 @@ export class NLUModule {
         this.startSingleListeningCycle();
       }
     });
-
   }
 
 
@@ -152,16 +150,11 @@ export class NLUModule {
 
   
   private async processAudioChunk(audioBlob: Blob): Promise<void> {
-
     if (!this.transcriptionDriver) { 
       
       this.logger.error('Transcription or Recognition Driver not initialized');
       return; 
     }
-  // if (!this.isSessionActive) {
-  //     this.logger.info("Ignoring audio chunk because session is inactive.");
-  //     return;
-  //   }
     try {
       const transcription = await this.transcriptionDriver.transcribe(audioBlob);
       this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
@@ -207,6 +200,8 @@ export class NLUModule {
     return this.transcriptionDriver.getAvailableLanguages();
   }
 
+  // This method appears to be unused. The command registry is now loaded from the JSON file.
+  // You can likely remove this method for cleanup.
   private getCommands(): CommandRegistry {
     return {
       intents: [

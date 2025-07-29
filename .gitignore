@@ -7,7 +7,6 @@ package-lock.json
 
 # Build outputs
 dist/
-demo/
 build/
 out/
 .next/
@@ -24,6 +23,8 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
+
+demo/html/
 
 # Testing
 coverage/

@@ -38,11 +38,12 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         'kindly', 'i want to', 'i would like to', 'i need to',
         'thanks', 'thank you'
     ];
-    private static readonly FUZZY_MATCH_SCORE_THRESHOLD = 0.5; // Adjust as needed
-    private static readonly EXACT_MATCH_CONFIDENCE_THRESHOLD = 0.9; // Adjust as needed
+    private static readonly FUZZY_MATCH_SCORE_THRESHOLD = 0.5;
+    private static readonly EXACT_MATCH_CONFIDENCE_THRESHOLD = 0.9;
+    
     constructor(config: RecognitionConfig) {
         this.config = config;
-        this.language = config.lang || this.language;
+        this.language = config.lang? config.lang.split(/[-_]/)[0].toLowerCase() : this.language;
         this.loadCommandRegistry(commands);
     }
 
@@ -57,13 +58,14 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
             return [this.createUnknownResult()];
         }
 
-        const preprocessedText = this.preprocessInputText(text);
+        // Keep the original text safe for raw entity extraction!
+        const originalText = text; 
+        const preprocessedText = this.preprocessInputText(originalText);
         const doc: CompromiseDoc = nlp(preprocessedText);
 
         let bestExactMatch: IntentResult | null = null;
         let bestFuzzyMatch = { score: 0, intent: IntentTypes.UNKNOWN, pattern: '' };
         
-        // Define thresholds for decision making
         const EXACT_MATCH_CONFIDENCE_THRESHOLD = CompromiseRecognitionDriver.EXACT_MATCH_CONFIDENCE_THRESHOLD;
         const FUZZY_MATCH_SCORE_THRESHOLD = CompromiseRecognitionDriver.FUZZY_MATCH_SCORE_THRESHOLD;
 
@@ -73,9 +75,7 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
             if (!commandConfig) continue;
 
             for (const pattern of commandConfig.utterances) {
-                // --- Calculate the fuzzy score for every pattern ---
                 const fuzzyScore = this.getAdvancedMatchScore(preprocessedText, pattern);
-                console.log(`[Fuzzy] Fuzzy score for "${pattern}" against "${preprocessedText}": ${fuzzyScore.toFixed(2)}`);
                 if (fuzzyScore > bestFuzzyMatch.score) {
                     bestFuzzyMatch = {
                         score: fuzzyScore,
@@ -84,7 +84,6 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
                     };
                 }
 
-                // --- Attempt a precise compromise match ---
                 const matches: CompromiseDoc = doc.match(pattern);
                 if (matches.found) {
                     const confidence = this.calculateConfidence(matches, doc);
@@ -92,7 +91,6 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
                         bestExactMatch = {
                             intent: intentName as IntentTypes,
                             confidence,
-                            // Save the pattern and config for later entity extraction
                             _pattern: pattern,
                             _config: commandConfig,
                         } as any; 
@@ -103,12 +101,17 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         
         // === STAGE 2: Decide which result to use ===
         
-        console.log(`[Fuzzy] Best fuzzy match: ${bestFuzzyMatch.intent} with score ${bestFuzzyMatch.score.toFixed(2)}`);
-
         // Case 1: A high-confidence exact match was found. This is our preferred outcome.
         if (bestExactMatch && bestExactMatch.confidence >= EXACT_MATCH_CONFIDENCE_THRESHOLD) {
             const winningMatch = doc.match((bestExactMatch as any)._pattern);
-            bestExactMatch.entities = this.extractEntitiesFromMatch(winningMatch, doc, (bestExactMatch as any)._config);
+            
+            // *** CHANGE 1: Pass `originalText` to get raw entities for exact matches ***
+            bestExactMatch.entities = this.extractEntitiesFromMatch(
+                winningMatch, 
+                (bestExactMatch as any)._config, 
+                originalText // Use the unprocessed text for perfect extraction
+            );
+
             delete (bestExactMatch as any)._pattern;
             delete (bestExactMatch as any)._config;
             return [bestExactMatch];
@@ -126,7 +129,13 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
             const commandConfig = this.commandRegistry[bestFuzzyMatch.intent];
 
             if (finalMatch.found && commandConfig) {
-                 const entities = this.extractEntitiesFromMatch(finalMatch, correctedDoc, commandConfig);
+                 // *** CHANGE 2: Pass `correctedText` as the source for fuzzy matches ***
+                 const entities = this.extractEntitiesFromMatch(
+                     finalMatch, 
+                     commandConfig, 
+                     correctedText // Offsets will be relative to the corrected text
+                 );
+
                  return [{
                     intent: bestFuzzyMatch.intent,
                     confidence: bestFuzzyMatch.score,
@@ -161,7 +170,15 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         return cleanedText;
     }
     
-    private extractEntitiesFromMatch(matches: CompromiseDoc, doc: any, config: CommandConfig): Entities {
+    // *** CHANGE 3: Replaced the old function with the new, superior offset-based method ***
+    /**
+     * Extracts entities from a match using precise character offsets to get the original, raw text.
+     * @param matches The CompromiseDoc object for the matched pattern.
+     * @param config The configuration for the matched command.
+     * @param sourceText The text the `matches` were found in (can be original or corrected text).
+     * @returns An Entities object with raw text values.
+     */
+    private extractEntitiesFromMatch(matches: CompromiseDoc, config: CommandConfig, sourceText: string): Entities {
         const groups = matches.groups();
         const entities: Entities = {};
 
@@ -169,30 +186,36 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
             return {};
         }
 
-        const matchText = matches.text();
-        let matchSentenceIndex = -1;
-        const anyDoc = doc as any;
-        const allSentences = anyDoc.sentences().out('array'); 
-
-        for (let i = 0; i < allSentences.length; i++) {
-            if (allSentences[i].includes(matchText)) {
-                matchSentenceIndex = i;
-                break; 
-            }
-        }
-
         for (const groupName in groups) {
-            const entityDoc = groups[groupName];
-            let extractedValue = entityDoc.text('clean');
-
-            if (config.rawEntities?.includes(groupName)) {
-                extractedValue = entityDoc.text();
-                if (matchSentenceIndex > -1 && matchSentenceIndex < allSentences.length - 1) {
-                    const restOfText = allSentences.slice(matchSentenceIndex + 1).join(' ');
-                    extractedValue += ' ' + restOfText;
-                }
+            if (!Object.prototype.hasOwnProperty.call(groups, groupName)) {
+                continue;
             }
-            entities[groupName] = extractedValue.trim();
+            
+            const entityDoc = groups[groupName];
+
+            // Use compromise's json output with offsets to get the exact location.
+            // We cast to `any` because our custom interface doesn't include the `json` method.
+            const jsonData = (entityDoc as any).json({ offset: true });
+
+            // Ensure we have valid data to work with
+            if (!jsonData || !jsonData[0] || !jsonData[0].terms || jsonData[0].terms.length === 0) {
+                entities[groupName] = entityDoc.text(); // Fallback for safety
+                continue;
+            }
+
+            const terms = jsonData[0].terms;
+            const firstTerm = terms[0];
+            const lastTerm = terms[terms.length - 1];
+
+            // Calculate the start and end positions from the offsets.
+            const start = firstTerm.offset.start;
+            const end = lastTerm.offset.start + lastTerm.offset.length;
+
+            // Slice the source text to get the true raw entity.
+            // This will be originalText for exact matches, and correctedText for fuzzy ones.
+            const rawEntityText = sourceText.slice(start, end);
+            
+            entities[groupName] = rawEntityText;
         }
 
         return entities;
@@ -215,14 +238,13 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         };
     }
 
-    // --- NEW HELPER METHODS FOR FUZZY MATCHING AND CORRECTION ---
+    // --- Helper methods for Fuzzy Matching and Correction ---
 
     private parsePattern(pattern: string): { keywords: string[] } {
-        // This function extracts the literal keywords from a compromise pattern.
         const keywords = pattern
-            .replace(/\[?<[^>]+>.*\]?/g, '') // Remove placeholders like <name> or [<name> optional]
-            .replace(/[()|]/g, ' ')          // Replace OR-group characters with spaces
-            .replace(/\s\s+/g, ' ')          // Clean up multiple spaces
+            .replace(/\[?<[^>]+>.*\]?/g, '') 
+            .replace(/[()|]/g, ' ')          
+            .replace(/\s\s+/g, ' ')          
             .trim()
             .split(' ');
         return { keywords };
@@ -236,23 +258,21 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
 
         let cumulativeScore = 0;
         let searchIndex = 0;
-        const MIN_KEYWORD_CONFIDENCE = 0.6; // How similar a word must be to be considered a keyword match
+        const MIN_KEYWORD_CONFIDENCE = 0.6;
 
         for (const keyword of keywords) {
             const searchString = userInput.substring(searchIndex);
-            if (!searchString) return 0; // Ran out of user input to search
+            if (!searchString) return 0;
 
             const wordCandidates = searchString.split(' ');
             const { bestMatch } = findBestMatch(keyword, wordCandidates);
 
             if (bestMatch.rating < MIN_KEYWORD_CONFIDENCE) {
-                // A required keyword was not found or was too different. This pattern is not a match.
                 return 0;
             }
 
             cumulativeScore += bestMatch.rating;
             
-            // Advance the search index past the found word to maintain order
             const absoluteMatchIndex = userInput.indexOf(bestMatch.target, searchIndex);
             searchIndex = absoluteMatchIndex + bestMatch.target.length;
         }
@@ -268,15 +288,11 @@ export class CompromiseRecognitionDriver implements RecognitionDriver {
         const correctedWords: string[] = [];
 
         for (const userWord of userInputWords) {
-            // Check if this word is a likely typo of one of our keywords
             const { bestMatch } = findBestMatch(userWord, keywords);
-
-            // If a highly similar keyword is found, we perform a "correction"
-            // The 0.5 threshold prevents correcting words that are only vaguely similar.
             if (bestMatch.rating > CompromiseRecognitionDriver.FUZZY_MATCH_SCORE_THRESHOLD) {
-                correctedWords.push(bestMatch.target); // Use the correct keyword
+                correctedWords.push(bestMatch.target);
             } else {
-                correctedWords.push(userWord); // Keep the original user word
+                correctedWords.push(userWord);
             }
         }
         return correctedWords.join(' ');

@@ -109,10 +109,10 @@ export class CoreModule {
             this.status.set(StatusType.IDLE);
         }
         this.uiHandler.updateUIStatus();  
-      if (this.isListeningModeActive) {
-        this.status.set(StatusType.PROCESSING);
-        this.uiHandler.updateUIStatus();
-      }
+      // if (this.isListeningModeActive) {
+      //   this.status.set(StatusType.PROCESSING);
+      //   this.uiHandler.updateUIStatus();
+      // }
     });
 
     this.eventBus.on(SpeechEvents.LISTENING_STOPPED, () => {
@@ -126,6 +126,7 @@ export class CoreModule {
       // After processing a command, check if we should continue listening.
       if (this.isListeningModeActive && !this.isRecordingModeActive)  {
         // If so, just reset the status. The VAD is still running.
+        console.log('[INTERRUPT] Continuing listening mode after action completion.');
         this.status.set(StatusType.LISTENING);
         this.uiHandler.updateUIStatus();
       }

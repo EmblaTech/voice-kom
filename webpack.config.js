@@ -32,6 +32,16 @@ const createConfig = (target, outputFile, options = {}) => {
           use: 'ts-loader',
           exclude: /node_modules/,
         },
+        // --- START: ADDED THIS RULE ---
+        {
+          // This rule will match any .html or .css file you import
+          test: /\.(html|css)$/i,
+          // 'asset/source' is a built-in Webpack 5 feature.
+          // It exports the raw source code of the asset as a string.
+          // This means no extra loaders are needed.
+          type: 'asset/source',
+        },
+        // --- END: ADDED THIS RULE ---
       ],
     },
     optimization: {
