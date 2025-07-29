@@ -1,48 +1,74 @@
 # VoiceKom Library
 
-VoiceKom is a powerful, client-side JavaScript library that enables developers to integrate conversational voice control into any web application. It uses advanced Speech-to-Text (STT) and a Large Language Model (LLM) for Natural Language Understanding (NLU) to interpret user commands and interact with web page elements.
+VoiceKom is a powerful, lightweight JavaScript library that lets you seamlessly add voice interaction to any existing web application.
+It runs fully on the client side and uses advanced Speech-to-Text (STT) and Large Language Models (LLMs) for Natural Language Understanding (NLU) — enabling users to speak naturally and control page elements easily.
 
-Turn "fill the name field with John Doe and click submit" from a user's voice into a real action on your website, with just a few lines of code.
+Just say “Fill name with John Smith” — VoiceKom intelligently fills the right input field, selects dropdowns, sets date pickers, chooses radio buttons, navigates menus, and clicks buttons — all without you touching the keyboard or mouse. And the best part? It takes just a few lines of code to integrate.
 
 ## ✨ Features
 
-- **LLM-Powered NLU**: Goes beyond simple keyword matching. Understands complex, natural user commands thanks to a powerful LLM-based NLU engine.
+- **LLM-Powered NLU**: Goes beyond simple keyword matching. Understands complex, natural user commands.
+- **Chained Commands**: Handle multiple actions in a single sentence (e.g., “Fill name with John and then click submit”).
+- **Multi-language**: Makes it adaptable for global use, breaking language barriers and making digital platforms more inclusive.
+- **Privacy-First Design**: No user data sent by default. All processing stays local unless configured otherwise.
 - **Easy Integration**: Add voice capabilities to your site by including a script and initializing the library with a simple configuration object.
-- **Zero Backend Required**: The library is fully client-side (though it relies on external APIs for STT/NLU).
+- **Zero Backend Required**: The library is fully client-side (optional API integration for enhanced accuracy APIs based on the configuration).
 - **Pre-defined Commands**: Out-of-the-box support for common web interactions like clicking buttons, filling forms, checking boxes, scrolling, and more.
-- **Customizable UI**: Control the position and appearance of the voice control widget.
-- **Modular & Extensible**: Built with TypeScript and InversifyJS for a clean, dependency-injected, and maintainable architecture.
+- **Customizable UI**: Easily style voice widget with theming and localization support.
+- **Wake & Sleep Words**: Start or stop listening on command — useful for continuous workflows.
+- **Modular & Extensible**: Built with TypeScript, clean, extensible driver architecture.
 
 ## 🚀 Getting Started
 
 ### 1. Installation
-
-You can add VoiceKom to your project via NPM or by using a CDN.
-
-**Using NPM:**
-
-```bash
-npm install voicekom
 ```
-
-Then, import it into your project:
-
-```javascript
-import VoiceKom from 'voicekom';
-```
-
 **Using CDN:**
 Add the following script tag to your HTML file.
 
 ```html
-<script src="https://voicekom.embla.asia/dist/voicekom.min.js"></script>
+<script src="[https://voicekom.embla.asia/dist/voicekom.min.js](https://voicekom.embla.asia/dist/voicekom.min.js)"></script>
 ```
 
 
 ### 2. Initialization
 
-Initialize the library once the DOM is loaded. You will need API keys for the STT and NLU services you choose to use (e.g., OpenAI).
+Initialize the VoiceKom library **after the DOM has fully loaded** to ensure proper setup.
 
+##### 🔐 Using External AI Engines
+
+If you wish to use external AI engines such as **OpenAI** for transcription and recognition, you will need to provide your own API keys.
+
+> ⚠️ **Important:** Supplying API keys directly in the frontend is **insecure** and not recommended for production environments.
+
+##### ⚙️ Default In-Browser Mode
+
+VoiceKom can run **entirely in the browser** without any external AI dependencies. In this mode:
+- Transcription and recognition are handled locally
+- Offers **faster performance**
+- Ensures **maximum privacy**
+- May have **less flexibility** compared to external engines and is less flexible for complex or nuanced language understanding compared to LLM-powered alternatives.
+
+This mode is ideal if you want simplicity and privacy without compromising usability.
+
+##### ☁️ Secure External Integration (Recommended)
+
+If you still prefer using services like OpenAI **without exposing your API key**, we can help:
+- Contact us to set up a **Tenant profile** for you
+- We'll route your requests through our **proxied API**, keeping your keys safe
+- Optionally, you may **host the proxy backend yourself** as well for full control
+
+##### 🧩 Flexible Architecture
+
+VoiceKom supports multiple integration paths:
+- Use local-only mode
+- Connect with your own AI backend
+- Proxy through our secured services
+- Or build a hybrid model
+
+This flexibility allows you to **choose the architecture** that best fits your **use case, infrastructure, and compliance needs**.
+
+---
+    
 ```javascript
 document.addEventListener('DOMContentLoaded', () => {
   VoiceKom.init({
