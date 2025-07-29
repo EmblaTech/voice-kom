@@ -21,13 +21,13 @@ Just say “Fill name with John Smith” — VoiceKom intelligently fills the ri
 ## 🚀 Getting Started
 
 ### 1. Installation
-```
-**Using CDN:**
-Add the following script tag to your HTML file.
+## 🚀 Using CDN:
+
+Add the following script tag to your HTML file:
 
 ```html
-<script src="[https://voicekom.embla.asia/dist/voicekom.min.js](https://voicekom.embla.asia/dist/voicekom.min.js)"></script>
-```
+<script src="https://voicekom.embla.asia/dist/voicekom.min.js"></script>
+
 
 
 ### 2. Initialization
