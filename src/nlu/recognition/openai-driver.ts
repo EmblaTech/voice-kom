@@ -296,6 +296,9 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         - "Click submit and then navigate to home" should return 2 separate intents
         - "My name is Nisal, email is nisal@gmail.com, phone number is 074321, fill those" should return 3 fill intents
 
+        ### IMPORTANT: Implied Intent / Intent Sequence Detection ###
+        Sometimes a user's command describes a final goal, not the direct steps to get there. Your task is to infer the logical sequence or a single simple, atomic actions required to achieve that goal.
+
         ### JSON Response Format Instructions ###
         You MUST respond with a JSON array. Each object in the array represents a detected intent and must contain:
         1. "intent": The identified intent name (e.g., "fill_input").
@@ -342,14 +345,8 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             
             IMPORTANT - Contextual Normalization:
             - Consider the context of the command (The related UI element Entity) to determine how to normalize values.
-            Example: It the user is refering to a phone number, you should normalize it to the correct phone number format.
-
-            IMPORTANT - Transcription Issues Handling:
-            - If the value doeses not make sense in the context, it's probably a transcription issue due to accent. So fix it to the most likely correct value.
-                Example: A name "Nisal" might be transcribed as "Missle" due to accent, so correct it to "Nisal". 
-            - Value might be misstranscripted with mixed text and digits and then you should normalize it to the correct format.
-                Example: a phone number "074321" might be misstranscribed as "note seven 4 three two one" due to low accuracy transcription, so correct it to "074321".
-
+            Example: -"Enter phone number as 1,2 3 note double two"  but since the context is a phone number, normalize it to "12322".
+                     - "Fill email as user at user.gmail.com" but since the context is an email, normalize it to "user@example.com".
             IMPORTANT - Mixed Language Handling:
             if value is in mixed languages you MUST normalize the entire value to the appropriate format because those are transcription issues.
 
