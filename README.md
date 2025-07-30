@@ -34,12 +34,6 @@ Add the following script tag to your HTML file:
 
 Initialize the VoiceKom library **after the DOM has fully loaded** to ensure proper setup.
 
-##### 🔐 Using External AI Engines
-
-If you wish to use external AI engines such as **OpenAI** for transcription and recognition, you will need to provide your own API keys.
-
-> ⚠️ **Important:** Supplying API keys directly in the frontend is **insecure** and not recommended for production environments.
-
 ##### ⚙️ Default In-Browser Mode
 
 VoiceKom can run **entirely in the browser** without any external AI dependencies. In this mode:
@@ -50,14 +44,81 @@ VoiceKom can run **entirely in the browser** without any external AI dependencie
 
 This mode is ideal if you want simplicity and privacy without compromising usability.
 
-##### ☁️ Secure External Integration (Recommended)
+**Configuration:**
+Set the `provider` for both `transcription` and `recognition` to `'default'`.
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  VoiceKom.init({   
+    lang: 'en-US', // Set the language
+    transcription: {
+      provider: 'default',
+    },
+    recognition: {
+      provider: 'default',
+    },    
+  }).then(() => {
+    console.log('VoiceKom has been initialized successfully in default mode.');
+  });
+});
+```
+
+#### 🔐 Using External AI Engines
+
+If you wish to use external AI engines such as **OpenAI** for transcription and recognition, you will need to provide your own API keys.
+
+> ⚠️ **Important:** Supplying API keys directly in the frontend is **insecure** and not recommended for production environments. This method should only be used for local development or testing.
+
+**Configuration (for Development/Testing):**
+Specify the provider (e.g., `'whisper'` for transcription, `'openai'` for recognition) and supply your API key.
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  VoiceKom.init({   
+    lang: 'en-US', // Set the language
+    transcription: {
+      provider: 'whisper',
+      apiKey: 'sk-proj-YOUR_OPENAI_API_KEY'  // Transcription provider API key
+    },
+    recognition: {
+      provider: 'openai', 
+      apiKey: 'sk-proj-YOUR_OPENAI_API_KEY'  // Recognition provider API key
+    },    
+  }).then(() => {
+    console.log('VoiceKom has been initialized with external AI engines.');
+  });
+});
+```
+
+#### ☁️ Secure External Integration (Recommended)
 
 If you still prefer using services like OpenAI **without exposing your API key**, we can help:
 - Contact us to set up a **Tenant profile** for you
 - We'll route your requests through our **proxied API**, keeping your keys safe
 - Optionally, you may **host the proxy backend yourself** as well for full control
 
-##### 🧩 Flexible Architecture
+**Configuration:**
+Once your Tenant profile is set up, initialize VoiceKom by setting the `provider` to `'voicekom'` and using your provided VoiceKom API key.
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  VoiceKom.init({   
+    lang: 'en-US', // Set the language
+    transcription: {
+      provider: 'voicekom',
+      apiKey: 'vk-proj-YOUR_VOICEKOM_API_KEY'  // Your VoiceKom API key
+    },
+    recognition: {
+      provider: 'voicekom', 
+      apiKey: 'vk-proj-YOUR_VOICEKOM_API_KEY'  // Your VoiceKom API key
+    },    
+  }).then(() => {
+    console.log('VoiceKom has been initialized with the secure proxy.');
+  });
+});
+```
+
+#### 🧩 Flexible Architecture
 
 VoiceKom supports multiple integration paths:
 - Use local-only mode
@@ -67,30 +128,6 @@ VoiceKom supports multiple integration paths:
 
 This flexibility allows you to **choose the architecture** that best fits your **use case, infrastructure, and compliance needs**.
 
----
-    
-```javascript
-document.addEventListener('DOMContentLoaded', () => {
-  VoiceKom.init({
-    // Required: The ID of the element to host the UI
-    // Required: Language code (e.g., 'en' for English, 'no' for Norwegian)
-    lang: 'en', 
-    // --- Speech-to-Text (STT) Configuration ---
-    transcription: { "provider": "default" }, // Supports WebSpeech API(default), Whisper
-    recognition: { "provider": "default" }, // Supports Compromise(default), OpenAI
-
-// --- Optional UI Customization ---
-    autoStart: false, // Set to true to start listening automatically
-    position: 'bottom-right' // 'bottom-right', 'bottom-left'
-  })
-  .then(() => {
-    console.log('VoiceKom initialized successfully!');
-  })
-  .catch(error => {
-    console.error('Failed to initialize VoiceKom:', error);
-  });
-});
-```
 
 ## ⚙️ API & Configuration
 
