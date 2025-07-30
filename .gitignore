@@ -24,7 +24,9 @@ out/
 .env.test.local
 .env.production.local
 
-demo/html/
+demo/html/script.js
+demo/html/demo-index.html
+demo/html/demo-index.css
 
 # Testing
 coverage/
