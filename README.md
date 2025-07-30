@@ -21,7 +21,6 @@ Just say “Fill name with John Smith” — VoiceKom intelligently fills the ri
 ## 🚀 Getting Started
 
 ### 1. Installation
-** Using CDN: **
 
 Add the following script tag to your HTML file:
 
@@ -32,17 +31,18 @@ Add the following script tag to your HTML file:
 
 ### 2. Initialization
 
-Initialize the VoiceKom library **after the DOM has fully loaded** to ensure proper setup.
+VoiceKom's transcription and recognition services can be configured independently, allowing you to create a hybrid setup tailored to your specific needs. You can mix providers to balance speed, privacy, and intelligence
+The following examples showcase common configurations, which you can use as a starting point.
 
 ##### ⚙️ Default In-Browser Mode
 
 VoiceKom can run **entirely in the browser** without any external AI dependencies. In this mode:
-- Transcription and recognition are handled locally
-- Offers **faster performance**
+- Offers **extremely fast performance**
 - Ensures **maximum privacy**
+- May be **less accurate** in transcriptions compared to exernal services
 - May have **less flexibility** compared to external engines and is less flexible for complex or nuanced language understanding compared to LLM-powered alternatives.
 
-This mode is ideal if you want simplicity and privacy without compromising usability.
+This mode is ideal if you want speed, and privacy without compromising usability.
 
 **Configuration:**
 Set the `provider` for both `transcription` and `recognition` to `'default'`.
@@ -57,15 +57,17 @@ document.addEventListener('DOMContentLoaded', () => {
     recognition: {
       provider: 'default',
     },    
-  }).then(() => {
-    console.log('VoiceKom has been initialized successfully in default mode.');
-  });
+  })
 });
 ```
 
 #### 🔐 Using External AI Engines
 
 If you wish to use external AI engines such as **OpenAI** for transcription and recognition, you will need to provide your own API keys.
+- Offers **slower performance** due to api calls
+- Has **low privacy**
+- Much more **accurate** due to external stt services
+- Much more **flexible** for complex or nuanced language understanding compared to LLM-powered alternatives.
 
 > ⚠️ **Important:** Supplying API keys directly in the frontend is **insecure** and not recommended for production environments. This method should only be used for local development or testing.
 
@@ -84,18 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
       provider: 'openai', 
       apiKey: 'sk-proj-YOUR_OPENAI_API_KEY'  // Recognition provider API key
     },    
-  }).then(() => {
-    console.log('VoiceKom has been initialized with external AI engines.');
-  });
+  })
 });
 ```
 
-#### ☁️ Secure External Integration (Recommended)
+#### ☁️ With Complete Secure External Integration (Recommended)
 
 If you still prefer using services like OpenAI **without exposing your API key**, we can help:
-- Contact us to set up a **Tenant profile** for you
-- We'll route your requests through our **proxied API**, keeping your keys safe
-- Optionally, you may **host the proxy backend yourself** as well for full control
+Contact us to set up a **Tenant profile** for you. We'll route your requests through our **proxied API**, keeping your keys safe
+- Offers **much slower performance** due to api calls
+- Has **good privacy** dues to api calls are domain-varified
+- Much more **accurate** due to external stt services
+- Much more **flexible** for complex or nuanced language understanding compared to LLM-powered alternatives.
+
 
 **Configuration:**
 Once your Tenant profile is set up, initialize VoiceKom by setting the `provider` to `'voicekom'` and using your provided VoiceKom API key.
@@ -112,21 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
       provider: 'voicekom', 
       apiKey: 'vk-proj-YOUR_VOICEKOM_API_KEY'  // Your VoiceKom API key
     },    
-  }).then(() => {
-    console.log('VoiceKom has been initialized with the secure proxy.');
-  });
+  })
 });
 ```
-
-#### 🧩 Flexible Architecture
-
-VoiceKom supports multiple integration paths:
-- Use local-only mode
-- Connect with your own AI backend
-- Proxy through our secured services
-- Or build a hybrid model
-
-This flexibility allows you to **choose the architecture** that best fits your **use case, infrastructure, and compliance needs**.
 
 
 ## ⚙️ API & Configuration
