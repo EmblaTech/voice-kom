@@ -187,6 +187,10 @@ export class VoiceKom {
         Validator.validateOptional(config.retries, Validator.isNum, 'Retries must be a number', errors);
         Validator.validateOptional(config.timeout, Validator.isNum, 'Timeout must be a number', errors);
 
+        if ((config.lang ?? 'en') != 'en' && (!config.recognition || config.recognition?.provider == 'default')) {
+            errors.push('Invalid configuration: default recognition provider is only supported for English');
+        }
+
         if (config.position) {
             const positionResult = Validator.isInValues(config.position, this.VALID_UI_POSITIONS, 'position');
             if (!positionResult.valid) {
