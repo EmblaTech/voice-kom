@@ -25,17 +25,16 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
     constructor(config: TranscriptionConfig) {
         this.validateConfig(config);
         this.language = config.lang? config.lang.split(/[-_]/)[0].toLowerCase() : this.DEFAULT_LANGUAGE;
-        this.apiKey = config.apiKey!;
+        this.apiKey = config.apiKey!; // Assuming apiKey is validated to exist before this class is instantiated
         this.apiEndpoint = config.apiUrl || this.apiEndpoint;
-        this.logger.info(`WhisperTranscriptionDriver initialized with config: ${JSON.stringify(config)}`);
+        this.logger.info(`WhisperTranscriptionDriver initialized with language: ${this.language}`);
     }
 
-    /**
-     * Transcribe audio blob to text using OpenAI Whisper API
-     */
     async transcribe(rawAudio: Blob): Promise<string> {
+        this.logger.info('Starting transcription with Whisper');
+        const formData = this.buildFormData(rawAudio);
+
         try {
-            const formData = this.buildFormData(rawAudio);
             const response = await fetch(this.apiEndpoint, {
                 method: 'POST',
                 headers: {
@@ -45,13 +44,17 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Whisper API error: ${response.status} - ${JSON.stringify(errorData)}`);
+                await this.handleApiError(response);
             }
 
             const data = await response.json();
             const transcription = data.text;
-            this.logger.info(`Transcription completed: ${transcription}`);
+            
+            if (typeof transcription !== 'string') {
+                throw new Error('Invalid transcription format in API response.');
+            }
+
+            this.logger.info(`Transcription successful: ${transcription}`);
             return transcription;
         } catch (error) {
             this.logger.error('Error during Whisper transcription:', error);
@@ -59,35 +62,46 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
         }
     }
 
-    /**
-     * Get list of available languages supported by Whisper
-     */
+
+    private async handleApiError(response: Response): Promise<never> {
+        // Read the body as text ONCE. This is safe and always works.
+        const errorText = await response.text();
+
+        try {
+            const errorData = JSON.parse(errorText);
+            const errorMessage = errorData.error?.message || 'Unknown API error message.';
+            // Throw a detailed, specific error.
+            throw new Error(`Whisper API error (${response.status}): ${errorMessage}`);
+        } catch (jsonParseError) {
+            throw new Error(`Whisper API error (${response.status} ${response.statusText}). Response: ${errorText}`);
+        }
+    }
+
+    
     getAvailableLanguages(): string[] {
         return [...this.AVAILABLE_LANGUAGES];
     }
 
-    /**
-     * Method to change API endpoint (for testing or using compatible services)
-     */
     setApiEndpoint(endpoint: string): void {
         if (!endpoint || !Validator.isValidUrl(endpoint)) {
             throw new Error('Invalid API endpoint provided');
         }
         this.apiEndpoint = endpoint;
     }
-
-    /**
-     * Get current language setting
-     */
+   
     getCurrentLanguage(): string {
         return this.language;
     }
 
     private validateConfig(config: TranscriptionConfig): void {
+        if (!config.apiKey) {
+            throw new Error('Whisper driver requires an API key in the configuration.');
+        }
         if (config.apiUrl && !Validator.isValidUrl(config.apiUrl)) {
             throw new Error('Invalid API URL provided in configuration');
         }
-        if (config.lang && !this.AVAILABLE_LANGUAGES.includes(config.lang.split(/[-_]/)[0].toLowerCase())) {
+        const langCode = config.lang ? config.lang.split(/[-_]/)[0].toLowerCase() : this.DEFAULT_LANGUAGE;
+        if (!this.AVAILABLE_LANGUAGES.includes(langCode)) {
             throw new Error(`Unsupported language provided in configuration: ${config.lang}`);
         }
     }
@@ -97,11 +111,8 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
         formData.append('file', rawAudio, 'audio.webm');
         formData.append('model', this.DEFAULT_MODEL);
         formData.append('language', this.language);
-        // Add prompt to improve name recognition
-        // Add temperature parameter for more precise transcription
         formData.append('temperature', this.DEFAULT_TEMPERATURE);
-        // Request word-level timestamps for better segmentation
-        formData.append('timestamp_granularities', '["word"]');
+    
         return formData;
     }
 }

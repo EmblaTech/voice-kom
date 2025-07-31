@@ -3,28 +3,18 @@ import { EventBus, SpeechEvents } from '../common/eventbus';
 import { ButtonMode, ErrorType, Status, StatusType, StatusMeta } from '../common/status';
 import { UIConfig } from '../../src/types';
 
-// --- START: MODIFICATION ---
 // 1. Import the HTML and CSS files directly.
-//    Webpack (with the config from the previous step) will replace these
-//    with the raw text content of the files at build time.
-//    The path is relative to this file.
 import htmlTemplate from './assets/widget.html';
 import defaultStyles from './assets/style.css';
 
-// 2. REMOVED: The runtime fetcher is no longer needed for internal assets.
-// import { fetchContent } from '../utils/resource-fetcher';
-// --- END: MODIFICATION ---
+// 2. The runtime fetcher is no longer needed for internal assets.
 
 export class UIHandler {
   private config: UIConfig | null = null;
   private readonly logger = Logger.getInstance();
 
-  // --- START: MODIFICATION ---
-  // 3. REMOVED: These path constants are no longer needed.
-  // private readonly TEMPLATE_PATH = ...
-  // private readonly STYLE_PATH = ...
+  // 3. Path constants are no longer needed.
   private readonly STYLE_ELEMENT_ID = 'speech-widget-style';
-  // --- END: MODIFICATION ---
 
   // UI Elements
   private widget: HTMLElement | null = null;
@@ -65,8 +55,9 @@ export class UIHandler {
     private readonly status: Status
   ) {
     this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, this.onTranscriptionCompleted.bind(this));
-    this.eventBus.on(SpeechEvents.ERROR_OCCURRED, this.onError.bind(this));
-    this.eventBus.on(SpeechEvents.RECORD_BUTTON_PRESSED, this.onNewRecording.bind(this));
+    // The internal event listener now calls the public displayError method.
+    // This allows you to either rely on the internal event bus or call displayError directly.
+    // this.eventBus.on(SpeechEvents.ERROR_OCCURRED, this.onError.bind(this));
     this.eventBus.on(SpeechEvents.LISTEN_STARTED, this.onNewRecording.bind(this));
   }
   
@@ -84,18 +75,14 @@ export class UIHandler {
 
   private async createDefaultUI(widgetId: string): Promise<HTMLElement> { 
     this.widget = this.createWidget(widgetId);
-    // Use optional chaining to safely pass potentially undefined config values
     await this.setUI(this.config?.position, this.config?.width, this.config?.height);
     return this.widget;
   }
 
-  // --- START: MODIFICATION ---
-  // 4. Make parameters optional and provide sensible defaults.
-  //    This fixes the "undefined must be a string" errors from your logs.
+  // 4. Parameters are optional with sensible defaults.
   private async setUI(position?: string, width?: string, height?: string): Promise<void> {
     if (!this.widget) return;
 
-    // Define defaults to make the component robust
     const finalPosition = position ?? 'bottom-right';
     const finalWidth = width ?? '350px';
     const finalHeight = height ?? 'auto';
@@ -104,16 +91,13 @@ export class UIHandler {
     this.widget.style.width = finalWidth;
     this.widget.style.height = finalHeight;
 
-    // The methods below will now use the bundled assets.
     await this.createUIElements();
     await this.injectStyles(this.widget, this.config?.styleUrl, this.config?.styles);
   }
-  // --- END: MODIFICATION ---
 
   private createWidget(id: string): HTMLElement {
     const widget = document.createElement('div');
     widget.id = id;
-    // Safely access config
     if (this.config) {
       this.config.widgetId = id;
     }
@@ -121,19 +105,15 @@ export class UIHandler {
     return widget;
   }
   
-  // --- START: MODIFICATION ---
   // 5. This method now uses the imported 'defaultStyles' variable.
-  //    It no longer fetches any internal assets at runtime.
   private async injectStyles(widget: any, fileStyles: string | undefined, inlineStyles: any): Promise<void> {
     if (document.getElementById(this.STYLE_ELEMENT_ID)) return;
 
     const styleElement = document.createElement('style');
     styleElement.id = this.STYLE_ELEMENT_ID;
     
-    // Use the CSS content imported at build time
     const cssContent = defaultStyles;
 
-    // Append dynamic animation styles
     const customAnimationStyles = `
     .action-button.recording-mode { background-color: #dc3545 !important; border-color: #dc3545 !important; color: white !important; }
     .action-button.recording-mode:hover { background-color: #c82333 !important; border-color: #bd2130 !important; }
@@ -150,44 +130,30 @@ export class UIHandler {
       transform: translate(-50%, -50%); 
       animation: wave-pulse 2s infinite; 
       opacity: 0.6; 
-      pointer-events: none; /* <-- ADD THIS LINE */
+      pointer-events: none;
     }
     @keyframes wave-pulse { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.3; } 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } }
-  `;
-  styleElement.textContent = cssContent + customAnimationStyles;
-  document.head.appendChild(styleElement);
-
-    // The logic for user-provided styles can remain, but it should not handle internal files.
-    // The finalizeStyles, parse, toCamelCase, and mergeStyles methods can likely be removed
-    // unless you need to support a user-provided `styleUrl`.
+    `;
+    styleElement.textContent = cssContent + customAnimationStyles;
+    document.head.appendChild(styleElement);
+    
     Object.assign(widget.style, inlineStyles || {});
   }
-  // --- END: MODIFICATION ---
 
-  // NOTE: The `finalizeStyles` and related methods are now likely obsolete unless
-  // you intend for users to provide a URL to their own stylesheet.
-  // If not, you can safely delete `finalizeStyles`, `parse`, `toCamelCase`, and `mergeStyles`.
   async finalizeStyles(fileStyles: string | undefined, inlineStyles: any) {
-    // This logic would now only apply to user-provided URLs.
     if (fileStyles) {
-      // Consider using a public fetch function if needed, not an internal one.
-      // const cssContent = await fetchContent(fileStyles);
-      // const cssProperties = this.parse(cssContent);
-      // ...
+      // Logic for user-provided style URLs would go here.
     }
     return inlineStyles || {};
   }
-  private parse(cssContent: string): Record<string, string> { /* ... */ return {}; }
-  private toCamelCase(cssProperties: Record<string, string>): Record<string, string> { /* ... */ return {}; }
-  mergeStyles(primaryStyles: any, secondaryStyles: any) { /* ... */ return {}; }
+  private parse(cssContent: string): Record<string, string> { return {}; }
+  private toCamelCase(cssProperties: Record<string, string>): Record<string, string> { return {}; }
+  mergeStyles(primaryStyles: any, secondaryStyles: any) { return {}; }
 
-  // --- START: MODIFICATION ---
   // 6. This method now uses the imported 'htmlTemplate' variable.
   private async createUIElements(): Promise<void> {
     if (!this.widget) return;
     this.widget.innerHTML = '';  
-
-    // No try/catch needed for fetching. The HTML is guaranteed to be here.
     this.widget.innerHTML = htmlTemplate;
     
     this.actionButton = this.widget.querySelector(this.ACTION_BUTTON_SELECTOR);
@@ -202,7 +168,6 @@ export class UIHandler {
     }
     this.syncTranscriptionDisplay();
   }
-  // --- END: MODIFICATION ---
 
   private bindEventListeners(): void {
     if (!this.actionButton) return;
@@ -237,18 +202,28 @@ export class UIHandler {
     this.setTranscription(transcription);
   }
 
-  private onError(error: unknown): void {
-    const userMessage = this.getMessage(error);
-    this.showError(userMessage);
-    this.logger.error('Voice processing error: ', error);
+  // --- START: MODIFICATION ---
+  /**
+   * Public method to display an error message in the widget's UI.
+   * This can be called from external error handling logic.
+   * @param error - The error object or a string message.
+   */
+  public displayError(error: unknown): void {
+    const currentStatus = this.status.get().value;    
+      console.log(`MANGO:${currentStatus}`)
+      const userMessage = this.getMessage(error);
+      this.showError(userMessage);
   }
-
+ 
   private getMessage(error: unknown): string {
     if (error && typeof error === 'object' && 'type' in error) {
       switch ((error as { type: ErrorType }).type) {
         case ErrorType.MICROPHONE_ACCESS: return 'Please allow microphone access';
         case ErrorType.NETWORK: return 'Network connection issue';
       }
+    }
+    if (typeof error === 'string') {
+      return error;
     }
     return 'We ran into a small problem';
   }

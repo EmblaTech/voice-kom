@@ -36,7 +36,6 @@ export class WebAudioCapturer implements AudioCapturer {
 
   public async startListening(config: VADConfig): Promise<void> {
     if (this.isMonitoring) return;
-    this.logger.info('Starting VAD monitoring with pre-roll buffering.');
 
     this.silenceDelay = config.silenceDelay;
     this.speakingThreshold = config.speakingThreshold;
@@ -63,7 +62,6 @@ export class WebAudioCapturer implements AudioCapturer {
       this.isMonitoring = true;
       this.monitorVolume();
     } catch (error) {
-      this.logger.error('Error starting VAD:', error);
       this.cleanup();
       this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
     }
@@ -71,7 +69,6 @@ export class WebAudioCapturer implements AudioCapturer {
   
   public stopListening(): void {
     if (!this.isMonitoring) return;
-    this.logger.info('Stopping all listening activities.');
     this.isMonitoring = false;
     if (this.isRecording) {
       this.stopSingleRecording(); // Finalize any in-progress recording
@@ -103,7 +100,6 @@ export class WebAudioCapturer implements AudioCapturer {
 
   private startSingleRecording(): void {
     if (this.isRecording) return;
-    this.logger.info('Speech detected! Starting audio capture.');
     
     this.isRecording = true;
     this.mainRecordingBuffer = []; // Clear any old data
@@ -112,7 +108,6 @@ export class WebAudioCapturer implements AudioCapturer {
 
   private stopSingleRecording(): void {
     if (!this.isRecording) return;
-    this.logger.info("Silence detected, finalizing recording.");
 
     // Combine the pre-roll buffer and the main recording buffer
     const fullBuffer = [...this.preRollBuffer, ...this.mainRecordingBuffer];
@@ -120,7 +115,6 @@ export class WebAudioCapturer implements AudioCapturer {
     
     // Encode the raw audio data into a WAV blob
     const audioBlob = this.encodeBufferToWav(fullBuffer);
-    this.logger.info(`Audio captured, final blob size: ${audioBlob.size}`);
     this.eventBus.emit(SpeechEvents.AUDIO_CAPTURED, audioBlob);
     
     // We now emit RECORDING_STOPPED *after* processing is complete.

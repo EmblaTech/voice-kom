@@ -81,7 +81,8 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             return results;
         } catch (error) {
             this.logger.error('Intent detection failed', { error, text });
-            return [this.createUnknownResult()];
+       
+            throw error;
         }
     }
 

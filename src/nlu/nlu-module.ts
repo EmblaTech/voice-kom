@@ -111,16 +111,17 @@ export class NLUModule {
   private startSingleListeningCycle(): void {
     // Guard against starting if the session was just stopped.
     if (!this.isSessionActive) return;
-
-    this.logger.info("Starting a single listening cycle.");
-
-    this.audioCapturer.startListening({
+    try{
+        this.audioCapturer.startListening({
         silenceDelay: this.silenceTimeout,
         speakingThreshold: this.speakingThreshold
     });
-    // Let the rest of the system know we are now in a listening state.
     this.eventBus.emit(SpeechEvents.LISTEN_STARTED);
+  } catch (error) {
+    this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, this.getErrorMessage(error));
+    return;
   }
+}
 
   private async sendAudioChunk(audioBlob: Blob): Promise<void> {
     if (!this.compoundDriver) {
@@ -143,8 +144,7 @@ export class NLUModule {
         this.logger.warn('No intents detected in the response');
       }
     } catch (error) {
-      this.logger.error('Error during backend intent recognition: ', error);
-      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
+      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, this.getErrorMessage(error));
     }
   }
 
@@ -159,8 +159,7 @@ export class NLUModule {
       const transcription = await this.transcriptionDriver.transcribe(audioBlob);
       this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
     } catch (error) {
-      this.logger.error('Error during transcription: ', error);
-      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED);
+      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, this.getErrorMessage(error));
     }
   }
 
@@ -190,9 +189,17 @@ export class NLUModule {
         }
       } catch (error) {
         this.logger.error('Error during intent recognition:', error);
-        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
+        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, this.getErrorMessage(error));
       }
   }
+
+  public getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;}
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+      return error.message;}
+    return 'An unknown error occurred.';
+    }
 
   
   public getAvailableLanguages(): string[] {
