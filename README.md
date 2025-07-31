@@ -51,14 +51,14 @@ The following are some of the different ways you can instantiate VoiceKom, depen
 
 ### 📌 Don’t Forget: Attribute Setup
 
-To help VoiceKom identify and interact with the correct elements on your page, you should decorate them with the `voicekom.name` attribute.
+To help VoiceKom identify and interact with the correct elements on your page, you should decorate them with the `voicekom.name` attribute in relavant elements.
 
 For example:
 
 ```html
 <input type="text" voicekom.name="fullName" />
 <select voicekom.name="gender">...</select>
-<button voicekom.name="submit">Submit</button>
+<button voicekom.name="submit">Submit</button> ````html
 
 
 ##### 1. Quick Start
