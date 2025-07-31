@@ -7,7 +7,7 @@ It runs fully on the client side and uses advanced Speech-to-Text (STT) and Larg
 VoiceKom is built to understand the way people actually speak — not just rigid commands. It lets users interact with forms and interfaces using natural, conversational language.
 Whether you're filling out a form, selecting an option, or submitting data — just say it the way you would in real life, and VoiceKom takes care of the rest.
 
-| Voice Command                                                   | Action Performed                                         |
+| Voice Command                                                   | Action                                                 |
 |----------------------------------------------------------------|----------------------------------------------------------|
 | Can you please enter the name as John Smith?                   | Fills the name field with “John Smith”                  |
 | Set the gender to female                                       | Selects the “female” radio button                       |
@@ -170,8 +170,8 @@ The `VoiceKom.init(config)` method accepts a single configuration object. All pa
 | Parameter | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `lang` | `string` | No | `'en'` | The primary BCP 47 language code (e.g., `'en-US'`) for transcription and recognition. |
-| `wakeWords` | `string[]` | No | `[]` | An array of phrases that will activate the microphone from an idle state. Example: `['Hey VoiceKom']`. |
-| `sleepWords` | `string[]` | No | `[]` | An array of phrases that will stop the microphone from listening. Example: `['Stop listening']`. |
+| `wakeWords` | `string[]` | No | `['Hello']` | An array of phrases that will activate the microphone from an idle state.  |
+| `sleepWords` | `string[]` | No | `['Stop listening']` | An array of phrases that will stop the microphone from listening. |
 | `position` | `string` | No | `'bottom-right'` | Position of the floating widget. Options: `'bottom-right'`, `'bottom-left'`. |
 | `width` | `string` | No | `'300px'` | The CSS width of the widget container (e.g., `'350px'`). |
 | `height` | `string` | No | `'75px'` | The CSS initial height of the widget container (e.g., `'75px'`). |
@@ -181,57 +181,19 @@ These parameters are passed within a `transcription` object: `transcription: { .
 
 | Parameter | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `provider` | `string` | No | `'default'` | The speech-to-text engine. Options: `'default'` (Web Speech API), `'openai'`, etc. |
+| `provider` | `string` | No | `'default'` | The speech-to-text engine. Currently supported providers: `'default'` (Web Speech API), `'openai'` |
 | `apiKey` | `string` | **Conditionally** | `N/A` | Your API key, required if using a provider other than `'default'`. |
 
 These parameters are passed within a `recognition` object: `recognition: { ... }`.
 
 | Parameter | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `provider` | `string` | No | `'default'` | The NLU engine for interpreting commands. Options: `'default'` (Compromise.js), `'openai'`, etc. |
+| `provider` | `string` | No | `'default'` | The NLU engine for interpreting commands. Currently supported providers: `'default'` (Compromise.js), `'openai'`, etc. |
 | `apiKey` | `string` | **Conditionally** | `N/A` | Your API key, required if using a provider other than `'default'`. |
 | `confidence`| `number`| No | `0.8` | The confidence threshold (0 to 1) required for a recognized intent. |
 
 
-## 🗣️ Supported Commands
-
-VoiceKom's command recognition capability depends on the `recognition.provider` you select in your configuration. Each provider offers a different balance of speed, flexibility, and intelligence.
-
-### Default Provider
-*(**Config:** `recognition: { provider: 'default' }`)*
-
-The `default` provider is a fast, lightweight, and offline-first engine. It operates on a strict set of command patterns and is designed for simple, direct instructions. It is not conversational and expects commands to be given one at a time in a specific format.
-
-| Intent | Command Structure | Alternative Verbs | Examples |
-| :--- | :--- | :--- | :--- |
-| Clicking Elements | `Click <element name>` | `Press` | `"Click submit"`<br>`"Press the login button"` |
-| Filling Text Fields | `Fill <field name> with <text to enter>`| `Enter`, `As` | `"Fill username with John Doe"`<br>`"Enter password as 123456"` |
-| Typing in Text Areas | `Type in <field name> as <text>` | `In` | `"Type in message as this is a great product"` |
-| Checking/Unchecking | `Check <checkbox name>` <br> `Uncheck <checkbox name>` <br> `Check all <group name>` <br> `Uncheck all <group name>` | - | `"Check agree to terms"`<br>`"Uncheck newsletter"`<br>`"Check all interests"` |
-| Selecting from Lists | `Select <option name> in <list name>` <br> `Open <dropdown name>` | `Choose` | `"Select Norway in country"`<br>`"Open the state dropdown"` |
-| Navigating | `Scroll <direction>` <br> `Scroll to <element name>` <br> `Scroll to the <position>` | `Go to` | `"Scroll down"`<br>`"Scroll to the footer"`<br>`"Go to the top"` |
-
-**Note:** The terms in `<...>` are placeholders for the name of the UI element (e.g., its label, placeholder) or the value you want to use.
-
-
-
-### OpenAI Provider
-*(**Config:** `recognition: { provider: 'openai', apiKey: '...' }`)*
-
-When using the `openai` provider, VoiceKom becomes a powerful conversational assistant. This provider is slower as it requires an internet connection, but it can understand natural language, context, and even multiple commands in a single, continuous utterance.
-
-You can be as natural as you want, as long as your intent is clear.
-> “Name is Alex, email is alex@gmail.com, phone number 071662, preferred date tomorrow, preferred time is 3 hrs from now. Select phone in preferred contact method. Check everything except upcoming events in interests. Select feedback in subject. Type Good morning Alex in message. I agree to terms and conditions. Finally, submit.”
-
-#### 💡 Best Practices for the OpenAI Provider:
-*   **Be Clear with Your Intent:** If you want to select from a list, use a verb like "select" or "choose". Saying "country is Sri Lanka" might be interpreted as typing into an input field named "country". A clearer command would be "**Select** country Sri Lanka".
-*   **Checkboxes vs. Selections:** Checking a checkbox within a group is a distinct action. For a group of radio buttons, use "select" or "choose". For checkboxes, use "check" or "uncheck".
-
-### How VoiceKom Finds Elements
-For both providers, VoiceKom intelligently finds UI elements on the page based on their `aria-label`, `placeholder` text, the text content of an associated `<label>`, or the text inside a button.
-
-
-## 🛠️ How It Works (Architecture)
+## 5. How It Works (Architecture)
 
 VoiceKom is built on a modular, with an expandable driver-based structure, allowing key components to be easily swapped or extended. separates concerns for maximum maintainability and extensibility.
 
@@ -241,9 +203,9 @@ The core flow is as follows:
 
 2. **Audio Capturer**: Uses the browser's MediaDevices API to capture audio from the user's microphone.
 
-3. **Transcription Driver (Whisper)**: Sends the captured audio to Speech-to-Text service (e.g: Whisper API) and receives a text transcription.
+3. **Transcription Driver**: Sends the captured audio to Speech-to-Text service (e.g: Whisper API) and receives a text transcription.
 
-4. **Intent Recognition Driver (OpenAI)**: Sends the transcripted text to an AI service (e.g: OpenAI API) which processes and returns a structured JSON object identifying the user's intent (e.g., `FILL_INPUT`) and the entities (e.g., `target: "name"`, `value: "John"`).
+4. **Intent Recognition Driver**: Sends the transcripted text to an AI service (e.g: OpenAI API) which processes and returns a structured JSON object identifying the user's intent (e.g., `FILL_INPUT`) and the entities (e.g., `target: "name"`, `value: "John"`).
 
 5. **Voice Actuator**: Receives the structured command and performs the corresponding action on the DOM, such as finding the correct element and dispatching a click or input event.
 
