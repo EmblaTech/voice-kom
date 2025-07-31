@@ -58,7 +58,8 @@ For example:
 ```html
 <input type="text" voicekom.name="fullName" />
 <select voicekom.name="gender">...</select>
-<button voicekom.name="submit">Submit</button> ````html
+<button voicekom.name="submit">Submit</button>
+```
 
 
 ##### 1. Quick Start
