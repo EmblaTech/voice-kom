@@ -1,9 +1,23 @@
 # VoiceKom Library
 
 VoiceKom is a powerful, lightweight JavaScript library that lets you seamlessly add voice interaction to any existing web application.
-It runs fully on the client side and uses advanced Speech-to-Text (STT) and Large Language Models (LLMs) for Natural Language Understanding (NLU) — enabling users to speak naturally and control page elements easily.
+It runs fully on the client side and uses advanced Speech-to-Text (STT) and Large Language Models (LLMs) for Natural Language Understanding (NLU) — enabling users to speak naturally and control page elements in a given web apps easily.
 
-Just say “Fill name with John Smith” — VoiceKom intelligently fills the right input field, selects dropdowns, sets date pickers, chooses radio buttons, navigates menus, and clicks buttons — all without you touching the keyboard or mouse. And the best part? It takes just a few lines of code to integrate.
+**Speak Naturally — VoiceKom Understands You**
+VoiceKom is built to understand the way people actually speak — not just rigid commands. It lets users interact with forms and interfaces using natural, conversational language.
+Whether you're filling out a form, selecting an option, or submitting data — just say it the way you would in real life, and VoiceKom takes care of the rest.
+
+Voice Command:                   What VoiceKom Does:
+------------------------------- --------------------------------------------
+Can you please enter the name as John Smith?    ➜ Fills the name field with “John Smith”
+Set the gender to female                        ➜ Selects the “female” radio button
+Choose marketing as the department              ➜ Selects “Marketing” from dropdown
+Set the date as next Friday                     ➜ Interprets and fills the date picker
+Set the time as six hours from now              ➜ Interprets and fills the time picker
+Fill in email with john@example.com and click submit ➜ Fills email and triggers submit
+Enter my phone number as zero double seven...  ➜ Converts speech to digits and fills phone
+Scroll down and click register                  ➜ Scrolls the page and clicks "Register"
+
 
 ## ✨ Features
 
@@ -31,8 +45,31 @@ Add the following script tag to your HTML file:
 
 ### 2. Initialization
 
-VoiceKom's transcription and recognition services can be configured independently, allowing you to create a hybrid setup tailored to your specific needs. You can mix providers to balance speed, privacy, and intelligence
-The following examples showcase common configurations, which you can use as a starting point.
+VoiceKom's transcription and recognition services can be configured independently, allowing you to create a hybrid setup tailored to your specific needs. You can mix providers to balance speed, privacy, and intelligence.
+
+The following are some of the different ways you can instantiate VoiceKom, depending on your setup and preferred configuration style:
+
+### 📌 Don’t Forget: Attribute Setup
+
+To help VoiceKom identify and interact with the correct elements on your page, you should decorate them with the `voicekom.name` attribute.
+
+For example:
+
+```html
+<input type="text" voicekom.name="fullName" />
+<select voicekom.name="gender">...</select>
+<button voicekom.name="submit">Submit</button>
+
+
+##### 1. Quick Start
+You don’t need any configuration to get started — just instantiate the library, and VoiceKom will initialize with all default settings:
+
+Uses the built-in browser-based transcriber and recognizer
+Automatically injects a mic widget at the bottom-right of your page
+
+Say "Hello" to activate it — then start giving voice commands
+
+🛠️ No API keys, no setup required
 
 ##### ⚙️ Default In-Browser Mode
 
