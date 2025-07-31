@@ -7,16 +7,17 @@ It runs fully on the client side and uses advanced Speech-to-Text (STT) and Larg
 VoiceKom is built to understand the way people actually speak — not just rigid commands. It lets users interact with forms and interfaces using natural, conversational language.
 Whether you're filling out a form, selecting an option, or submitting data — just say it the way you would in real life, and VoiceKom takes care of the rest.
 
-Voice Command:                   What VoiceKom Does:
-------------------------------- --------------------------------------------
-Can you please enter the name as John Smith?    ➜ Fills the name field with “John Smith”
-Set the gender to female                        ➜ Selects the “female” radio button
-Choose marketing as the department              ➜ Selects “Marketing” from dropdown
-Set the date as next Friday                     ➜ Interprets and fills the date picker
-Set the time as six hours from now              ➜ Interprets and fills the time picker
-Fill in email with john@example.com and click submit ➜ Fills email and triggers submit
-Enter my phone number as zero double seven...  ➜ Converts speech to digits and fills phone
-Scroll down and click register                  ➜ Scrolls the page and clicks "Register"
+| Voice Command                                                   | Action Performed                                         |
+|----------------------------------------------------------------|----------------------------------------------------------|
+| Can you please enter the name as John Smith?                   | Fills the name field with “John Smith”                  |
+| Set the gender to female                                       | Selects the “female” radio button                       |
+| Choose marketing as the department                             | Selects “Marketing” from dropdown                       |
+| Set the date as next Friday                                    | Interprets and fills the date picker                    |
+| Set the time as six hours from now                             | Interprets and fills the time picker                    |
+| Fill in email with john@example.com and click submit           | Fills email and triggers submit                         |
+| Enter my phone number as zero double seven...                  | Converts speech to digits and fills phone               |
+| Scroll down and click register                                 | Scrolls the page and clicks "Register"                  |
+
 
 
 ## ✨ Features
@@ -93,7 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
     wakeWords: ['Hello','Hey'],
     sleepWords: ['Stop', 'Bye'],
     position: 'bottom-left',
-    styles: { 'border' :  }
+    width: '200px',
+    height: '75px',
+    styles: { 'border' : '2px solid green',
+              'font-size' : '15px'
+            }
   })
 });
 ```
@@ -106,9 +111,10 @@ If you wish to use external AI engines such as **OpenAI** for transcription and 
 - Much more **accurate** due to renowned external Speech to Text services
 - Much more **flexible** for complex or nuanced language understanding compared to LLM-powered alternatives.
 
+
 > ⚠️ **Important:** Supplying API keys directly in the frontend is **insecure** and not recommended for production environments. This method should only be used for local development or testing.
 
-**Configuration (for Development/Testing):**
+
 Specify the provider (e.g., `'whisper'` for transcription, `'openai'` for recognition) and supply your API key.
 
 ```javascript
@@ -146,11 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
     lang: 'en-US', // Set the language
     transcription: {
       provider: 'voicekom',
-      apiKey: 'YOUR_VOICEKOM_CLIENT_ID'  // Your VoiceKom API key
+      apiKey: 'VOICEKOM_CLIENT_ID'  // Your VoiceKom API key
     },
     recognition: {
       provider: 'voicekom', 
-      apiKey: 'YOUR_VOICEKOM_CLIENT_ID'  // Your VoiceKom API key
+      apiKey: 'VOICEKOM_CLIENT_ID'  // Your VoiceKom API key
     },    
   })
 });
