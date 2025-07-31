@@ -126,8 +126,6 @@ export class ConfigValidatorAndBuilder {
     }
 
     public static validateAndGenerateConfig(config: VoiceKomConfig): { finalConfig: any, errors: string[] } {
-        console.log("ConfigValidatorAndBuilder validateAndGenerateConfig()...");
-        
         const errors: string[] = [];
         Validator.validateOptional(config.widgetId, Validator.isString, 'Widget Id must be a string', errors);
         Validator.validateOptional(config.lang, Validator.isString, 'Language must be a string', errors);
@@ -180,7 +178,6 @@ export class ConfigValidatorAndBuilder {
             return { finalConfig: null, errors };
         }
         const finalConfig = this.generateFinalConfiguration(config, transcriptionValidation, recognitionValidation);
-        console.log("ConfigValidatorAndBuilder validateAndGenerateConfig() END...");
         return { finalConfig, errors };
     }
 } 
