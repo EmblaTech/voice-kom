@@ -165,11 +165,25 @@
   }
   
   .status-display.error-state {
-    font-size: 11px;
-    color: #c62828;
-    background-color: #ffebee;
-    border-color: #f5c6cb;
-  }
+  /* Use padding for consistent spacing around the text */
+  padding: 6px 10px;
+
+  /* Use a relative line-height for proper text wrapping */
+  line-height: 1.4; 
+
+  /* Slightly larger font for better readability */
+  font-size: 12px;
+  
+  /* Use flexbox to perfectly align the icon (from ::before) and text */
+  display: flex;
+  align-items: center;
+  gap: 6px; /* This creates the space between the icon and the text */
+
+  /* Your existing, good color scheme */
+  color: #c62828;
+  background-color: #ffebee;
+  border-color: #f5c6cb;
+}
   
   .transcription-display {
     padding: 10px;

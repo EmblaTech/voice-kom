@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     containerId: 'speech-container',
     lang: 'en-US', // Set the language
     transcription: {
-      provider: 'whisper',
+      provider: 'default',
       apiKey: 'sk-proj-' 
     },
     recognition: {
