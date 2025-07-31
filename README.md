@@ -77,7 +77,7 @@ Say "Hello" to activate it — then start giving voice commands
 
 🛠️ No API keys, no setup required
 
-##### 3.2 Custom-Browser Mode
+##### 3.2 Local Mode
 
 VoiceKom can run **entirely in the browser** without any external AI dependencies. In this mode:
 - Offers **faster response**
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 ```
 
 
-## 4. API & Configuration
+## 🔧 API & Configuration
 
 The `VoiceKom.init(config)` method accepts a single configuration object. All parameters are optional and have sensible defaults unless stated otherwise.
 
@@ -193,7 +193,7 @@ These parameters are passed within a `recognition` object: `recognition: { ... }
 | `confidence`| `number`| No | `0.8` | The confidence threshold (0 to 1) required for a recognized intent. |
 
 
-## 5. How It Works (Architecture)
+## ⚙️ How It Works
 
 VoiceKom is built on a modular, with an expandable driver-based structure, allowing key components to be easily swapped or extended. separates concerns for maximum maintainability and extensibility.
 
