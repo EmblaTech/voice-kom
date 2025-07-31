@@ -42,14 +42,7 @@ Add the following script tag to your HTML file:
 <script src="https://voicekom.embla.asia/dist/voicekom.min.js"></script>
 ```
 
-
-### 2. Initialization
-
-VoiceKom's transcription and recognition services can be configured independently, allowing you to create a hybrid setup tailored to your specific needs. You can mix providers to balance speed, privacy, and intelligence.
-
-The following are some of the different ways you can instantiate VoiceKom, depending on your setup and preferred configuration style:
-
-### 📌 Don’t Forget: Attribute Setup
+### 2. Attribute Setup
 
 To help VoiceKom identify and interact with the correct elements on your page, you should decorate them with the `voicekom.name` attribute in relavant elements.
 
@@ -61,9 +54,20 @@ For example:
 <button voicekom.name="submit">Submit</button>
 ```
 
+### 3. Initialization
 
-##### 1. Quick Start
+VoiceKom's transcription and recognition services can be configured independently, allowing you to create a hybrid setup tailored to your specific needs. You can mix providers to balance speed, privacy, and intelligence.
+
+The following are different ways you can instantiate VoiceKom, depending on your setup and preferred configuration style:
+
+##### 3.1. Zero-Config Mode
 You don’t need any configuration to get started — just instantiate the library, and VoiceKom will initialize with all default settings:
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  VoiceKom.init()
+});
+```
 
 Uses the built-in browser-based transcriber and recognizer
 Automatically injects a mic widget at the bottom-right of your page
@@ -72,39 +76,34 @@ Say "Hello" to activate it — then start giving voice commands
 
 🛠️ No API keys, no setup required
 
-##### ⚙️ Default In-Browser Mode
+##### 3.2 Custom-Browser Mode
 
 VoiceKom can run **entirely in the browser** without any external AI dependencies. In this mode:
-- Offers **extremely fast performance**
+- Offers **faster response**
 - Ensures **maximum privacy**
 - May be **less accurate** in transcriptions compared to exernal services
 - May have **less flexibility** compared to external engines and is less flexible for complex or nuanced language understanding compared to LLM-powered alternatives.
 
 This mode is ideal if you want speed, and privacy without compromising usability.
 
-**Configuration:**
-Set the `provider` for both `transcription` and `recognition` to `'default'`.
-
 ```javascript
 document.addEventListener('DOMContentLoaded', () => {
   VoiceKom.init({   
     lang: 'en-US', // Set the language
-    transcription: {
-      provider: 'default',
-    },
-    recognition: {
-      provider: 'default',
-    },    
+    wakeWords: ['Hello','Hey'],
+    sleepWords: ['Stop', 'Bye'],
+    position: 'bottom-left',
+    styles: { 'border' :  }
   })
 });
 ```
 
-#### 🔐 Using External AI Engines
+#### 3.3 External AI Mode
 
 If you wish to use external AI engines such as **OpenAI** for transcription and recognition, you will need to provide your own API keys.
-- Offers **slower performance** due to api calls
+- Offers slightly **slower response** due to external API calls
 - Has **low privacy**
-- Much more **accurate** due to external stt services
+- Much more **accurate** due to renowned external Speech to Text services
 - Much more **flexible** for complex or nuanced language understanding compared to LLM-powered alternatives.
 
 > ⚠️ **Important:** Supplying API keys directly in the frontend is **insecure** and not recommended for production environments. This method should only be used for local development or testing.
@@ -118,28 +117,28 @@ document.addEventListener('DOMContentLoaded', () => {
     lang: 'en-US', // Set the language
     transcription: {
       provider: 'whisper',
-      apiKey: 'sk-proj-YOUR_OPENAI_API_KEY'  // Transcription provider API key
+      apiKey: 'YOUR_OPENAI_API_KEY'  // Transcription provider API key
     },
     recognition: {
       provider: 'openai', 
-      apiKey: 'sk-proj-YOUR_OPENAI_API_KEY'  // Recognition provider API key
+      apiKey: 'YOUR_OPENAI_API_KEY'  // Recognition provider API key
     },    
   })
 });
 ```
 
-#### ☁️ With Complete Secure External Integration (Recommended)
+#### 3.4 Secure Proxy Mode (Recommended)
 
 If you still prefer using services like OpenAI **without exposing your API key**, we can help:
 Contact us to set up a **Tenant profile** for you. We'll route your requests through our **proxied API**, keeping your keys safe
-- Offers **much slower performance** due to api calls
-- Has **good privacy** dues to api calls are domain-varified
-- Much more **accurate** due to external stt services
-- Much more **flexible** for complex or nuanced language understanding compared to LLM-powered alternatives.
+- Offers **a bit less slower response** due to api calls
+- Has **strong privacy** thanks to domain-verified API access
+- Significantly **more accurate** using external speech-to-text services
+- Highly **flexible** for handling complex or nuanced language, outperforming many LLM-based options
 
 
-**Configuration:**
-Once your Tenant profile is set up, initialize VoiceKom by setting the `provider` to `'voicekom'` and using your provided VoiceKom API key.
+Once your Tenant profile is set up, initialize VoiceKom by setting the `provider` as `'voicekom'` and using your provided VoiceKom client Id as API key. 
+The client ID will be validated against the configured profile to ensure secure usage
 
 ```javascript
 document.addEventListener('DOMContentLoaded', () => {
@@ -147,18 +146,18 @@ document.addEventListener('DOMContentLoaded', () => {
     lang: 'en-US', // Set the language
     transcription: {
       provider: 'voicekom',
-      apiKey: 'vk-proj-YOUR_VOICEKOM_API_KEY'  // Your VoiceKom API key
+      apiKey: 'YOUR_VOICEKOM_CLIENT_ID'  // Your VoiceKom API key
     },
     recognition: {
       provider: 'voicekom', 
-      apiKey: 'vk-proj-YOUR_VOICEKOM_API_KEY'  // Your VoiceKom API key
+      apiKey: 'YOUR_VOICEKOM_CLIENT_ID'  // Your VoiceKom API key
     },    
   })
 });
 ```
 
 
-## ⚙️ API & Configuration
+## 4. API & Configuration
 
 The `VoiceKom.init(config)` method accepts a single configuration object. All parameters are optional and have sensible defaults unless stated otherwise.
 
