@@ -3,8 +3,11 @@ import { Logger } from "../../utils/logger";
 import { RecognitionDriver } from "./driver";
 
 interface CommandConfig {
+    // description: string;
+    negative_utterances: string[];
     utterances: string[];
     entities: string[];
+    inferenceGuide?: string;
 }
 
 interface CommandRegistry {
@@ -281,16 +284,43 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
 
         The user is speaking in ${this.getLanguageName(this.language)}.
 
-        You must identify intents from the following list: ${this.availableIntents.filter(i => i !== IntentTypes.UNKNOWN).join(', ')}.
+        You must identify intents from the following list..
 `;
-
         Object.entries(this.commandRegistry).forEach(([intentName, config]) => {
-            if (intentName === IntentTypes.UNKNOWN || !config.entities) return;
-            systemPrompt += `\n- For the "${intentName}" intent, you can extract these entities: ${config.entities.join(', ')}.`;
+        // We skip the UNKNOWN intent as it's not a valid classification target
+        if (intentName === IntentTypes.UNKNOWN) return;
+
+        systemPrompt += `
+        **Intent: \`${intentName}\`**
+        -**Inference guide:** ${config.inferenceGuide}
+        -**Example Phrases:** ${config.utterances.map(u => `"${u}"`).join(', ')}
+        -**Example Phrases that are mistaken for the intent:** ${config.negative_utterances.map(u => `"${u}"`).join(', ')}
+        `;
         });
 
         systemPrompt += `
 
+        ### Guiding Principle: The Rule of Maximum Specificity ###
+        Your most important reasoning task is to select the most specific and descriptive intent that fits the user's command. Do not discard information.
+
+        **Your Rule:** When a user's command could plausibly match more than one intent, you **MUST** choose the intent that accounts for the **most information** provided by the user. An intent that uses more of the user's words to fill its entities is better than one that ignores parts of the command.
+
+        **Example of Applying this Rule:**
+        -   **User Command:** "send an email to user Nisal"
+        -   **Your Analysis:**
+            1.  First, consider a simple intent that only has a 'target' entity. This could match "send an email", but it would have to ignore the crucial phrase "to user Nisal". This is an **error of information loss**.
+            2.  Next, look for a more complex intent in your list. Is there an intent that can capture not just the action ("send an email") but also the context it applies to ("user Nisal")?
+            3.  You will find an intent with entities for a target (the action), a contextKey (the type of item), and a contextValue (the specific item). This intent accounts for the *entire* user command.
+        -   **Your Conclusion:** You must select the more specific intent because it provides a more complete and accurate representation of the user's request.
+
+        -   **Incorrect Output (Loses Information):**
+            [{"intent": "click_element", "entities": {"target": "email"}}]  // WRONG - "to user Nisal" is ignored.
+
+        -   **Correct Output (Conserves Information):**
+            [{"intent": "CLICK_ELEMENT_IN_CONTEXT", "confidence": 0.95, "entities": {"target": {"english": "send email", ...}, "contextKey": {"english": "user", ...}, "contextValue": "Nisal"}}] // CORRECT - All parts of the command are used.
+        `;
+
+        systemPrompt += `
         ### IMPORTANT: Disambiguating Overlapping Intents ###
         Some commands can be ambiguous. Your primary tool for disambiguation is the **main action verb** in the user's command. Prioritize the verb's meaning over the noun's common associations.
 
@@ -553,64 +583,82 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
     private createDefaultCommandRegistry(): CommandRegistry {
         return {
             [IntentTypes.CLICK_ELEMENT]: {
+                // description:"Clicking an element directly. Button can be a simple action(Ex: send, edit, cancel transaction etc:)",
                 utterances: ["click (target)", "press (target)", "tap (target)"],
+                negative_utterances: ["go to (target)"],
                 entities: ["target"]
             },
             [IntentTypes.FILL_INPUT]: {
+                // description:"Filling an input with some value, if a value is not specified, then nothing to fill.",
                 utterances: [
+                    "(target) is (value)",
                     "Fill (target) as (value)",
                     "Enter (target) as (value)",
                     "Enter (target) with (value)",
                     "Fill (target) with (value)"
                 ],
+                negative_utterances: ["edit (target)"],
                 entities: ["target", "value"]
             },
             [IntentTypes.SCROLL]: {
+                // description:"Just navigate through the page.",
                 utterances: ["scroll (direction)", "scroll to (direction)", "go (direction)"],
+                negative_utterances: [],
                 entities: ["direction"]
             },
             [IntentTypes.SCROLL_TO_ELEMENT]: {
+                // description:"Navigate to a certain element.",
                 utterances: ["scroll to (target)", "go to (target) section"],
+                negative_utterances: [],
                 entities: ["target"]
             },
 
             [IntentTypes.CHECK_CHECKBOX]: {
+                // description:"Check check boxes.",
                 utterances: [
                     "check (target)",
                     "select (target) checkbox",
                     "tick (target)",
                     "enable (target) option"
                 ],
+                negative_utterances: [],
                 entities: ["target"]
             },
 
             [IntentTypes.UNCHECK_CHECKBOX]: {
+                // description:"Unheck check boxes.",
                 utterances: [
                     "uncheck (target)",
                     "deselect (target) checkbox",
                     "untick (target)",
                     "disable (target) option"
                 ],
+                negative_utterances: [],
                 entities: ["target"]
             },
 
             [IntentTypes.CHECK_ALL]: {
+                // description:"Check all check boxes under a group.",
                 utterances: [
                     "check all (targetGroup)",
                     "select all (targetGroup)"
                 ],
+                negative_utterances: [],
                 entities: ["targetGroup"]
             },
 
             [IntentTypes.UNCHECK_ALL]: {
+                // description:"Uncheck all check boxes under a group.",
                 utterances: [
                     "uncheck all (targetGroup)",
                     "deselect all (targetGroup)"
                 ],
+                negative_utterances: [],
                 entities: ["targetGroup"]
             },
 
             [IntentTypes.SELECT_RADIO_OR_DROPDOWN]: {
+                // description:"Select a certain option from a dropdown or a radiobutton",
                 utterances: [
                     "select (target) in (group)",
                     "choose (target) in (group)",
@@ -619,24 +667,43 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
                     "choose (target)",
                     "pick (target)"
                 ],
+                negative_utterances: [],
                 entities: ["target", "group"]
             },
 
             [IntentTypes.OPEN_DROPDOWN]: {
+                // description:"Open a dropdown list",
                 utterances: [
                     "Open (target)",
                     "Drop down (target)",
                     "Open (target) drop down",
                 ],
+                negative_utterances: [],
                 entities: ["target"]
             },
 
-            [IntentTypes.GO_BACK]: {
+            [IntentTypes.GO_BACK]: {                
+                // description:"Go back to previous page",
                 utterances: [
                     "Go Back",
                 ],
+                negative_utterances: [],
                 entities: []
-            }
+            },
+
+            [IntentTypes.CLICK_ELEMENT_IN_CONTEXT]: {
+            // description:"Clicking on an element under a context, probably in a table. The target button is most probably an action(verb).",
+            utterances: [
+                "(target) for (contextKey) (contextValue)",
+                "(target) the (contextKey) (contextValue)",
+                "Click the (target) for the (contextValue) (contextKey)",
+            ],
+            negative_utterances: [],
+            entities: ["target", "contextKey", "contextValue"],
+            inferenceGuide:`
+            Example : "Edit name Nisal"
+            Edit is an action verb that does not match any other intent so there should be a button for it (if it's not completetly unhinged). And the type of action (modification, retrieval, etc.) does not matter. And since they mention Nisal is a name, that means Nisal is one of many names in the page, so there is a context`
+        },
         };
     }
 
