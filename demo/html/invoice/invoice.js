@@ -2,7 +2,7 @@ let invoices = [];
 
 function getNextInvoiceNumber() {
   if (!invoices || invoices.length === 0) {
-    return 'INV-1001'; // Starting point if no invoices exist
+    return '1001'; // Starting point if no invoices exist
   }
 
   // Extract numeric parts and find max
@@ -12,7 +12,7 @@ function getNextInvoiceNumber() {
   }));
 
   const nextNumber = maxId + 1;
-  return `INV-${nextNumber}`;
+  return `${nextNumber}`;
 }
 
 function setPaymentMode(paymentMode) {
@@ -86,17 +86,17 @@ function populateItemRows(invoiceItems = []) {
       return;
   }
 
-  invoiceItems.forEach(item => {
+  invoiceItems.forEach((item, index) => {
       const tr = document.createElement('tr');
       // Create the row HTML with options
       tr.innerHTML = `
     <td>
       <select class="form-select item-select">
         <option value="">-- Select Item --</option>
-        ${items.map(i => `<option value="${i.id}" data-price="${i.unitPrice}">${i.name}</option>`).join('')}
+        ${items.map(i => `<option value="${i.id}" data-price="${i.unitPrice}" voice.name = "item number ${index+1}" >${i.name} </option>`).join('')}
       </select>
     </td>
-    <td><input type="number" class="form-control qty" min="1"></td>
+    <td><input type="number" class="form-control qty" min="1" voice.name= "quantity of item number ${index+1}" ></td>
     <td><input type="number" class="form-control price" readonly></td>
     <td><input type="number" class="form-control amount" readonly></td>
   `;
@@ -163,12 +163,12 @@ function renderItemRow(rows = 1) {
 
     tr.innerHTML = `
       <td>
-        <select class="form-select item-select" voice.name="invoice item ${i+1}">
+        <select class="form-select item-select" voice.name="item number ${i+1}">
           <option value="">-- Select Item --</option>
           ${items.map(item => `<option voice.name="${item.name}" value="${item.id}" data-price="${item.unitPrice}">${item.name}</option>`).join('')}
         </select>
       </td>
-      <td><input type="number" class="form-control qty" value="1" min="1"></td>
+      <td><input type="number" class="form-control qty" value="1" min="1" voice.name= "quantity of item number ${i+1}"></td>
       <td><input type="number" class="form-control price" readonly></td>
       <td><input type="number" class="form-control amount" readonly></td>
     `;
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Sample initial data
   invoices = [
-    { id: 'INV-3056', customer: 'John Traders', date: '2025-07-29', total: '79500', status: 'Paid',discount: 10,
+    { id: '3056', customer: 'John Doe', date: '2025-07-29', total: '79500', status: 'Paid',discount: 10,
       items: [{
           itemId: 1,
           itemName: "Basmati Rice 5kg",
@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function () {
           unitPrice: 1750,
           amount: 87500
       }] },
-    { id: 'INV-3057', customer: 'Galaxy Pvt Ltd', date: '2025-07-30', total: '22000', status: 'Pending',discount: 0,
+    { id: '3057', customer: 'Ayesha Silva', date: '2025-07-30', total: '22000', status: 'Pending',discount: 0,
       items: [{
           itemId: 2,
           itemName: "Eggs - 10 Pack",
@@ -395,9 +395,9 @@ document.addEventListener('DOMContentLoaded', function () {
           unitPrice: 500,
           amount: 22000
       }] },
-    { id: 'INV-3058', customer: 'Oceanic Co.', date: '2025-07-28', total: '150000', status: 'Overdue' },
-    { id: 'INV-3059', customer: 'Silverleaf Supplies', date: '2025-07-26', total: '64800', status: 'Paid' },
-    { id: 'INV-3060', customer: 'NovaTech', date: '2025-07-25', total: '98300', status: 'Pending' }
+    { id: '3058', customer: 'Kumaran Siva', date: '2025-07-28', total: '150000', status: 'Overdue' },
+    { id: '3059', customer: 'Nimal Fernando', date: '2025-07-26', total: '64800', status: 'Paid' },
+    { id: '3060', customer: 'Ayesha Silva', date: '2025-07-25', total: '98300', status: 'Pending' }
   ];
 
   items = [
