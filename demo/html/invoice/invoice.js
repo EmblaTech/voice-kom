@@ -150,7 +150,7 @@ function renderCustomerOptions() {
     const opt = document.createElement('option');
     opt.value = customer.id;
     opt.textContent = `${customer.name}`;
-    opt.dataset.email = customer.email;
+    // opt.dataset.email = customer.email;
     opt.setAttribute('voice.name', customer.name);
     select.appendChild(opt);
   });
