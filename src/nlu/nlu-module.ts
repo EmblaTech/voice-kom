@@ -72,7 +72,7 @@ export class NLUModule {
         this.audioCapturer = DriverFactory.getAudioCapturer(transConfig, this.eventBus);
         
         // Load command registry
-        this.commandRegistry = await fetchContent('../../src/nlu/command-registry.json');
+        // this.commandRegistry = await fetchContent('../../src/nlu/command-registry.json');
         
         this.logger.info("NLUModule.init() completed successfully");
       } catch (error) {

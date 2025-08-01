@@ -1,16 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {  
   VoiceKom.init({   
-    wakeWords: ['Hello','Hi'],
-    sleepWords: ['Stop listening'],
+    wakeWords: ['Hello','Hi','start'],
+    sleepWords: ['Stop listening', 'stop'],
     containerId: 'speech-container',
     lang: 'en-US', // Set the language
     transcription: {
       provider: 'default',
-      apiKey: 'sk-proj-' 
+      apiKey: '' 
     },
     recognition: {
       provider: 'openai',
-      // provider: 'default',
       apiKey: '' 
     },
     speakingThreshold: 0.2, 

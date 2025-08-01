@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="assets/style.css"> -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-link" voice.name="home">Home</a></li>
+                <li><a href="#" class="nav-link" voice.name="Features">Features <span class="dropdown-arrow">▼</span></a></li>
+                <li><a href="#" class="nav-link" voice.name="Blog">Blog</a></li>
+                <li><a href="#" class="nav-link" voice.name="Shop">Shop</a></li>
+                <li><a href="about.html" class="nav-link" voice.name="About">About</a></li>
+                <li><a href="#" class="nav-link active" voice.name="Contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="container">
+            <div class="form-section" id="invoice-form-section" style="display: none;">
+                <h2 class="text-center">Invoice Entry</h2>
+                <form id="invoice-form">
+                    <input type="hidden" id="edit-index" value="">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="invoice-id">Invoice ID</label>
+                            <input type="text" id="invoice-id" voice.name="invoice id" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="invoice-customer">Customer</label>
+                            <input type="text" id="invoice-customer" voice.name="customer" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="invoice-date">Date</label>
+                            <input type="date" id="invoice-date" voice.name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="invoice-total">Total</label>
+                            <input type="number" id="invoice-total" voice.name="total" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="invoice-status">Status</label>
+                            <select id="invoice-status" required voice.name="status">
+                                <option value="Paid" voice.name="paid">Paid</option>
+                                <option value="Pending" voice.name="pending">Pending</option>
+                                <option value="Overdue" voice.name="overdue">Overdue</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit" voice.name="save">Save</button>
+                        <button type="button" class="btn-reset" onclick="hideForm()" voice.name="cancel">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Invoice List Section -->
+            <div class="form-section">
+                <h2 class="text-center">Invoice List</h2>
+                <div class="mb-3 text-end">
+                    <button class="btn btn-success btn-sm" onclick="showForm()" voice.name="add invoice">➕ Add Invoice</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Invoice ID</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+<script src="../../../dist/voicekom.js"></script>
+<script src="invoice.js"></script>
+
+</html>

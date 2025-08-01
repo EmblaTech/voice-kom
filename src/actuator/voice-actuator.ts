@@ -2,6 +2,7 @@ import { EventBus, SpeechEvents } from '../common/eventbus';
 import { IntentResult, Entities, Action, IntentTypes, IVoiceActuator,isVoiceEntity, VoiceEntity, EntityValue } from '../types';
 import * as chrono from 'chrono-node';
 import { Logger } from '../utils/logger';
+import { unsubscribe } from 'diagnostics_channel';
 
 // Interface for processed entities with resolved DOM elements
 export interface ProcessedEntities {
@@ -39,9 +40,10 @@ export class VoiceActuator implements IVoiceActuator {
   private initializeProcessors(): void {
     // Register element processors in order of priority
     this.elementProcessors = [
+      new ContextualElementProcessor(this, this.logger),
       new GroupedTargetProcessor(this),
       new MultipleTargetProcessor(this),
-      new SingleTargetProcessor(this)
+      new SingleTargetProcessor(this),
     ];
   }
 
@@ -68,6 +70,7 @@ export class VoiceActuator implements IVoiceActuator {
     this.registerAction(IntentTypes.OPEN_DROPDOWN, { execute: (entities) => this.executeOpenDropdownAction(entities)});
     this.registerAction(IntentTypes.GO_BACK, { execute: (entities) => this.executeGoBackAction(entities)});
     this.registerAction(IntentTypes.TYPE_TEXT, { execute: (entities) => this.executeInputAction(entities) });
+    this.registerAction(IntentTypes.CLICK_ELEMENT_IN_CONTEXT, { execute: (entities) => this.executeTableClickAction(entities) });
 
   }
   
@@ -584,7 +587,69 @@ private executeGoBackAction(entities: ProcessedEntities): boolean {
   }
 }
 
+// This is a new private method to be added to your VoiceActuator class.
+
+/**
+ * Executes a click action on a target element identified within a specific row context.
+ * This function is the designated executor for the CLICK_ELEMENT_IN_CONTEXT intent.
+ * It assumes a processor (like ContextualElementProcessor) has already resolved the
+ * precise targetElement to be clicked.
+ *
+ * @param {ProcessedEntities} entities The processed entities object, which must contain the `targetElement`.
+ * @returns {boolean} True if the click was successful, false otherwise.
+ */
+private executeTableClickAction(entities: ProcessedEntities): boolean {
+  // 1. Core Validation: Ensure the processor has found our target button.
+  if (!entities.targetElement) {
+    this.logger.warn(`[VoiceActuator][executeTableClickAction] Action failed: No targetElement was resolved by the processor. The contextual item or the action button within it could not be found on the page.`);
+    // No action is possible, so we fail early.
+    return false;
+  }
+
+  // 2. Perform the Action with Error Handling
+  try {
+    const elementToClick = entities.targetElement;
+    
+    // For a better user experience, we first ensure the element is visible.
+    // The optional groupElement (the <tr>) can be used for logging or highlighting later if needed.
+    elementToClick.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest'
+    });
+
+    // Perform the click.
+    elementToClick.click();
+
+    // 3. Log Success
+    // Logging the original entities provides a complete trace from voice command to action.
+    this.logger.info(
+      `[VoiceActuator][executeTableClickAction] Successfully clicked element:`,
+      elementToClick,
+      `from original intent:`,
+      entities.rawentities
+    );
+
+    // The action was successful.
+    return true;
+
+  } catch (error) {
+    // 4. Handle Unexpected Errors
+    // This could happen if the element becomes detached from the DOM after being found.
+    this.logger.error(
+      `[VoiceActuator][executeTableClickAction] An error occurred while trying to click the target element.`,
+      {
+        target: entities.targetElement,
+        error: error
+      }
+    );
+    return false;
+  }
 }
+
+}
+
+
 
 /* ELEMENT PROCESSORS */
 class SingleTargetProcessor implements ElementProcessor {
@@ -732,7 +797,6 @@ class GroupedTargetProcessor implements ElementProcessor {
     return { groupElement, targetElement, targetName };
 }
 
-
   private shouldAutoDetectGroup(intent: string, entities: Entities): boolean {
     return intent === IntentTypes.SELECT_RADIO_OR_DROPDOWN;
   }
@@ -765,6 +829,129 @@ class GroupedTargetProcessor implements ElementProcessor {
   }
 
 }
+
+// This is a new, separate class file or section in your code.
+
+class ContextualElementProcessor implements ElementProcessor {
+  constructor(private actuator: VoiceActuator, private logger: Logger) {
+    logger.debug("CONTEXTUAL ELEMENT PROCESSOR SELECTED")
+  }
+
+  canProcess(intent: string, entities: Entities): boolean {
+    // This logic remains the same.
+    return intent === IntentTypes.CLICK_ELEMENT_IN_CONTEXT &&
+           !!entities.target &&
+           !!entities.contextKey &&
+           !!entities.contextValue;
+  }
+
+  process(entities: Entities): Partial<ProcessedEntities> {
+    this.logger.debug(`[ContextualProcessor] Starting to process:`, entities);
+    const targetEntity = entities.target!;
+    const contextKey = entities.contextKey!;
+    const contextValue = entities.contextValue!;
+
+    // Step 1: Discover the specific table row that matches our context.
+    const targetRow = this.findRowByContext(contextKey, contextValue);
+
+    if (!targetRow) {
+      this.logger.warn(`[ContextualProcessor] Could not find a row context for key "${this.getEntityText(contextKey)}" with value "${this.getEntityText(contextValue)}"`);
+      return {};
+    }
+
+    this.logger.debug(`[ContextualProcessor] Found target row for context:`, targetRow);
+
+    // Step 2: Find the final target element within that row.
+    let targetElement: HTMLElement | undefined;
+    if (isVoiceEntity(targetEntity)) {
+      targetElement = this.actuator.findFinalTarget(targetEntity, targetRow);
+    } else {
+      const findResult = this.actuator.findElement(targetEntity as string, targetRow);
+      targetElement = findResult?.element;
+    }
+
+    if (!targetElement) {
+      this.logger.warn(`[ContextualProcessor] Found the row, but could not find target "${this.getEntityText(targetEntity)}" within it.`);
+    }
+
+    // ==================== MODIFICATION ====================
+    // Return BOTH the final button (targetElement) and its container row (groupElement).
+    // This provides richer context to the action executor.
+    return { 
+        targetElement, 
+        groupElement: targetRow 
+    };
+    // ======================================================
+  }
+
+  /**
+   * Discovers a table row by finding the column header and then matching the cell value.
+   * This is a robust way to find a row without relying on fragile selectors.
+   */
+  private findRowByContext(contextKey: EntityValue, contextValue: EntityValue): HTMLElement | undefined {
+    // ==================== MODIFICATION (IMPROVED ROBUSTNESS) ====================
+    // Get both language possibilities to check against.
+    const keyCandidates = isVoiceEntity(contextKey) ? [contextKey.english, contextKey.user_language] : [contextKey as string];
+    const valueCandidates = isVoiceEntity(contextValue) ? [contextValue.english, contextValue.user_language] : [contextValue as string];
+    //=============================================================================
+
+    const allHeaders = document.querySelectorAll('th');
+    let columnIndex = -1;
+    let bestScore = 0;
+
+    allHeaders.forEach((header, index) => {
+      const headerText = header.textContent || '';
+      // Score against all candidates and take the best score.
+      const score = Math.max(...keyCandidates.map(key => this.actuator.calculateMatchScore(headerText, key)));
+      if (score > bestScore) {
+        bestScore = score;
+        columnIndex = index;
+      }
+    });
+
+    if (bestScore < 50) {
+      this.logger.warn(`[ContextualProcessor] Could not find a table header that sufficiently matches "${this.getEntityText(contextKey)}".`);
+      return undefined;
+    }
+    this.logger.debug(`[ContextualProcessor] Found best match for header "${this.getEntityText(contextKey)}" at index ${columnIndex}.`);
+
+    const table = allHeaders[columnIndex].closest('table');
+    if (!table) {
+      this.logger.warn(`[ContextualProcessor] Header at index ${columnIndex} was not inside a <table>.`);
+      return undefined;
+    }
+
+    const allRows = table.querySelectorAll('tbody tr');
+    let targetRow: HTMLElement | undefined;
+    let bestRowScore = 0;
+    
+    allRows.forEach(row => {
+      const cell = (row as HTMLElement).querySelectorAll('td')[columnIndex];
+      if (cell) {
+        const cellText = cell.textContent || '';
+        // Score against all value candidates and take the best score.
+        const rowScore = Math.max(...valueCandidates.map(val => this.actuator.calculateMatchScore(cellText, val)));
+        if (rowScore > bestRowScore) {
+          bestRowScore = rowScore;
+          targetRow = row as HTMLElement;
+        }
+      }
+    });
+
+    if (bestRowScore < 50) {
+      this.logger.warn(`[ContextualProcessor] Could not find a row where column "${this.getEntityText(contextKey)}" sufficiently matches "${this.getEntityText(contextValue)}".`);
+      return undefined;
+    }
+
+    return targetRow;
+  }
+  
+  private getEntityText(entity: EntityValue): string {
+    // Return the English version for logging consistency, as it's the normalized form.
+    return isVoiceEntity(entity) ? entity.english : (entity as string);
+  }
+}
+
 
 /* VALUE NORMALIZERS */
 
