@@ -53,6 +53,7 @@ export class Status {
   public set(status: StatusType, message?: string): void {
     this.currentStatus = status;
     this.message = message;
+    console.log(`[STATE]:${status}`)
   }
   
   // Reset state

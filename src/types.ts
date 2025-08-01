@@ -73,6 +73,7 @@ export interface ActuatorConfig {
 
 export enum IntentTypes {
   CLICK_ELEMENT = 'click_element',
+  CLICK_ELEMENT_IN_CONTEXT ='click_element_in_context',
   SCROLL= 'scroll',
   SCROLL_TO_ELEMENT = 'scroll_to_element',
   FILL_INPUT = 'fill_input',

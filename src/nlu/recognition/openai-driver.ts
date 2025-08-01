@@ -3,8 +3,11 @@ import { Logger } from "../../utils/logger";
 import { RecognitionDriver } from "./driver";
 
 interface CommandConfig {
+    // description: string;
+    negative_utterances: string[];
     utterances: string[];
     entities: string[];
+    inferenceGuide?: string;
 }
 
 interface CommandRegistry {
@@ -81,7 +84,8 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             return results;
         } catch (error) {
             this.logger.error('Intent detection failed', { error, text });
-            return [this.createUnknownResult()];
+       
+            throw error;
         }
     }
 
@@ -280,21 +284,62 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
 
         The user is speaking in ${this.getLanguageName(this.language)}.
 
-        You must identify intents from the following list: ${this.availableIntents.filter(i => i !== IntentTypes.UNKNOWN).join(', ')}.
+        You must identify intents from the following list..
 `;
-
         Object.entries(this.commandRegistry).forEach(([intentName, config]) => {
-            if (intentName === IntentTypes.UNKNOWN || !config.entities) return;
-            systemPrompt += `\n- For the "${intentName}" intent, you can extract these entities: ${config.entities.join(', ')}.`;
+        // We skip the UNKNOWN intent as it's not a valid classification target
+        if (intentName === IntentTypes.UNKNOWN) return;
+
+        systemPrompt += `
+        **Intent: \`${intentName}\`**
+        -**Inference guide:** ${config.inferenceGuide}
+        -**Example Phrases:** ${config.utterances.map(u => `"${u}"`).join(', ')}
+        -**Example Phrases that are mistaken for the intent:** ${config.negative_utterances.map(u => `"${u}"`).join(', ')}
+        `;
         });
 
         systemPrompt += `
+
+        ### Guiding Principle: The Rule of Maximum Specificity ###
+        Your most important reasoning task is to select the most specific and descriptive intent that fits the user's command. Do not discard information.
+
+        **Your Rule:** When a user's command could plausibly match more than one intent, you **MUST** choose the intent that accounts for the **most information** provided by the user. An intent that uses more of the user's words to fill its entities is better than one that ignores parts of the command.
+
+        **Example of Applying this Rule:**
+        -   **User Command:** "send an email to user Nisal"
+        -   **Your Analysis:**
+            1.  First, consider a simple intent that only has a 'target' entity. This could match "send an email", but it would have to ignore the crucial phrase "to user Nisal". This is an **error of information loss**.
+            2.  Next, look for a more complex intent in your list. Is there an intent that can capture not just the action ("send an email") but also the context it applies to ("user Nisal")?
+            3.  You will find an intent with entities for a target (the action), a contextKey (the type of item), and a contextValue (the specific item). This intent accounts for the *entire* user command.
+        -   **Your Conclusion:** You must select the more specific intent because it provides a more complete and accurate representation of the user's request.
+
+        -   **Incorrect Output (Loses Information):**
+            [{"intent": "click_element", "entities": {"target": "email"}}]  // WRONG - "to user Nisal" is ignored.
+
+        -   **Correct Output (Conserves Information):**
+            [{"intent": "CLICK_ELEMENT_IN_CONTEXT", "confidence": 0.95, "entities": {"target": {"english": "send email", ...}, "contextKey": {"english": "user", ...}, "contextValue": "Nisal"}}] // CORRECT - All parts of the command are used.
+        `;
+
+        systemPrompt += `
+        ### IMPORTANT: Disambiguating Overlapping Intents ###
+        Some commands can be ambiguous. Your primary tool for disambiguation is the **main action verb** in the user's command. Prioritize the verb's meaning over the noun's common associations.
+
+        **Example of Disambiguation:**
+        -   **Ambiguous User Command:** "go to submit"
+        -   **Incorrect Reasoning:** The word "submit" is almost always a button, so the intent must be \`click_element\`. **THIS IS WRONG.**
+        -   **Correct Reasoning:** The primary action is "go to". This phrase strongly implies navigation or scrolling. The target of the navigation is "submit". Therefore, the correct intent is \`scroll_to_element\`.
+
+        -   **Your Rule:** When an action verb (like "go to", "scroll to") is present, it defines the intent. The noun that follows is simply the target of that action.
 
         ### IMPORTANT: Multiple Intent Detection ###
         A single user command can contain MULTIPLE intents. For example:
         - "Fill name with John, email with john@example.com, and phone with 123456" should return 3 separate intents
         - "Click submit and then navigate to home" should return 2 separate intents
         - "My name is Nisal, email is nisal@gmail.com, phone number is 074321, fill those" should return 3 fill intents
+
+
+        ### IMPORTANT: Implied Intent / Intent Sequence Detection ###
+        Sometimes a user's command describes a final goal, not the direct steps to get there. Your task is to infer the logical sequence or a single simple, atomic actions required to achieve that goal.
 
         ### JSON Response Format Instructions ###
         You MUST respond with a JSON array. Each object in the array represents a detected intent and must contain:
@@ -342,14 +387,8 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             
             IMPORTANT - Contextual Normalization:
             - Consider the context of the command (The related UI element Entity) to determine how to normalize values.
-            Example: It the user is refering to a phone number, you should normalize it to the correct phone number format.
-
-            IMPORTANT - Transcription Issues Handling:
-            - If the value doeses not make sense in the context, it's probably a transcription issue due to accent. So fix it to the most likely correct value.
-                Example: A name "Nisal" might be transcribed as "Missle" due to accent, so correct it to "Nisal". 
-            - Value might be misstranscripted with mixed text and digits and then you should normalize it to the correct format.
-                Example: a phone number "074321" might be misstranscribed as "note seven 4 three two one" due to low accuracy transcription, so correct it to "074321".
-
+            Example: -"Enter phone number as 1,2 3 note double two"  but since the context is a phone number, normalize it to "12322".
+                     - "Fill email as user at user.gmail.com" but since the context is an email, normalize it to "user@example.com".
             IMPORTANT - Mixed Language Handling:
             if value is in mixed languages you MUST normalize the entire value to the appropriate format because those are transcription issues.
 
@@ -393,6 +432,32 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             }
         }
         ]
+
+        ### IMPORTANT: Interpreting Spelling and Formatting Corrections ###
+        The input you receive is a raw Speech-to-Text transcript. The user may see a transcription error on their screen and try to correct it by giving spelling or formatting instructions. Your first job is to correctly interpret these instructions to reconstruct the user's true intended text.
+
+        **Your Rule:** When you detect a spelling or formatting command (e.g., "with a capital letter...", "with an 'N'"), you MUST apply this correction to the immediately preceding word. Then, use the *reconstructed* word for intent and entity extraction.
+
+        **Examples of Spelling/Formatting Corrections to Resolve:**
+
+        - **User Command:** "Enter name as misal with an N"
+        - **Your Interpretation:** The user saw "misal" transcribed but meant "Nisal". The phrase "with an N" is a spelling instruction.
+        - **Correct Value to Extract:** "Nisal"
+
+        - **User Command:** "The company is realx with a capital X"
+        - **Your Interpretation:** The user wants the 'x' and only the 'x' in "realx" to be capitalized.
+        - **Correct Value to Extract:** "realX"
+
+        - **User Command:** "Set the password to password one two three with a capital P"
+        - **Your Interpretation:** The user is specifying the capitalization of the word "password".
+        - **Correct Value to Extract:** "Password123"
+
+        - **User Command:** "The city is londan, replace 'a' with 'o'"
+        - **Your Interpretation:** The user is directly correcting a character in the preceding word.
+        - **Correct Value to Extract:** "london"
+
+        Essentially, you must mentally "fix" the transcript based on these meta-instructions *before* you proceed with your main task of identifying intents and entities.
+
 
         ### Final Instruction ###
         Analyze the user's command carefully, identify ALL intents present in the command, apply these rules, and return ONLY the raw JSON array. Do not include any markdown formatting like \`\`\`json or explanations.`;
@@ -518,64 +583,82 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
     private createDefaultCommandRegistry(): CommandRegistry {
         return {
             [IntentTypes.CLICK_ELEMENT]: {
+                // description:"Clicking an element directly. Button can be a simple action(Ex: send, edit, cancel transaction etc:)",
                 utterances: ["click (target)", "press (target)", "tap (target)"],
+                negative_utterances: ["go to (target)"],
                 entities: ["target"]
             },
             [IntentTypes.FILL_INPUT]: {
+                // description:"Filling an input with some value, if a value is not specified, then nothing to fill.",
                 utterances: [
+                    "(target) is (value)",
                     "Fill (target) as (value)",
                     "Enter (target) as (value)",
                     "Enter (target) with (value)",
                     "Fill (target) with (value)"
                 ],
+                negative_utterances: ["edit (target)"],
                 entities: ["target", "value"]
             },
             [IntentTypes.SCROLL]: {
+                // description:"Just navigate through the page.",
                 utterances: ["scroll (direction)", "scroll to (direction)", "go (direction)"],
+                negative_utterances: [],
                 entities: ["direction"]
             },
             [IntentTypes.SCROLL_TO_ELEMENT]: {
+                // description:"Navigate to a certain element.",
                 utterances: ["scroll to (target)", "go to (target) section"],
+                negative_utterances: [],
                 entities: ["target"]
             },
 
             [IntentTypes.CHECK_CHECKBOX]: {
+                // description:"Check check boxes.",
                 utterances: [
                     "check (target)",
                     "select (target) checkbox",
                     "tick (target)",
                     "enable (target) option"
                 ],
+                negative_utterances: [],
                 entities: ["target"]
             },
 
             [IntentTypes.UNCHECK_CHECKBOX]: {
+                // description:"Unheck check boxes.",
                 utterances: [
                     "uncheck (target)",
                     "deselect (target) checkbox",
                     "untick (target)",
                     "disable (target) option"
                 ],
+                negative_utterances: [],
                 entities: ["target"]
             },
 
             [IntentTypes.CHECK_ALL]: {
+                // description:"Check all check boxes under a group.",
                 utterances: [
                     "check all (targetGroup)",
                     "select all (targetGroup)"
                 ],
+                negative_utterances: [],
                 entities: ["targetGroup"]
             },
 
             [IntentTypes.UNCHECK_ALL]: {
+                // description:"Uncheck all check boxes under a group.",
                 utterances: [
                     "uncheck all (targetGroup)",
                     "deselect all (targetGroup)"
                 ],
+                negative_utterances: [],
                 entities: ["targetGroup"]
             },
 
             [IntentTypes.SELECT_RADIO_OR_DROPDOWN]: {
+                // description:"Select a certain option from a dropdown or a radiobutton",
                 utterances: [
                     "select (target) in (group)",
                     "choose (target) in (group)",
@@ -584,24 +667,43 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
                     "choose (target)",
                     "pick (target)"
                 ],
+                negative_utterances: [],
                 entities: ["target", "group"]
             },
 
             [IntentTypes.OPEN_DROPDOWN]: {
+                // description:"Open a dropdown list",
                 utterances: [
                     "Open (target)",
                     "Drop down (target)",
                     "Open (target) drop down",
                 ],
+                negative_utterances: [],
                 entities: ["target"]
             },
 
-            [IntentTypes.GO_BACK]: {
+            [IntentTypes.GO_BACK]: {                
+                // description:"Go back to previous page",
                 utterances: [
                     "Go Back",
                 ],
+                negative_utterances: [],
                 entities: []
-            }
+            },
+
+            [IntentTypes.CLICK_ELEMENT_IN_CONTEXT]: {
+            // description:"Clicking on an element under a context, probably in a table. The target button is most probably an action(verb).",
+            utterances: [
+                "(target) for (contextKey) (contextValue)",
+                "(target) the (contextKey) (contextValue)",
+                "Click the (target) for the (contextValue) (contextKey)",
+            ],
+            negative_utterances: [],
+            entities: ["target", "contextKey", "contextValue"],
+            inferenceGuide:`
+            Example : "Edit name Nisal"
+            Edit is an action verb that does not match any other intent so there should be a button for it (if it's not completetly unhinged). And the type of action (modification, retrieval, etc.) does not matter. And since they mention Nisal is a name, that means Nisal is one of many names in the page, so there is a context`
+        },
         };
     }
 

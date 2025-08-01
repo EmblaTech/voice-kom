@@ -72,7 +72,7 @@ export class NLUModule {
         this.audioCapturer = DriverFactory.getAudioCapturer(transConfig, this.eventBus);
         
         // Load command registry
-        this.commandRegistry = await fetchContent('../../src/nlu/command-registry.json');
+        // this.commandRegistry = await fetchContent('../../src/nlu/command-registry.json');
         
         this.logger.info("NLUModule.init() completed successfully");
       } catch (error) {
@@ -111,16 +111,18 @@ export class NLUModule {
   private startSingleListeningCycle(): void {
     // Guard against starting if the session was just stopped.
     if (!this.isSessionActive) return;
-
-    this.logger.info("Starting a single listening cycle.");
-
-    this.audioCapturer.startListening({
+    try{
+        this.audioCapturer.startListening({
         silenceDelay: this.silenceTimeout,
         speakingThreshold: this.speakingThreshold
     });
-    // Let the rest of the system know we are now in a listening state.
     this.eventBus.emit(SpeechEvents.LISTEN_STARTED);
+  } catch (error) {
+    this.handleAndEmitError(error,'Capturing Audio')
+    //this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, this.getErrorMessage(error));
+    return;
   }
+}
 
   private async sendAudioChunk(audioBlob: Blob): Promise<void> {
     if (!this.compoundDriver) {
@@ -143,8 +145,9 @@ export class NLUModule {
         this.logger.warn('No intents detected in the response');
       }
     } catch (error) {
-      this.logger.error('Error during backend intent recognition: ', error);
-      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
+        this.handleAndEmitError(error,'Backend Processing')
+
+      //this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, this.getErrorMessage(error));
     }
   }
 
@@ -159,8 +162,8 @@ export class NLUModule {
       const transcription = await this.transcriptionDriver.transcribe(audioBlob);
       this.eventBus.emit(SpeechEvents.TRANSCRIPTION_COMPLETED, transcription);
     } catch (error) {
-      this.logger.error('Error during transcription: ', error);
-      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED);
+      this.handleAndEmitError(error,'Transcription')
+      //this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, this.getErrorMessage(error));
     }
   }
 
@@ -190,9 +193,18 @@ export class NLUModule {
         }
       } catch (error) {
         this.logger.error('Error during intent recognition:', error);
-        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
+        this.handleAndEmitError(error,'Recognition')
+        //this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, this.getErrorMessage(error));
       }
   }
+
+  public getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;}
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+      return error.message;}
+    return 'An unknown error occurred.';
+    }
 
   
   public getAvailableLanguages(): string[] {
@@ -213,4 +225,38 @@ export class NLUModule {
       ]
     };
   }
+
+  private handleAndEmitError(error: unknown, source: 'Transcription' | 'Recognition' | 'Capturing Audio'| 'Backend Processing'): void {
+        this.logger.error(`Error during ${source}:`, error);
+
+        let userMessage = `An unknown error occurred during ${source}.`;
+
+        if (error instanceof Error) {
+            const message = error.message.toLowerCase(); // Use lowercase for case-insensitive matching
+
+            // Case 1: Network Error (Highest priority check)
+            if (message.includes('failed to fetch')) {
+                userMessage = `${source} failed. Please check your internet connection.`;
+            }
+            // Case 2: Invalid API Key (look for 401 or "invalid api key")
+            else if (message.includes('401') || message.includes('invalid_api_key')) {
+                userMessage = `${source} failed: Invalid API Key provided.`;
+            }
+            // Case 3: Quota or Rate Limit Error
+            else if (message.includes('429') || message.includes('quota') || message.includes('rate limit')) {
+                userMessage = `${source} failed: API quota has been reached.`;
+            }
+            // Case 4: Server-side Error
+            else if (message.includes('500') || message.includes('503')) {
+                userMessage = `The ${source} service is currently unavailable. Please try again later.`;
+            }
+            // Case 5: Invalid Response from our driver logic
+            else if (message.includes('invalid transcription format')) {
+                userMessage = `The ${source} service returned an invalid or empty response.`;
+            }
+        }
+        
+        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, userMessage);
+    }
+
 }

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- <link rel="stylesheet" href="assets/invoice.css">  -->
+  <style>
+    :root {
+      --main-teal: #14B8A6;
+    }
+
+    .container,
+    .container-fluid {
+      max-width: 1000px !important;
+    }
+
+    .btn-primary,
+    .bg-primary {
+      background-color: var(--main-teal) !important;
+      border-color: var(--main-teal) !important;
+    }
+
+    .action-icons i {
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: 1.1rem;
+    }
+
+    .action-icons .text-primary:hover {
+      color: #0b5ed7 !important;
+    }
+
+    .action-icons .text-danger:hover {
+      color: #bb2d3b !important;
+    }
+
+    .table tfoot td {
+      font-weight: bold;
+    }
+
+    .badge {
+      display: inline-block;
+      width: 90px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .page-wrapper {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .table-wrapper {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .sidebar {
+      width: 240px;
+      height: 100vh;
+      background-color: #f8f9fa;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <span>
+      <img src="assets/images/logo.png" alt="Logo" class="rounded-circle" width="150" height="32">	
+    </span>
+  
+    <div class="container">      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <!-- Left side links -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        </ul>
+
+        <!-- Right side -->
+        <ul class="navbar-nav align-items-center">
+          <!-- Language Dropdown -->
+          <li class="nav-item dropdown me-3">
+            <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              English
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item active" href="#">English</a></li>
+              <li><a class="dropdown-item" href="#">Français</a></li>
+              <li><a class="dropdown-item" href="#">Deutsch</a></li>
+              <li><a class="dropdown-item" href="#">සිංහල</a></li>
+            </ul>
+          </li>
+
+          <!-- Username dropdown -->
+          <li class="nav-item dropdown me-2">
+            <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              John Doe
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#">Profile</a></li>
+              <li><a class="dropdown-item" href="#">Settings</a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item text-danger" href="#">Logout</a></li>
+            </ul>
+          </li>
+
+          <!-- Profile Image -->
+          <li class="nav-item">
+            <img src="assets/images/avatar.png" alt="User Avatar" class="rounded-circle" width="32" height="32">
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- Layout with Sidebar -->
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <div class="sidebar p-3">
+      <h5 class="mb-4">Menu</h5>
+      <ul class="nav flex-column">
+        <li class="nav-item mb-2">
+          <a class="nav-link text-dark" href="#"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+        </li>
+        <li class="nav-item mb-2">
+          <a class="nav-link text-dark" href="#"><i class="bi bi-file-earmark-text me-2"></i>Invoices</a>
+        </li>
+        <li class="nav-item mb-2">
+          <a class="nav-link text-dark" href="#"><i class="bi bi-people me-2"></i>Customers</a>
+        </li>
+        <li class="nav-item mb-2">
+          <a class="nav-link text-dark" href="#"><i class="bi bi-graph-up me-2"></i>Reports</a>
+        </li>
+        <li class="nav-item mb-2">
+          <a class="nav-link text-dark" href="#"><i class="bi bi-gear me-2"></i>Settings</a>
+        </li>
+      </ul>
+    </div>
+    <!-- Main content -->
+    <div class="main-content">
+      <div class="page-wrapper p-4">
+        <div id="invoice-list-container">
+          <div class="d-flex justify-content-between align-items-center mb-4" >
+            <h2>Invoice List</h2>
+            <button voice.name = "add new" class="btn btn-primary" type="button" onclick="showForm()">
+              + Add New
+            </button>
+          </div>
+
+        <!-- Invoice List Table -->
+        <div class="table-wrapper">
+          <table class="table table-bordered align-middle" voice.name = "invoice table">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Invoice No.</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="invoice-list">
+            </tbody>
+          </table>
+        </div>
+      </div>
+        <!-- Add Invoice Form -->
+        <div class="collapse mt-5"  id="invoice-form-section" style="display: none;">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h4 class="mb-0">INVOICE</h4>
+            </div>
+            <div class="card-body">
+              <form id="invoice-form">
+                <input type="hidden" id="invoice-index" value="">
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label class="form-label" >Invoice No</label>
+                    <input type="text" class="form-control" id="invoice-no" placeholder="e.g., INV-004" voice.name = "invoice number">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Invoice Date</label>
+                    <input type="date" id="date" class="form-control" voice.name = "invoice date">
+                  </div>
+                </div>
+
+                <h5 class="mb-3 mt-4 border-bottom pb-5">Customer Information</h5>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label class="form-label">Customer Name</label>
+                    <select id="customer-select" class="form-control" voice.name="customer">
+                      <option value="">Select Customer</option>
+                      <option value="0">Select Customer</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="text" class="form-control" id="email" placeholder="e.g: john.smith@gmail.com" voice.name="email">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Contact No</label>
+                    <input type="text" class="form-control" id="phone" placeholder="e.g., 0771234567" voice.name="contact number">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Address</label>
+                    <input type="text" class="form-control" id="address" placeholder="Delivery address" voice.name="address">
+                  </div>                  
+                </div>
+                <h5 class="mb-3 mt-4 border-bottom pb-5">Payment Information</h5>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6" voice.name="payment mode">
+                      <label class="form-label">Payment Mode</label>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment-mode" id="cash" voice.name="cash" checked>
+                        <label class="form-check-label" for="cash">
+                          Cash
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment-mode" id="card" voice.name="card">
+                        <label class="form-check-label" for="card">
+                          Card
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment-mode" id="bank" voice.name="bank">
+                        <label class="form-check-label" for="bank">
+                          Bank
+                        </label>
+                      </div>
+                  </div>
+                  <div class="col-md-6" voice.name="invoice delivery">
+                    <label class="form-label">Invoice Delivery</label>
+                    <div class="form-check invoice-delivery">
+                      <input class="form-check-input" type="checkbox" id="email" value="email" voice.name="email">
+                      <label class="form-check-label" for="email">Email</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input invoice-delivery" type="checkbox" id="whatsapp" value="whatsapp" voice.name="whatsapp">
+                      <label class="form-check-label" for="whatsapp">WhatsApp</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input invoice-delivery" type="checkbox" id="postal" value="postal" voice.name="postal">
+                      <label class="form-check-label" for="postal">Postal</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" id="due-date" class="form-control" voice.name="due date">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Time</label>
+                    <input type="time" id="due-time" class="form-control" voice.name="due time">
+                  </div>
+                </div>
+                <h5 class="mb-3 mt-4 border-bottom pb-2">Invoice Items</h5>
+                <div class="table-wrapper table-responsive">
+                  <table class="table table-bordered align-middle" voice.name="invoice items">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody id="invoice-item-body">
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="3" class="text-end">Gross Total</td>
+                        <td><input type="text" class="form-control" id="gross-total" voice.name="gross total" readonly></td>
+                      </tr>
+                      <tr>
+                        <td colspan="3" class="text-end">Discount(%)</td>
+                        <td><input type="number" class="form-control" id="discount" voice.name="discount" value="0.00"></td>
+                      </tr>
+                      <tr>
+                        <td colspan="3" class="text-end">Net Total</td>
+                        <td><input type="text" class="form-control" id="net-total" voice.name="net total" readonly></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                <div class="mt-4 text-end">
+                  <button type="button" class="btn btn-secondary me-2" data-bs-toggle="collapse"
+                    data-bs-target="#addInvoiceForm" onclick="hideForm()" voice.name="cancel">Cancel</button>
+                  <button type="submit" class="btn btn-primary" voice.name="save">Save Invoice</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="../../../dist/voicekom.js"></script>
+  <script src="invoice.js"></script>
+  <script src="../script.js"></script>
+</body>
+
+</html>
