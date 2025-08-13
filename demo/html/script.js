@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lang: 'en-US', // Set the language
     transcription: {
       provider: 'default',
-      apiKey: 'sk-proj-' 
+      apiKey: '' 
     },
     recognition: {
       provider: 'openai',
